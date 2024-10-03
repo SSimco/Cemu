@@ -65,7 +65,7 @@
     <string name="right_axis">Right Axis</string>
     <string name="extra">Extra</string>
     <string name="nunchuck">Nunchuck</string>
-    <string name="games_folder_description">Add a game path to scan for games displayed in the game list</string>
+    <string name="games_folder_description">Add a WUD/WUX/WUA/WUHB/ISO/ELF/RPX path to scan for games displayed in the game list</string>
     <string name="games_folder_empty">No games folder selected</string>
     <string name="options">Options</string>
     <string name="emulated_controller_selection_description">Selected controller: %1s</string>
