@@ -224,6 +224,8 @@ void CafeTitleList::AddTitleFromPath(fs::path path)
 		ZArchiveReader* zar = nullptr;
 #if __ANDROID__
 		if(FilesystemAndroid::isContentUri(path))
+			// THIS IS FROM CODE IN A PRIVATE REPO AND DOES NOT EXIST ELSEWHERE.
+			// APP WILL NOT COMPILE
 			zar = ZArchiveReader::OpenFromStream(std::make_unique<ContentUriStream>(path));
 		else
 #endif // __ANDROID__
