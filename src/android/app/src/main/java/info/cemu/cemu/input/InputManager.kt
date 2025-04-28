@@ -4,9 +4,14 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import info.cemu.cemu.nativeinterface.NativeInput
+import info.cemu.cemu.nativeinterface.NativeInput.VPadButtons
+import info.cemu.cemu.nativeinterface.NativeInput.ProControllerButtons
+import info.cemu.cemu.nativeinterface.NativeInput.ClassicControllerButtons
+import info.cemu.cemu.nativeinterface.NativeInput.WiimoteButtons
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeAxis
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeKey
 import info.cemu.cemu.nativeinterface.NativeInput.setControllerMapping
+
 import kotlin.math.abs
 
 class InputManager {
@@ -40,13 +45,14 @@ class InputManager {
     }
 
     private fun isMotionEventFromJoystickOrGamepad(event: MotionEvent): Boolean {
-        return (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK || (event.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        return (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                || (event.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
     }
 
-    fun mapMotionEventToMappingId(
+    fun tryMapMotionEventToMappingId(
         controllerIndex: Int,
         mappingId: Int,
-        event: MotionEvent
+        event: MotionEvent,
     ): Boolean {
         if (!isMotionEventFromJoystickOrGamepad(event)) {
             return false
@@ -127,7 +133,7 @@ class InputManager {
         return true
     }
 
-    fun mapKeyEventToMappingId(controllerIndex: Int, mappingId: Int, event: KeyEvent): Boolean {
+    fun mapKeyEventToMappingId(controllerIndex: Int, mappingId: Int, event: KeyEvent) {
         val device = event.device
         setControllerMapping(
             device.descriptor,
@@ -136,7 +142,263 @@ class InputManager {
             mappingId,
             event.keyCode
         )
-        return true
+    }
+
+    private fun mapAxisCodeToMappingId(
+        controllerIndex: Int,
+        mappingId: Int,
+        deviceDescriptor: String,
+        deviceName: String,
+        axisCode: Int,
+        isPositive: Boolean,
+    ) {
+        setControllerMapping(
+            deviceDescriptor,
+            deviceName,
+            controllerIndex,
+            mappingId,
+            getNativeAxisKey(axisCode, isPositive)
+        )
+    }
+
+    private fun mapKeyCodeToMappingId(
+        controllerIndex: Int,
+        mappingId: Int,
+        deviceDescriptor: String,
+        deviceName: String,
+        keyCode: Int,
+    ) {
+        setControllerMapping(
+            deviceDescriptor,
+            deviceName,
+            controllerIndex,
+            mappingId,
+            keyCode
+        )
+    }
+
+    private fun InputDevice.isGameController(): Boolean {
+        return !isVirtual && (
+                sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+                        || sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
+                        || sources and InputDevice.SOURCE_DPAD == InputDevice.SOURCE_DPAD
+                )
+    }
+
+    fun getGameControllers(): List<Pair<String, Int>> {
+        val gameControllers = mutableListOf<Pair<String, Int>>()
+
+        InputDevice.getDeviceIds().forEach { deviceId ->
+            val device = InputDevice.getDevice(deviceId) ?: return@forEach
+
+            if (gameControllers.any { (_, id) -> id == deviceId }) {
+                return@forEach
+            }
+
+            if (device.isGameController()) {
+                gameControllers.add(Pair(device.name, deviceId))
+            }
+        }
+
+        return gameControllers
+    }
+
+    fun mapAllInputs(deviceId: Int, controllerIndex: Int) {
+        if (NativeInput.isControllerDisabled(controllerIndex)) {
+            return
+        }
+        val controllerType = NativeInput.getControllerType(controllerIndex)
+        val device = InputDevice.getDevice(deviceId) ?: return
+
+        val inputs = mutableMapOf<InputMapping, Boolean>().apply {
+            val buttonKeyCodes =
+                ButtonInputMapping.entries.map { it.keyCode }.toIntArray()
+            ButtonInputMapping.entries
+                .zip(device.hasKeys(*buttonKeyCodes).toTypedArray())
+                .forEach { (button, hasKey) -> put(button, hasKey) }
+
+            device.motionRanges.forEach { motionRange ->
+                AxisInputMapping.entries.filter {
+                    val isPositive = motionRange.min < 0 && !it.isPositive
+                    val isNegative = motionRange.max > 0 && it.isPositive
+                    (isPositive || isNegative) && it.axisCode == motionRange.axis
+                }.forEach { put(it, true) }
+            }
+        }
+
+        val buttons = NativeInput.getNativeButtonsForControllerType(controllerType)
+
+        for (button in buttons) {
+            val mapping = getButtonMappings(button).firstOrNull { inputs[it] == true }
+                ?: FALLBACK_BUTTONS.firstOrNull { inputs[it] == true }
+            if (mapping == null) {
+                continue
+            }
+            inputs[mapping] = false
+
+            val buttonId = button.nativeKeyCode
+
+            if (mapping is ButtonInputMapping) {
+                mapKeyCodeToMappingId(
+                    controllerIndex,
+                    buttonId,
+                    device.descriptor,
+                    device.name,
+                    mapping.keyCode
+                )
+            }
+
+            if (mapping is AxisInputMapping) {
+                mapAxisCodeToMappingId(
+                    controllerIndex,
+                    buttonId,
+                    device.descriptor,
+                    device.name,
+                    mapping.axisCode,
+                    mapping.isPositive,
+                )
+            }
+        }
+    }
+
+    private fun getButtonMappings(button: NativeInput.NativeInputButton): Array<InputMapping> {
+        return when (button) {
+            VPadButtons.A,
+            ProControllerButtons.A,
+            ClassicControllerButtons.A,
+            WiimoteButtons.A,
+                -> arrayOf(ButtonInputMapping.BUTTON_A)
+
+            VPadButtons.B,
+            ProControllerButtons.B,
+            ClassicControllerButtons.B,
+            WiimoteButtons.B,
+                -> arrayOf(ButtonInputMapping.BUTTON_B)
+
+            VPadButtons.X,
+            ProControllerButtons.X,
+            ClassicControllerButtons.X,
+            WiimoteButtons.ONE,
+                -> arrayOf(ButtonInputMapping.BUTTON_X)
+
+            VPadButtons.Y,
+            ProControllerButtons.Y,
+            ClassicControllerButtons.Y,
+            WiimoteButtons.TWO,
+                -> arrayOf(ButtonInputMapping.BUTTON_Y)
+
+            VPadButtons.L,
+            ProControllerButtons.L,
+            ClassicControllerButtons.L,
+            WiimoteButtons.NUNCHUCK_C,
+                -> arrayOf(ButtonInputMapping.BUTTON_L1)
+
+            VPadButtons.R,
+            ProControllerButtons.R,
+            ClassicControllerButtons.R,
+            WiimoteButtons.NUNCHUCK_Z,
+                -> arrayOf(ButtonInputMapping.BUTTON_R1)
+
+            VPadButtons.ZL,
+            ProControllerButtons.ZL,
+            ClassicControllerButtons.ZL,
+                -> arrayOf(ButtonInputMapping.BUTTON_L2, AxisInputMapping.LTRIGGER)
+
+            VPadButtons.ZR,
+            ProControllerButtons.ZR,
+            ClassicControllerButtons.ZR,
+                -> arrayOf(ButtonInputMapping.BUTTON_R2, AxisInputMapping.RTRIGGER)
+
+            VPadButtons.PLUS,
+            ProControllerButtons.PLUS,
+            ClassicControllerButtons.PLUS,
+            WiimoteButtons.PLUS,
+                -> arrayOf(ButtonInputMapping.BUTTON_START)
+
+            VPadButtons.MINUS,
+            ProControllerButtons.MINUS,
+            ClassicControllerButtons.MINUS,
+            WiimoteButtons.MINUS,
+                -> arrayOf(ButtonInputMapping.BUTTON_SELECT)
+
+            VPadButtons.STICKL_UP,
+            ProControllerButtons.STICKL_UP,
+            ClassicControllerButtons.STICKL_UP,
+            WiimoteButtons.NUNCHUCK_UP,
+                -> arrayOf(AxisInputMapping.Y_NEG)
+
+            VPadButtons.STICKL_DOWN,
+            ProControllerButtons.STICKL_DOWN,
+            ClassicControllerButtons.STICKL_DOWN,
+            WiimoteButtons.NUNCHUCK_DOWN,
+                -> arrayOf(AxisInputMapping.Y_POS)
+
+            VPadButtons.STICKL_LEFT,
+            ProControllerButtons.STICKL_LEFT,
+            ClassicControllerButtons.STICKL_LEFT,
+            WiimoteButtons.NUNCHUCK_LEFT,
+                -> arrayOf(AxisInputMapping.X_NEG)
+
+            VPadButtons.STICKL_RIGHT,
+            ProControllerButtons.STICKL_RIGHT,
+            ClassicControllerButtons.STICKL_RIGHT,
+            WiimoteButtons.NUNCHUCK_RIGHT,
+                -> arrayOf(AxisInputMapping.X_POS)
+
+            VPadButtons.STICKR_UP,
+            ProControllerButtons.STICKR_UP,
+            ClassicControllerButtons.STICKR_UP,
+                -> arrayOf(AxisInputMapping.RY_NEG, AxisInputMapping.RZ_NEG)
+
+            VPadButtons.STICKR_DOWN,
+            ProControllerButtons.STICKR_DOWN,
+            ClassicControllerButtons.STICKR_DOWN,
+                -> arrayOf(AxisInputMapping.RY_POS, AxisInputMapping.RZ_POS)
+
+            VPadButtons.STICKR_LEFT,
+            ProControllerButtons.STICKR_LEFT,
+            ClassicControllerButtons.STICKR_LEFT,
+                -> arrayOf(AxisInputMapping.RX_NEG, AxisInputMapping.Z_NEG)
+
+            VPadButtons.STICKR_RIGHT,
+            ProControllerButtons.STICKR_RIGHT,
+            ClassicControllerButtons.STICKR_RIGHT,
+                -> arrayOf(AxisInputMapping.RX_POS, AxisInputMapping.Z_POS)
+
+            VPadButtons.UP,
+            ProControllerButtons.UP,
+            ClassicControllerButtons.UP,
+            WiimoteButtons.UP,
+                -> arrayOf(AxisInputMapping.HAT_Y_NEG, ButtonInputMapping.DPAD_UP)
+
+            VPadButtons.DOWN,
+            ProControllerButtons.DOWN,
+            ClassicControllerButtons.DOWN,
+            WiimoteButtons.DOWN,
+                -> arrayOf(AxisInputMapping.HAT_Y_POS, ButtonInputMapping.DPAD_DOWN)
+
+            VPadButtons.LEFT,
+            ProControllerButtons.LEFT,
+            ClassicControllerButtons.LEFT,
+            WiimoteButtons.LEFT,
+                -> arrayOf(AxisInputMapping.HAT_X_NEG, ButtonInputMapping.DPAD_LEFT)
+
+            VPadButtons.RIGHT,
+            ProControllerButtons.RIGHT,
+            ClassicControllerButtons.RIGHT,
+            WiimoteButtons.RIGHT,
+                -> arrayOf(AxisInputMapping.HAT_X_POS, ButtonInputMapping.DPAD_RIGHT)
+
+            VPadButtons.STICKL,
+            ProControllerButtons.STICKL,
+                -> arrayOf(ButtonInputMapping.BUTTON_THUMBL)
+
+            VPadButtons.STICKR,
+            ProControllerButtons.STICKR,
+                -> arrayOf(ButtonInputMapping.BUTTON_THUMBR)
+
+            else -> arrayOf()
+        }
     }
 
     companion object {

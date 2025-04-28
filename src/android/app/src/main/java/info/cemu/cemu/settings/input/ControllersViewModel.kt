@@ -23,12 +23,14 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
     private val _controls = MutableStateFlow<Map<Int, String>>(emptyMap())
     val controls = _controls.asStateFlow()
 
+    private val _controllers = MutableStateFlow<List<Pair<String, Int>>?>(null)
+    val controllers = _controllers.asStateFlow()
+
     private var vpadCount = 0
     private var wpadCount = 0
 
     private fun getControllerMapping(buttonId: Int) =
         buttonId to NativeInput.getControllerMapping(controllerIndex, buttonId)
-
 
     fun setControllerType(controllerType: Int) {
         if (!isControllerTypeAllowed(controllerType) || _controllerType.value == controllerType)
@@ -38,16 +40,38 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
         refreshControllerData()
     }
 
-    fun tryMapKeyEvent(keyEvent: KeyEvent, buttonId: Int): Boolean {
-        if (inputManager.mapKeyEventToMappingId(controllerIndex, buttonId, keyEvent)) {
-            _controls.value += getControllerMapping(buttonId)
-            return true
+    fun mapKeyEvent(keyEvent: KeyEvent, buttonId: Int) {
+        inputManager.mapKeyEventToMappingId(controllerIndex, buttonId, keyEvent)
+        _controls.value += getControllerMapping(buttonId)
+    }
+
+    fun refreshAvailableControllers(onNoControllersAvailable: () -> Unit) {
+        val newControllers = inputManager.getGameControllers()
+        if (newControllers.isEmpty()) {
+            _controllers.value = null
+            onNoControllersAvailable()
+            return
         }
-        return false
+        _controllers.value = newControllers
+    }
+
+    fun clearGameControllers() {
+        _controllers.value = null
+    }
+
+    fun mapAllInputs(deviceId: Int) {
+        val oldControls = _controls.value
+        _controls.value = emptyMap()
+        oldControls.keys.forEach { NativeInput.clearControllerMapping(controllerIndex, it) }
+
+        inputManager.mapAllInputs(deviceId, controllerIndex)
+
+        val buttons = NativeInput.getNativeButtonsForControllerType (controllerType.value)
+        buttons.forEach { _controls.value += getControllerMapping(it.nativeKeyCode) }
     }
 
     fun tryMapMotionEvent(motionEvent: MotionEvent, buttonId: Int): Boolean {
-        if (inputManager.mapMotionEventToMappingId(controllerIndex, buttonId, motionEvent)) {
+        if (inputManager.tryMapMotionEventToMappingId(controllerIndex, buttonId, motionEvent)) {
             _controls.value += getControllerMapping(buttonId)
             return true
         }

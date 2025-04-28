@@ -332,4 +332,7 @@
     <string name="title_manager_filter_titles_description">Filter titles</string>
     <string name="title_manager_install_title_description">Install title</string>
     <string name="title_dropdown_menu_description">Show dropdown menu for title</string>
+    <string name="controller_setup_all_inputs">Setup all inputs</string>
+    <string name="no_controllers_available">No controllers available</string>
+    <string name="controller_select_dialog_title">Select a controller</string>
 </resources>

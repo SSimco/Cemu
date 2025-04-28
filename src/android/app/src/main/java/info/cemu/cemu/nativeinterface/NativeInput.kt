@@ -1,6 +1,10 @@
 package info.cemu.cemu.nativeinterface
 
 object NativeInput {
+    sealed interface NativeInputButton {
+        val nativeKeyCode: Int
+    }
+
     const val VPAD_BUTTON_NONE: Int = 0
     const val VPAD_BUTTON_A: Int = 1
     const val VPAD_BUTTON_B: Int = 2
@@ -31,6 +35,36 @@ object NativeInput {
     const val VPAD_BUTTON_HOME: Int = 27
     const val VPAD_BUTTON_MAX: Int = 28
 
+    enum class VPadButtons(override val nativeKeyCode: Int) : NativeInputButton {
+        A(VPAD_BUTTON_A),
+        B(VPAD_BUTTON_B),
+        X(VPAD_BUTTON_X),
+        Y(VPAD_BUTTON_Y),
+        L(VPAD_BUTTON_L),
+        R(VPAD_BUTTON_R),
+        ZL(VPAD_BUTTON_ZL),
+        ZR(VPAD_BUTTON_ZR),
+        PLUS(VPAD_BUTTON_PLUS),
+        MINUS(VPAD_BUTTON_MINUS),
+        UP(VPAD_BUTTON_UP),
+        DOWN(VPAD_BUTTON_DOWN),
+        LEFT(VPAD_BUTTON_LEFT),
+        RIGHT(VPAD_BUTTON_RIGHT),
+        STICKL(VPAD_BUTTON_STICKL),
+        STICKR(VPAD_BUTTON_STICKR),
+        STICKL_UP(VPAD_BUTTON_STICKL_UP),
+        STICKL_DOWN(VPAD_BUTTON_STICKL_DOWN),
+        STICKL_LEFT(VPAD_BUTTON_STICKL_LEFT),
+        STICKL_RIGHT(VPAD_BUTTON_STICKL_RIGHT),
+        STICKR_UP(VPAD_BUTTON_STICKR_UP),
+        STICKR_DOWN(VPAD_BUTTON_STICKR_DOWN),
+        STICKR_LEFT(VPAD_BUTTON_STICKR_LEFT),
+        STICKR_RIGHT(VPAD_BUTTON_STICKR_RIGHT),
+        MIC(VPAD_BUTTON_MIC),
+        SCREEN(VPAD_BUTTON_SCREEN),
+        HOME(VPAD_BUTTON_HOME),
+    }
+
     const val PRO_BUTTON_NONE: Int = 0
     const val PRO_BUTTON_A: Int = 1
     const val PRO_BUTTON_B: Int = 2
@@ -59,6 +93,34 @@ object NativeInput {
     const val PRO_BUTTON_STICKR_RIGHT: Int = 25
     const val PRO_BUTTON_MAX: Int = 26
 
+    enum class ProControllerButtons(override val nativeKeyCode: Int) : NativeInputButton {
+        A(PRO_BUTTON_A),
+        B(PRO_BUTTON_B),
+        X(PRO_BUTTON_X),
+        Y(PRO_BUTTON_Y),
+        L(PRO_BUTTON_L),
+        R(PRO_BUTTON_R),
+        ZL(PRO_BUTTON_ZL),
+        ZR(PRO_BUTTON_ZR),
+        PLUS(PRO_BUTTON_PLUS),
+        MINUS(PRO_BUTTON_MINUS),
+        HOME(PRO_BUTTON_HOME),
+        UP(PRO_BUTTON_UP),
+        DOWN(PRO_BUTTON_DOWN),
+        LEFT(PRO_BUTTON_LEFT),
+        RIGHT(PRO_BUTTON_RIGHT),
+        STICKL(PRO_BUTTON_STICKL),
+        STICKR(PRO_BUTTON_STICKR),
+        STICKL_UP(PRO_BUTTON_STICKL_UP),
+        STICKL_DOWN(PRO_BUTTON_STICKL_DOWN),
+        STICKL_LEFT(PRO_BUTTON_STICKL_LEFT),
+        STICKL_RIGHT(PRO_BUTTON_STICKL_RIGHT),
+        STICKR_UP(PRO_BUTTON_STICKR_UP),
+        STICKR_DOWN(PRO_BUTTON_STICKR_DOWN),
+        STICKR_LEFT(PRO_BUTTON_STICKR_LEFT),
+        STICKR_RIGHT(PRO_BUTTON_STICKR_RIGHT),
+    }
+
     const val CLASSIC_BUTTON_NONE: Int = 0
     const val CLASSIC_BUTTON_A: Int = 1
     const val CLASSIC_BUTTON_B: Int = 2
@@ -85,6 +147,32 @@ object NativeInput {
     const val CLASSIC_BUTTON_STICKR_RIGHT: Int = 23
     const val CLASSIC_BUTTON_MAX: Int = 24
 
+    enum class ClassicControllerButtons(override val nativeKeyCode: Int) : NativeInputButton {
+        A(CLASSIC_BUTTON_A),
+        B(CLASSIC_BUTTON_B),
+        X(CLASSIC_BUTTON_X),
+        Y(CLASSIC_BUTTON_Y),
+        L(CLASSIC_BUTTON_L),
+        R(CLASSIC_BUTTON_R),
+        ZL(CLASSIC_BUTTON_ZL),
+        ZR(CLASSIC_BUTTON_ZR),
+        PLUS(CLASSIC_BUTTON_PLUS),
+        MINUS(CLASSIC_BUTTON_MINUS),
+        HOME(CLASSIC_BUTTON_HOME),
+        UP(CLASSIC_BUTTON_UP),
+        DOWN(CLASSIC_BUTTON_DOWN),
+        LEFT(CLASSIC_BUTTON_LEFT),
+        RIGHT(CLASSIC_BUTTON_RIGHT),
+        STICKL_UP(CLASSIC_BUTTON_STICKL_UP),
+        STICKL_DOWN(CLASSIC_BUTTON_STICKL_DOWN),
+        STICKL_LEFT(CLASSIC_BUTTON_STICKL_LEFT),
+        STICKL_RIGHT(CLASSIC_BUTTON_STICKL_RIGHT),
+        STICKR_UP(CLASSIC_BUTTON_STICKR_UP),
+        STICKR_DOWN(CLASSIC_BUTTON_STICKR_DOWN),
+        STICKR_LEFT(CLASSIC_BUTTON_STICKR_LEFT),
+        STICKR_RIGHT(CLASSIC_BUTTON_STICKR_RIGHT),
+    }
+
     const val WIIMOTE_BUTTON_NONE: Int = 0
     const val WIIMOTE_BUTTON_A: Int = 1
     const val WIIMOTE_BUTTON_B: Int = 2
@@ -104,6 +192,36 @@ object NativeInput {
     const val WIIMOTE_BUTTON_NUNCHUCK_RIGHT: Int = 16
     const val WIIMOTE_BUTTON_HOME: Int = 17
     const val WIIMOTE_BUTTON_MAX: Int = 18
+
+    enum class WiimoteButtons(override val nativeKeyCode: Int) : NativeInputButton {
+        A(WIIMOTE_BUTTON_A),
+        B(WIIMOTE_BUTTON_B),
+        ONE(WIIMOTE_BUTTON_1),
+        TWO(WIIMOTE_BUTTON_2),
+        NUNCHUCK_Z(WIIMOTE_BUTTON_NUNCHUCK_Z),
+        NUNCHUCK_C(WIIMOTE_BUTTON_NUNCHUCK_C),
+        PLUS(WIIMOTE_BUTTON_PLUS),
+        MINUS(WIIMOTE_BUTTON_MINUS),
+        UP(WIIMOTE_BUTTON_UP),
+        DOWN(WIIMOTE_BUTTON_DOWN),
+        LEFT(WIIMOTE_BUTTON_LEFT),
+        RIGHT(WIIMOTE_BUTTON_RIGHT),
+        NUNCHUCK_UP(WIIMOTE_BUTTON_NUNCHUCK_UP),
+        NUNCHUCK_DOWN(WIIMOTE_BUTTON_NUNCHUCK_DOWN),
+        NUNCHUCK_LEFT(WIIMOTE_BUTTON_NUNCHUCK_LEFT),
+        NUNCHUCK_RIGHT(WIIMOTE_BUTTON_NUNCHUCK_RIGHT),
+        HOME(WIIMOTE_BUTTON_HOME),
+    }
+
+    fun getNativeButtonsForControllerType(controllerType: Int): Array<NativeInputButton> {
+        return when (controllerType) {
+            EMULATED_CONTROLLER_TYPE_VPAD -> VPadButtons.entries.toTypedArray()
+            EMULATED_CONTROLLER_TYPE_PRO -> ProControllerButtons.entries.toTypedArray()
+            EMULATED_CONTROLLER_TYPE_CLASSIC -> ClassicControllerButtons.entries.toTypedArray()
+            EMULATED_CONTROLLER_TYPE_WIIMOTE -> WiimoteButtons.entries.toTypedArray()
+            else -> arrayOf()
+        }
+    }
 
     const val EMULATED_CONTROLLER_TYPE_VPAD: Int = 0
     const val EMULATED_CONTROLLER_TYPE_PRO: Int = 1
@@ -135,7 +253,7 @@ object NativeInput {
         deviceDescriptor: String?,
         deviceName: String?,
         key: Int,
-        isPressed: Boolean
+        isPressed: Boolean,
     )
 
     @JvmStatic
@@ -143,7 +261,7 @@ object NativeInput {
         deviceDescriptor: String?,
         deviceName: String?,
         axis: Int,
-        value: Float
+        value: Float,
     )
 
     @JvmStatic
@@ -175,14 +293,20 @@ object NativeInput {
         deviceName: String?,
         index: Int,
         mappingId: Int,
-        buttonId: Int
+        buttonId: Int,
     )
 
     @JvmStatic
     external fun clearControllerMapping(index: Int, mappingId: Int)
 
+    fun clearControllerMapping(index: Int, button: NativeInputButton) =
+        clearControllerMapping(index, button.nativeKeyCode)
+
     @JvmStatic
     external fun getControllerMapping(index: Int, mappingId: Int): String
+
+    fun getControllerMapping(index: Int, button: NativeInputButton): String =
+        getControllerMapping(index, button.nativeKeyCode)
 
     @JvmStatic
     external fun getControllerMappings(index: Int): Map<Int, String>
@@ -204,7 +328,7 @@ object NativeInput {
         gyroZ: Float,
         accelX: Float,
         accelY: Float,
-        accelZ: Float
+        accelZ: Float,
     )
 
     @JvmStatic

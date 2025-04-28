@@ -34,6 +34,7 @@ import info.cemu.cemu.R
 @Composable
 fun ScreenContent(
     appBarText: String,
+    snackbarHost: @Composable () -> Unit = {},
     navigateBack: () -> Unit,
     actions: @Composable RowScope.() -> Unit = {},
     contentModifier: Modifier = Modifier.padding(8.dp),
@@ -43,6 +44,7 @@ fun ScreenContent(
 ) {
     ScreenContentGeneric(
         appBarTitle = { DefaultAppBarTitle(appBarText) },
+        snackbarHost = snackbarHost,
         navigateBack = navigateBack,
         actions = actions,
     ) {
