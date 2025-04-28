@@ -11,17 +11,16 @@ AndroidSwkbdCallbacks::AndroidSwkbdCallbacks()
 
 void AndroidSwkbdCallbacks::showSoftwareKeyboard(const std::string& initialText, sint32 maxLength)
 {
-	std::thread([&, this]() {
-		JNIUtils::ScopedJNIENV env;
+	JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
 		jstring j_initialText = JNIUtils::toJString(env, initialText);
 		JNIUtils::ScopedJNIENV()->CallStaticVoidMethod(*m_emulationActivityClass, m_showSoftwareKeyboardMethodID, j_initialText, maxLength);
 		env->DeleteLocalRef(j_initialText);
-	}).join();
+	});
 }
 
 void AndroidSwkbdCallbacks::hideSoftwareKeyboard()
 {
-	std::thread([this]() {
-		JNIUtils::ScopedJNIENV()->CallStaticVoidMethod(*m_emulationActivityClass, m_hideSoftwareKeyboardMethodID);
-	}).join();
+	JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
+		env->CallStaticVoidMethod(*m_emulationActivityClass, m_hideSoftwareKeyboardMethodID);
+	});
 }

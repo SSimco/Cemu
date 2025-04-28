@@ -190,4 +190,6 @@ namespace JNIUtils
 		env->DeleteLocalRef(javaClass);
 		return obj;
 	}
+
+	void fiberSafeJNICall(const std::function<void(JNIEnv*)>& func);
 } // namespace JNIUtils

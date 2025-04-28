@@ -14,12 +14,11 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 	bool callBooleanFunction(const std::filesystem::path& uri, jmethodID methodId)
 	{
 		bool result = false;
-		std::thread([&, this]() {
-			JNIUtils::ScopedJNIENV env;
+		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
 			jstring uriString = JNIUtils::toJString(env, uri);
 			result = env->CallStaticBooleanMethod(*m_fileUtilClass, methodId, uriString);
 			env->DeleteLocalRef(uriString);
-		}).join();
+		});
 		return result;
 	}
 
@@ -38,20 +37,18 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 	int openContentUri(const std::filesystem::path& uri) override
 	{
 		int fd = -1;
-		std::thread([&, this]() {
-			JNIUtils::ScopedJNIENV env;
+		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
 			jstring uriString = JNIUtils::toJString(env, uri);
 			fd = env->CallStaticIntMethod(*m_fileUtilClass, m_openContentUriMid, uriString);
 			env->DeleteLocalRef(uriString);
-		}).join();
+		});
 		return fd;
 	}
 
 	std::vector<std::filesystem::path> listFiles(const std::filesystem::path& uri) override
 	{
 		std::vector<std::filesystem::path> paths;
-		std::thread([&, this]() {
-			JNIUtils::ScopedJNIENV env;
+		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
 			jstring uriString = JNIUtils::toJString(env, uri);
 			jobjectArray pathsObjArray = static_cast<jobjectArray>(env->CallStaticObjectMethod(*m_fileUtilClass, m_listFilesMid, uriString));
 			env->DeleteLocalRef(uriString);
@@ -64,7 +61,7 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 				env->DeleteLocalRef(pathStr);
 			}
 			env->DeleteLocalRef(pathsObjArray);
-		}).join();
+		});
 		return paths;
 	}
 
