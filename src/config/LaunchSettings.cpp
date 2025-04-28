@@ -202,7 +202,6 @@ bool LaunchSettings::HandleCommandline(const std::vector<std::wstring>& args)
 		if(ppcRec_limitLowerAddr != 0 && ppcRec_limitUpperAddr != 0)
 			cemuLog_log(LogType::Force, "PPCRec range limited to 0x{:08x}-0x{:08x}", ppcRec_limitLowerAddr, ppcRec_limitUpperAddr);
 
-
 		if(!extract_path.empty())
 		{
 			ExtractorTool(extract_path, output_path, log_path);

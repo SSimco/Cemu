@@ -127,9 +127,11 @@ public:
 	// dump options
 	[[nodiscard]] static bool DumpShadersEnabled();
 	[[nodiscard]] static bool DumpTexturesEnabled();
+	[[nodiscard]] static bool DumpRecompilerFunctionsEnabled();
 	[[nodiscard]] static bool DumpLibcurlRequestsEnabled();
 	static void EnableDumpShaders(bool state);
 	static void EnableDumpTextures(bool state);
+	static void EnableDumpRecompilerFunctions(bool state);
 	static void EnableDumpLibcurlRequests(bool state);
 
 	// hacks
@@ -143,6 +145,7 @@ private:
 	// dump options
 	inline static bool s_dump_shaders = false;
 	inline static bool s_dump_textures = false;
+	inline static bool s_dump_recompiler_functions = false;
 	inline static bool s_dump_libcurl_requests = false;
 
 	// timer speed

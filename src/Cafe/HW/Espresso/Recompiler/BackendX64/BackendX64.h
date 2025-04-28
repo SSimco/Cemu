@@ -15,6 +15,7 @@ struct x64GenContext_t
 {
 	IMLSegment* currentSegment{};
 	x86Assembler64* emitter;
+	sint32 m_currentInstructionEmitIndex;
 
 	x64GenContext_t()
 	{
@@ -24,6 +25,14 @@ struct x64GenContext_t
 	~x64GenContext_t()
 	{
 		delete emitter;
+	}
+
+	IMLInstruction* GetNextInstruction(sint32 relativeIndex = 1)
+	{
+		sint32 index = m_currentInstructionEmitIndex + relativeIndex;
+		if(index < 0 || index >= (sint32)currentSegment->imlList.size())
+			return nullptr;
+		return currentSegment->imlList.data() + index;
 	}
 
 	// relocate offsets
@@ -61,9 +70,6 @@ enum
 	X86_CONDITION_PARITY, // parity flag must be set
 	X86_CONDITION_NONE, // no condition, jump always
 };
-
-#define PPC_X64_GPR_USABLE_REGISTERS		(16-4)
-#define PPC_X64_FPR_USABLE_REGISTERS		(16-1) // Use XMM0 - XMM14, XMM15 is the temp register
 
 bool PPCRecompiler_generateX64Code(struct PPCRecFunction_t* PPCRecFunction, ppcImlGenContext_t* ppcImlGenContext);
 

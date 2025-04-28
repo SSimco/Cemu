@@ -46,6 +46,7 @@ private:
 	inline static bool s_force_interpreter = false;
 	
 	inline static std::optional<uint32> s_persistent_id{};
+
 	// for recompiler debugging
 	inline static uint32 ppcRec_limitLowerAddr{};
 	inline static uint32 ppcRec_limitUpperAddr{};

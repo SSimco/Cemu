@@ -1,6 +1,7 @@
 #pragma once
 
 using IMLRegID = uint16; // 16 bit ID
+using IMLPhysReg = sint32; // arbitrary value that is up to the architecture backend, usually this will be the register index. A value of -1 is reserved and means not assigned
 
 // format of IMLReg:
 // 0-15		(16 bit)	IMLRegID
@@ -98,6 +99,7 @@ private:
 };
 
 static const IMLReg IMLREG_INVALID(IMLRegFormat::INVALID_FORMAT, IMLRegFormat::INVALID_FORMAT, 0, 0);
+static const IMLRegID IMLRegID_INVALID(0xFFFF);
 
 using IMLName = uint32;
 
@@ -120,11 +122,9 @@ enum
 	PPCREC_IML_OP_RIGHT_SHIFT_U,	// right shift operator (unsigned)
 	PPCREC_IML_OP_RIGHT_SHIFT_S,	// right shift operator (signed)
 	// ppc
-	PPCREC_IML_OP_RLWIMI,			// RLWIMI instruction (rotate, merge based on mask)
 	PPCREC_IML_OP_SLW,				// SLW (shift based on register by up to 63 bits)
 	PPCREC_IML_OP_SRW,				// SRW (shift based on register by up to 63 bits)
 	PPCREC_IML_OP_CNTLZW,
-	PPCREC_IML_OP_DCBZ,				// clear 32 bytes aligned to 0x20
 	// FPU
 	PPCREC_IML_OP_FPR_ADD_BOTTOM,
 	PPCREC_IML_OP_FPR_ADD_PAIR,
@@ -142,7 +142,6 @@ enum
 	PPCREC_IML_OP_FPR_COPY_TOP_TO_BOTTOM, // leave top of destination untouched
 	PPCREC_IML_OP_FPR_COPY_BOTTOM_AND_TOP_SWAPPED,
 	PPCREC_IML_OP_FPR_EXPAND_BOTTOM32_TO_BOTTOM64_AND_TOP64, // expand bottom f32 to f64 in bottom and top half
-	PPCREC_IML_OP_FPR_BOTTOM_FRES_TO_BOTTOM_AND_TOP, // calculate reciprocal with Espresso accuracy of source bottom half and write result to destination bottom and top half
 	PPCREC_IML_OP_FPR_FCMPO_BOTTOM, // deprecated
 	PPCREC_IML_OP_FPR_FCMPU_BOTTOM, // deprecated
 	PPCREC_IML_OP_FPR_FCMPU_TOP, // deprecated
@@ -180,6 +179,11 @@ enum
 
 	// R_R_R_carry
 	PPCREC_IML_OP_ADD_WITH_CARRY, // similar to ADD but also adds carry bit (0 or 1)
+
+	// X86 extension
+	PPCREC_IML_OP_X86_CMP, // R_R and R_S32
+
+	PPCREC_IML_OP_INVALID
 };
 
 #define PPCREC_IML_OP_FPR_COPY_PAIR (PPCREC_IML_OP_ASSIGN)
@@ -192,7 +196,6 @@ enum
 	PPCREC_IML_MACRO_B_FAR,			// branch to different function
 	PPCREC_IML_MACRO_COUNT_CYCLES,	// decrease current remaining thread cycles by a certain amount
 	PPCREC_IML_MACRO_HLE,			// HLE function call
-	PPCREC_IML_MACRO_MFTB,			// get TB register value (low or high)
 	PPCREC_IML_MACRO_LEAVE,			// leaves recompiler and switches to interpeter
 	// debugging
 	PPCREC_IML_MACRO_DEBUGBREAK,	// throws a debugbreak
@@ -247,8 +250,8 @@ enum
 	// atomic
 	PPCREC_IML_TYPE_ATOMIC_CMP_STORE,
 
-	// conditional (legacy)
-	PPCREC_IML_TYPE_CONDITIONAL_R_S32,
+	// function call
+	PPCREC_IML_TYPE_CALL_IMM,			// call to fixed immediate address
 
 	// FPR
 	PPCREC_IML_TYPE_FPR_LOAD,			// r* = (bitdepth) [r*+s32*] (single or paired single mode)
@@ -261,6 +264,9 @@ enum
 	PPCREC_IML_TYPE_FPR_R,
 
 	PPCREC_IML_TYPE_FPR_COMPARE,		// r* = r* CMP[cond] r*
+
+	// X86 specific
+	PPCREC_IML_TYPE_X86_EFLAGS_JCC,
 };
 
 enum // IMLName
@@ -324,41 +330,20 @@ struct IMLUsedRegisters
 {
 	IMLUsedRegisters() {};
 
-	// GPR
-	union
+	bool IsWrittenByRegId(IMLRegID regId) const
 	{
-		struct
-		{
-			IMLReg readGPR1;
-			IMLReg readGPR2;
-			IMLReg readGPR3;
-			IMLReg writtenGPR1;
-			IMLReg writtenGPR2;
-		};
-	};
-	// FPR
-	union
-	{
-		struct
-		{
-			// note: If destination operand is not fully written (PS0 and PS1) it will be added to the read registers
-			IMLReg readFPR1;
-			IMLReg readFPR2;
-			IMLReg readFPR3;
-			IMLReg readFPR4;
-			IMLReg writtenFPR1;
-		};
-	};
-
-	bool IsBaseGPRWritten(IMLReg imlReg) const
-	{
-		cemu_assert_debug(imlReg.IsValid());
-		auto regId = imlReg.GetRegID();
 		if (writtenGPR1.IsValid() && writtenGPR1.GetRegID() == regId)
 			return true;
 		if (writtenGPR2.IsValid() && writtenGPR2.GetRegID() == regId)
 			return true;
 		return false;
+	}
+
+	bool IsBaseGPRWritten(IMLReg imlReg) const
+	{
+		cemu_assert_debug(imlReg.IsValid());
+		auto regId = imlReg.GetRegID();
+		return IsWrittenByRegId(regId);
 	}
 
 	template<typename Fn>
@@ -379,6 +364,8 @@ struct IMLUsedRegisters
 			F(readGPR2);
 		if (readGPR3.IsValid())
 			F(readGPR3);
+		if (readGPR4.IsValid())
+			F(readGPR4);
 	}
 
 	template<typename Fn>
@@ -391,23 +378,20 @@ struct IMLUsedRegisters
 			F(readGPR2, false);
 		if (readGPR3.IsValid())
 			F(readGPR3, false);
+		if (readGPR4.IsValid())
+			F(readGPR4, false);
 		if (writtenGPR1.IsValid())
 			F(writtenGPR1, true);
 		if (writtenGPR2.IsValid())
 			F(writtenGPR2, true);
-		// FPRs
-		if (readFPR1.IsValid())
-			F(readFPR1, false);
-		if (readFPR2.IsValid())
-			F(readFPR2, false);
-		if (readFPR3.IsValid())
-			F(readFPR3, false);
-		if (readFPR4.IsValid())
-			F(readFPR4, false);
-		if (writtenFPR1.IsValid())
-			F(writtenFPR1, true);
 	}
 
+	IMLReg readGPR1;
+	IMLReg readGPR2;
+	IMLReg readGPR3;
+	IMLReg readGPR4;
+	IMLReg writtenGPR1;
+	IMLReg writtenGPR2;
 };
 
 struct IMLInstruction
@@ -492,6 +476,14 @@ struct IMLInstruction
 		}op_storeLoad;
 		struct
 		{
+			uintptr_t callAddress;
+			IMLReg regParam0;
+			IMLReg regParam1;
+			IMLReg regParam2;
+			IMLReg regReturn;
+		}op_call_imm;
+		struct
+		{
 			IMLReg regR;
 			IMLReg regA;
 		}op_fpr_r_r;
@@ -556,6 +548,12 @@ struct IMLInstruction
 			uint8 crBitIndex;
 			bool  bitMustBeSet;
 		}op_conditional_r_s32;
+		// X86 specific
+		struct
+		{
+			IMLCondition cond;
+			bool invertedCondition;
+		}op_x86_eflags_jcc;
 	};
 
 	bool IsSuffixInstruction() const
@@ -565,10 +563,10 @@ struct IMLInstruction
 			type == PPCREC_IML_TYPE_MACRO && operation == PPCREC_IML_MACRO_B_TO_REG ||
 			type == PPCREC_IML_TYPE_MACRO && operation == PPCREC_IML_MACRO_LEAVE ||
 			type == PPCREC_IML_TYPE_MACRO && operation == PPCREC_IML_MACRO_HLE ||
-			type == PPCREC_IML_TYPE_MACRO && operation == PPCREC_IML_MACRO_MFTB ||
 			type == PPCREC_IML_TYPE_CJUMP_CYCLE_CHECK ||
 			type == PPCREC_IML_TYPE_JUMP ||
-			type == PPCREC_IML_TYPE_CONDITIONAL_JUMP)
+			type == PPCREC_IML_TYPE_CONDITIONAL_JUMP ||
+			type == PPCREC_IML_TYPE_X86_EFLAGS_JCC)
 			return true;
 		return false;
 	}
@@ -676,7 +674,7 @@ struct IMLInstruction
 	void make_compare(IMLReg regA, IMLReg regB, IMLReg regR, IMLCondition cond)
 	{
 		this->type = PPCREC_IML_TYPE_COMPARE;
-		this->operation = -999;
+		this->operation = PPCREC_IML_OP_INVALID;
 		this->op_compare.regR = regR;
 		this->op_compare.regA = regA;
 		this->op_compare.regB = regB;
@@ -686,7 +684,7 @@ struct IMLInstruction
 	void make_compare_s32(IMLReg regA, sint32 immS32, IMLReg regR, IMLCondition cond)
 	{
 		this->type = PPCREC_IML_TYPE_COMPARE_S32;
-		this->operation = -999;
+		this->operation = PPCREC_IML_OP_INVALID;
 		this->op_compare_s32.regR = regR;
 		this->op_compare_s32.regA = regA;
 		this->op_compare_s32.immS32 = immS32;
@@ -696,7 +694,7 @@ struct IMLInstruction
 	void make_conditional_jump(IMLReg regBool, bool mustBeTrue)
 	{
 		this->type = PPCREC_IML_TYPE_CONDITIONAL_JUMP;
-		this->operation = -999;
+		this->operation = PPCREC_IML_OP_INVALID;
 		this->op_conditional_jump.registerBool = regBool;
 		this->op_conditional_jump.mustBeTrue = mustBeTrue;
 	}
@@ -704,7 +702,7 @@ struct IMLInstruction
 	void make_jump()
 	{
 		this->type = PPCREC_IML_TYPE_JUMP;
-		this->operation = -999;
+		this->operation = PPCREC_IML_OP_INVALID;
 	}
 
 	// load from memory
@@ -743,6 +741,17 @@ struct IMLInstruction
 		this->op_atomic_compare_store.regBoolOut = regSuccessOutput;
 	}
 
+	void make_call_imm(uintptr_t callAddress, IMLReg param0, IMLReg param1, IMLReg param2, IMLReg regReturn)
+	{
+		this->type = PPCREC_IML_TYPE_CALL_IMM;
+		this->operation = 0;
+		this->op_call_imm.callAddress = callAddress;
+		this->op_call_imm.regParam0 = param0;
+		this->op_call_imm.regParam1 = param1;
+		this->op_call_imm.regParam2 = param2;
+		this->op_call_imm.regReturn = regReturn;
+	}
+
 	void make_fpr_compare(IMLReg regA, IMLReg regB, IMLReg regR, IMLCondition cond)
 	{
 		this->type = PPCREC_IML_TYPE_FPR_COMPARE;
@@ -753,12 +762,19 @@ struct IMLInstruction
 		this->op_fpr_compare.cond = cond;
 	}
 
+	/* X86 specific */
+	void make_x86_eflags_jcc(IMLCondition cond, bool invertedCondition)
+	{
+		this->type = PPCREC_IML_TYPE_X86_EFLAGS_JCC;
+		this->operation = -999;
+		this->op_x86_eflags_jcc.cond = cond;
+		this->op_x86_eflags_jcc.invertedCondition = invertedCondition;
+	}
+
 	void CheckRegisterUsage(IMLUsedRegisters* registersUsed) const;
+	bool HasSideEffects() const; // returns true if the instruction has side effects beyond just reading and writing registers. Dead code elimination uses this to know if an instruction can be dropped when the regular register outputs are not used
 
 	void RewriteGPR(const std::unordered_map<IMLRegID, IMLRegID>& translationTable);
-	void ReplaceFPRs(IMLReg fprRegisterSearched[4], IMLReg fprRegisterReplaced[4]);
-	void ReplaceFPR(IMLRegID fprRegisterSearched, IMLRegID fprRegisterReplaced);
-
 };
 
 // architecture specific constants

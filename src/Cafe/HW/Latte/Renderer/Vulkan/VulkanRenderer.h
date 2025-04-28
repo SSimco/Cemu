@@ -450,7 +450,6 @@ private:
 			bool tooling_info = false; // VK_EXT_tooling_info
 			bool transform_feedback = false;
 			bool depth_range_unrestricted = false;
-			bool depth_clip_enable = false;
 			bool nv_fill_rectangle = false; // NV_fill_rectangle
 			bool pipeline_feedback = false;
 			bool pipeline_creation_cache_control = false; // VK_EXT_pipeline_creation_cache_control
@@ -463,6 +462,7 @@ private:
 			bool dynamic_rendering = false; // VK_KHR_dynamic_rendering
 			bool shader_float_controls = false; // VK_KHR_shader_float_controls
 			bool present_wait = false; // VK_KHR_present_wait
+			bool depth_clip_enable = false; // VK_EXT_depth_clip_enable
 		}deviceExtensions;
 
 		struct
