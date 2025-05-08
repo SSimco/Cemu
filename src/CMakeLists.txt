@@ -55,7 +55,6 @@ add_subdirectory(audio)
 add_subdirectory(util)
 add_subdirectory(imgui)
 add_subdirectory(resource)
-add_subdirectory(asm)
 
 if(ANDROID)
 	add_library(CemuBin STATIC

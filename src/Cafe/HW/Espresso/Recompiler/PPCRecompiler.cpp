@@ -336,10 +336,7 @@ bool PPCRecompiler_ApplyIMLPasses(ppcImlGenContext_t& ppcImlGenContext)
 	// this simplifies logic during register allocation
 	PPCRecompilerIML_isolateEnterableSegments(&ppcImlGenContext);
 
-	// if GQRs can be predicted, optimize PSQ load/stores
-	PPCRecompiler_optimizePSQLoadAndStore(&ppcImlGenContext);
-
-	// merge certain float load+store patterns (must happen before FPR register remapping)
+	// merge certain float load+store patterns
 	IMLOptimizer_OptimizeDirectFloatCopies(&ppcImlGenContext);
 	// delay byte swapping for certain load+store patterns
 	IMLOptimizer_OptimizeDirectIntegerCopies(&ppcImlGenContext);
@@ -694,9 +691,9 @@ void PPCRecompiler_init()
 		ppcRecompilerEnabled = false;
 		return;
 	}
-	if (LaunchSettings::ForceInterpreter())
+	if (LaunchSettings::ForceInterpreter() || LaunchSettings::ForceMultiCoreInterpreter())
 	{
-		cemuLog_log(LogType::Force, "Recompiler disabled. Command line --force-interpreter was passed");
+		cemuLog_log(LogType::Force, "Recompiler disabled. Command line --force-interpreter or force-multicore-interpreter was passed");
 		return;
 	}
 	if (ppcRecompilerInstanceData)
