@@ -558,6 +558,14 @@ if(ANDROID)
   endif()
 endif()
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64)|(AARCH64)")
+  target_sources(CemuCafe PRIVATE
+    HW/Espresso/Recompiler/BackendAArch64/BackendAArch64.cpp
+    HW/Espresso/Recompiler/BackendAArch64/BackendAArch64.h
+  )
+  target_link_libraries(CemuCafe PRIVATE xbyak_aarch64)
+endif()
+
 set_property(TARGET CemuCafe PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 target_include_directories(CemuCafe PUBLIC "../")
