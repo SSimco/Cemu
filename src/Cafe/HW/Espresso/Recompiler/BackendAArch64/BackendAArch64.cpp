@@ -172,7 +172,7 @@ struct AArch64GenContext_t : CodeGenerator
 		for (auto&& [jumpStart, jumpInfo] : jumps)
 		{
 			bool success = std::visit(
-				[&, this](const auto& jump) {
+				[&jumpStart = jumpStart, this](const auto& jump) {
 					setSize(jumpStart);
 					sint64 targetAddress = segmentStarts.at(jump.target);
 					sint64 addressOffset = targetAddress - jumpStart;

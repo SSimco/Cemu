@@ -16,7 +16,16 @@ env:
 
 jobs:
   build-ubuntu:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          [
+            { runner: ubuntu-22.04, arch: x64 },
+            { runner: ubuntu-22.04-arm, arch: aarch64 },
+          ]
+    name: Linux ${{ matrix.os.arch }}
+    runs-on: ${{ matrix.os.runner }}
     steps:
     - name: "Checkout repo"
       uses: actions/checkout@v4
@@ -53,17 +62,26 @@ jobs:
     - name: 'Setup NuGet Credentials for vcpkg'
       shell: 'bash'
       run: |
-        mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
+        vcpkg_nuget() {
+            local nuget_path
+            nuget_path=$(./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1)
+            if [[ "$nuget_path" == *vcpkg* ]]; then
+                mono "$nuget_path" "$@"
+            else
+                "$nuget_path" "$@"
+            fi
+        }
+        vcpkg_nuget \
         sources add \
         -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
         -storepasswordincleartext \
         -name "GitHub" \
         -username "${{ github.repository_owner }}" \
         -password "${{ secrets.GITHUB_TOKEN }}"
-        mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
+        vcpkg_nuget \
         setapikey "${{ secrets.GITHUB_TOKEN }}" \
         -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        
+ 
     - name: "cmake"
       run: |
         cmake -S . -B build ${{ env.BUILD_FLAGS }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_MODE }} -DCMAKE_C_COMPILER=/usr/bin/clang-15 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-15 -G Ninja -DCMAKE_MAKE_PROGRAM=/usr/bin/ninja
@@ -78,25 +96,8 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cemu-bin-linux-x64
+        name: cemu-bin-linux-${{ matrix.os.arch }}
         path: ./bin/Cemu
-
-  build-appimage:
-    runs-on: ubuntu-22.04
-    needs: build-ubuntu
-    steps:
-    - name: Checkout Upstream Repo
-      uses: actions/checkout@v4
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: cemu-bin-linux-x64
-        path: bin
-
-    - name: "Install system dependencies"
-      run: |
-        sudo apt update -qq
-        sudo apt install -y clang-15 cmake freeglut3-dev libgcrypt20-dev libglm-dev libgtk-3-dev libpulse-dev libsecret-1-dev libsystemd-dev nasm ninja-build appstream libbluetooth-dev
 
     - name: "Build AppImage"
       run: |
@@ -107,7 +108,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cemu-appimage-x64
+        name: cemu-appimage-${{ matrix.os.arch }}
         path: artifacts
 
   build-windows:

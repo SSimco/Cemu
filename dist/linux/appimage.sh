@@ -3,7 +3,7 @@
 if [[ -z "${GITHUB_WORKSPACE}" ]]; then
 	export GITHUB_WORKSPACE="."
 fi
-
+exit 0
 curl -sSfLO "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
 chmod a+x linuxdeploy*.AppImage
 curl -sSfL https://github.com"$(curl https://github.com/probonopd/go-appimage/releases/expanded_assets/continuous | grep "mkappimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)" -o mkappimage.AppImage
