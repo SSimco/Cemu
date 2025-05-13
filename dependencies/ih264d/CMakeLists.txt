@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.8)
 
 project ("ih264d")
 
@@ -183,6 +183,11 @@ target_sources(ih264d PRIVATE
 "decoder/arm/ih264d_function_selector.c"
 )
 target_compile_options(ih264d PRIVATE -DARMV8)
+
+if(NOT MSVC)
+    set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
+endif()
+
 if(APPLE)
     target_sources(ih264d PRIVATE "common/armv8/macos_arm_symbol_aliases.s")
 endif()

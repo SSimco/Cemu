@@ -11,7 +11,7 @@ on:
     paths-ignore:
       - "*.md"
     branches:
-      - main
+      - linux-aarch64-appimage
 
 jobs:
   build:
