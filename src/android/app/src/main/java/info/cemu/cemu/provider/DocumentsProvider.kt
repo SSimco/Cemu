@@ -2,7 +2,7 @@
 // Skyline
 // SPDX-License-Identifier: MPL-2.0
 // Copyright © 2022 Skyline Team and Contributors (https://github.com/skyline-emu/)
-package info.cemu.cemu.features
+package info.cemu.cemu.provider
 
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -215,7 +215,7 @@ class DocumentsProvider : DocumentsProvider() {
     override fun queryChildDocuments(
         parentDocumentId: String,
         projection: Array<String>?,
-        sortOrder: String
+        sortOrder: String?
     ): Cursor {
         val cursor = MatrixCursor(projection ?: DEFAULT_DOCUMENT_PROJECTION)
         val parent = getFile(parentDocumentId)

@@ -61,7 +61,7 @@
         </activity>
 
         <provider
-            android:name=".features.DocumentsProvider"
+            android:name=".provider.DocumentsProvider"
             android:authorities="${applicationId}.provider"
             android:exported="true"
             android:grantUriPermissions="true"

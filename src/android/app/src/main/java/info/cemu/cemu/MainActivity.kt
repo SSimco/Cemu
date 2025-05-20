@@ -32,7 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
 import info.cemu.cemu.emulation.EmulationActivity
-import info.cemu.cemu.features.DocumentsProvider
+import info.cemu.cemu.provider.DocumentsProvider
 import info.cemu.cemu.gamelist.GameListRoute
 import info.cemu.cemu.gamelist.gameListNavigation
 import info.cemu.cemu.graphicpacks.GraphicPacksRoute
@@ -163,6 +163,7 @@ private fun openCemuFolder(context: Context) {
             )
             addFlags(
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        or Intent.FLAG_GRANT_READ_URI_PERMISSION
                         or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
                         or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
