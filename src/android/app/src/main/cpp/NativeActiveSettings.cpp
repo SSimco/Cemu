@@ -14,12 +14,13 @@ Java_info_cemu_cemu_nativeinterface_NativeActiveSettings_getUserDataPath(JNIEnv*
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeActiveSettings_initializeActiveSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring data_path, jstring cache_path)
+Java_info_cemu_cemu_nativeinterface_NativeActiveSettings_initializeActiveSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring user_data_path, jstring data_path, jstring cache_path)
 {
+	std::string userDataPath = JNIUtils::toString(env, user_data_path);
 	std::string dataPath = JNIUtils::toString(env, data_path);
 	std::string cachePath = JNIUtils::toString(env, cache_path);
 	std::set<fs::path> failedWriteAccess;
-	ActiveSettings::SetPaths(false, {}, dataPath, dataPath, cachePath, dataPath, failedWriteAccess);
+	ActiveSettings::SetPaths(false, {}, userDataPath, userDataPath, cachePath, dataPath, failedWriteAccess);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL

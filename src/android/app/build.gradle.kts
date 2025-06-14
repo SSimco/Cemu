@@ -1,4 +1,9 @@
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import java.io.IOException
+import java.security.MessageDigest
+import java.util.regex.Pattern
+import javax.xml.bind.DatatypeConverter
+
 
 plugins {
     alias(libs.plugins.android.application)
@@ -35,6 +40,8 @@ fun getVersionName(): String {
 
 fun getVersionCode(): Int = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 
+val cemuDataFilesFolder = "../../../bin"
+
 android {
     namespace = "info.cemu.cemu"
     compileSdk = 35
@@ -47,6 +54,17 @@ android {
         versionName = getVersionName()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    androidResources {
+        ignoreAssetsPattern = "!*cemu.mo:"
+    }
+
+    sourceSets.getByName("main") {
+        assets {
+            srcDir(cemuDataFilesFolder)
+        }
+    }
+
     packaging {
         jniLibs.useLegacyPackaging = true
     }
@@ -138,6 +156,58 @@ android {
         jvmTarget = "17"
     }
 }
+
+abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
+    private val ignoreFilePatterns = arrayOf(
+        Pattern.compile(".*cemu\\.mo"),
+        Pattern.compile(".*Cemu_(?:debug|release)"),
+    )
+
+    @get:Input
+    abstract val cemuDataFolder: Property<String>
+
+    private fun isFileIgnored(file: File): Boolean {
+        return ignoreFilePatterns.any { pattern -> pattern.matcher(file.path).matches() }
+    }
+
+    @TaskAction
+    fun computeCemuDataFilesHash() {
+        val assetDir = File(project.projectDir, "src/main/assets")
+        if (!assetDir.exists()) {
+            assetDir.mkdirs()
+        }
+
+        val cemuDataFilesFile = File(project.projectDir, cemuDataFolder.get())
+        val hashFile = File(assetDir, "hash.txt")
+        val md = MessageDigest.getInstance("SHA-256")
+
+        if (!cemuDataFilesFile.isDirectory) {
+            hashFile.writeText("invalid")
+            return
+        }
+
+        val fileHashes = cemuDataFilesFile.walkTopDown()
+            .filter { it.isFile && !isFileIgnored(it) }
+            .sortedBy { it.path }
+            .map {
+                md.reset()
+                md.update(it.path.toByteArray())
+                md.update(it.readBytes())
+                md.digest()
+            }
+            .toList()
+
+        md.reset()
+        fileHashes.forEach { md.update(it) }
+
+        hashFile.writeText(DatatypeConverter.printHexBinary(md.digest()))
+    }
+}
+
+tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
+    cemuDataFolder = cemuDataFilesFolder
+}
+tasks.preBuild.dependsOn("computeCemuDataFilesHash")
 
 dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
