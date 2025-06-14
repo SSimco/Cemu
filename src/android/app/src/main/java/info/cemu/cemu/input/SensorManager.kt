@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.Surface
 import info.cemu.cemu.nativeinterface.NativeInput.onMotion
 import info.cemu.cemu.nativeinterface.NativeInput.setMotionEnabled
 
@@ -15,11 +16,12 @@ class SensorManager(context: Context) : SensorEventListener {
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val gyroscope =
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
+    private var deviceRotationProvider = { Surface.ROTATION_0 }
     private val hasMotionData = accelerometer != null && gyroscope != null
     private var accelX = 0f
     private var accelY = 0f
     private var accelZ = 0f
-    private var isLandscape = true
     private var isListening = false
 
     fun startListening() {
@@ -32,8 +34,8 @@ class SensorManager(context: Context) : SensorEventListener {
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
     }
 
-    fun setIsLandscape(isLandscape: Boolean) {
-        this.isLandscape = isLandscape
+    fun setDeviceRotationProvider(deviceRotationProvider: () -> Int) {
+        this.deviceRotationProvider = deviceRotationProvider
     }
 
     fun pauseListening() {
@@ -46,25 +48,50 @@ class SensorManager(context: Context) : SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
+        val values = event.values
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-            accelX = event.values[0]
-            accelY = event.values[1]
-            accelZ = event.values[2]
+            val accelValues = getSensorEventValues(values)
+            accelX = accelValues.first
+            accelY = accelValues.second
+            accelZ = accelValues.third
             return
         }
         if (event.sensor.type != Sensor.TYPE_GYROSCOPE) {
             return
         }
-        val gyroX = event.values[0]
-        val gyroY = event.values[1]
-        val gyroZ = event.values[2]
-        if (isLandscape) {
-            onMotion(event.timestamp, gyroY, gyroZ, gyroX, accelY, accelZ, accelX)
-            return
-        }
+        val (gyroX, gyroY, gyroZ) = getSensorEventValues(values)
         onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelY, accelZ)
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+    }
+
+    private fun getSensorEventValues(values: FloatArray): Triple<Float, Float, Float> {
+        val x: Float
+        val y: Float
+        val z = values[2]
+        val deviceRotation = deviceRotationProvider()
+        when (deviceRotation) {
+            Surface.ROTATION_90 -> {
+                x = -values[1]
+                y = values[0]
+            }
+
+            Surface.ROTATION_180 -> {
+                x = -values[0]
+                y = -values[1]
+            }
+
+            Surface.ROTATION_270 -> {
+                x = values[1]
+                y = -values[0]
+            }
+
+            else /*Surface.ROTATION_0*/ -> {
+                x = values[0]
+                y = values[1]
+            }
+        }
+        return Triple(x, y, z)
     }
 }

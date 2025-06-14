@@ -121,13 +121,13 @@ class EmulationActivity : AppCompatActivity() {
         val inputOverlaySettingsManager = InputOverlaySettingsManager(this)
         overlaySettings = inputOverlaySettingsManager.overlaySettings
         sensorManager = SensorManager(this)
+        sensorManager.setDeviceRotationProvider(deviceRotationProvider = { display.rotation })
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 showExitConfirmationDialog()
             }
         })
-
 
         initializeView(getLaunchPath())
         setContentView(binding.root)
