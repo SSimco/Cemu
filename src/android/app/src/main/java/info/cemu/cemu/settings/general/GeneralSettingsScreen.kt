@@ -3,15 +3,21 @@ package info.cemu.cemu.settings.general
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
 import info.cemu.cemu.guicore.components.Button
 import info.cemu.cemu.guicore.components.ScreenContent
 import info.cemu.cemu.guicore.components.SingleSelection
+import info.cemu.cemu.guicore.components.Toggle
 import info.cemu.cemu.guicore.nativeenummapper.consoleLanguageToStringId
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 @Composable
-fun GeneralSettingsScreen(navigateBack: () -> Unit, goToGamePathsSettings: () -> Unit) {
+fun GeneralSettingsScreen(
+    navigateBack: () -> Unit,
+    goToGamePathsSettings: () -> Unit,
+    generalSettingsViewModel: GeneralSettingsViewModel = viewModel(factory = GeneralSettingsViewModel.Factory),
+) {
     ScreenContent(
         appBarText = stringResource(R.string.general_settings),
         navigateBack = navigateBack,
@@ -40,6 +46,14 @@ fun GeneralSettingsScreen(navigateBack: () -> Unit, goToGamePathsSettings: () ->
                 NativeSettings.CONSOLE_LANGUAGE_RUSSIAN,
                 NativeSettings.CONSOLE_LANGUAGE_TAIWANESE,
             ),
+        )
+        Toggle(
+            label = stringResource(R.string.side_menu_button),
+            description = stringResource(R.string.side_menu_button_description),
+            initialCheckedState = { generalSettingsViewModel.emulationScreenSettings.isDrawerButtonVisible },
+            onCheckedChanged = {
+                generalSettingsViewModel.emulationScreenSettings.isDrawerButtonVisible = it
+            }
         )
     }
 }

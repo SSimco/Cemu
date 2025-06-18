@@ -38,6 +38,8 @@ import info.cemu.cemu.inputoverlay.OverlaySettings
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeException
 import info.cemu.cemu.nativeinterface.NativeSwkbd.setCurrentInputText
+import info.cemu.cemu.settings.EmulationScreenSettings
+import info.cemu.cemu.settings.SettingsManager
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
@@ -80,6 +82,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private var isMotionEnabled = false
     private lateinit var overlaySettings: OverlaySettings
+    private lateinit var emulationScreenSettings: EmulationScreenSettings
     private lateinit var inputOverlaySurfaceView: InputOverlaySurfaceView
     private lateinit var sensorManager: SensorManager
     private var hasEmulationError = false
@@ -118,8 +121,8 @@ class EmulationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         emulationActivityInstance = WeakReference(this)
 
-        val inputOverlaySettingsManager = InputOverlaySettingsManager(this)
-        overlaySettings = inputOverlaySettingsManager.overlaySettings
+        overlaySettings = InputOverlaySettingsManager(this).overlaySettings
+        emulationScreenSettings = SettingsManager(this).emulationScreenSettings
         sensorManager = SensorManager(this)
         sensorManager.setDeviceRotationProvider(deviceRotationProvider = { display.rotation })
 
@@ -240,7 +243,14 @@ class EmulationActivity : AppCompatActivity() {
             binding.editInputsLayout.visibility = View.GONE
             toastMessage(R.string.input_mode_default)
         }
-        binding.emulationSettingsButton.setOnClickListener { binding.drawerLayout.open() }
+
+        if (emulationScreenSettings.isDrawerButtonVisible) {
+            binding.emulationSettingsButton.setOnClickListener { binding.drawerLayout.open() }
+            binding.drawerLayout.setLockedMode(true)
+        } else {
+            binding.emulationSettingsButton.visibility = View.GONE
+        }
+
         val mainCanvas = binding.mainCanvas
         try {
             val testSurfaceTexture = SurfaceTexture(0)

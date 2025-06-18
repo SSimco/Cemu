@@ -335,4 +335,6 @@
     <string name="controller_setup_all_inputs">Setup all inputs</string>
     <string name="no_controllers_available">No controllers available</string>
     <string name="controller_select_dialog_title">Select a controller</string>
+    <string name="side_menu_button">Side menu button</string>
+    <string name="side_menu_button_description">Show the emulation side menu button</string>
 </resources>
