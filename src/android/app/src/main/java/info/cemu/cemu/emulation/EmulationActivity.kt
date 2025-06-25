@@ -12,6 +12,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -119,6 +120,9 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         emulationActivityInstance = WeakReference(this)
 
         overlaySettings = InputOverlaySettingsManager(this).overlaySettings
@@ -189,7 +193,9 @@ class EmulationActivity : AppCompatActivity() {
         }
     }
 
-    private fun LayoutSideMenuEmulationBinding.configureSideMenu(isInputOverlayEnabled: Boolean) {
+    private fun LayoutSideMenuEmulationBinding.configureSideMenu() {
+        val isInputOverlayEnabled = overlaySettings.isOverlayEnabled
+
         enableMotionCheckbox.configure(onCheckChanged = ::setMotionEnabled)
         replaceTvWithPadCheckbox.configure(onCheckChanged = NativeEmulation::setReplaceTVWithPadView)
         showPadCheckbox.configure(onCheckChanged = ::setPadViewVisibility)
@@ -217,7 +223,9 @@ class EmulationActivity : AppCompatActivity() {
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         inputOverlaySurfaceView = binding.inputOverlay
 
-        binding.sideMenu.configureSideMenu(overlaySettings.isOverlayEnabled)
+        inputOverlaySurfaceView.setVisible(overlaySettings.isOverlayEnabled)
+
+        binding.sideMenu.configureSideMenu()
 
         binding.moveInputsButton.setOnClickListener { _ ->
             if (inputOverlaySurfaceView.getInputMode() == InputOverlaySurfaceView.InputMode.EDIT_POSITION) {
@@ -416,6 +424,7 @@ class EmulationActivity : AppCompatActivity() {
                 }
                 val parentTextInputLayout =
                     inputEditTextLayout.requireViewById<TextInputLayout>(R.id.emulation_input_layout)
+
                 if (maxLength > 0) {
                     parentTextInputLayout.isCounterEnabled = true
                     parentTextInputLayout.counterMaxLength = maxLength
@@ -423,6 +432,7 @@ class EmulationActivity : AppCompatActivity() {
                 } else {
                     parentTextInputLayout.isCounterEnabled = false
                 }
+
                 emulationActivity.emulationTextInputDialog = dialog
             }
         }

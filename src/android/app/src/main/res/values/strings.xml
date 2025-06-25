@@ -337,4 +337,6 @@
     <string name="controller_select_dialog_title">Select a controller</string>
     <string name="side_menu_button">Side menu button</string>
     <string name="side_menu_button_description">Show the emulation side menu button</string>
+    <string name="log_file_not_available">Log file doesn\'t exist</string>
+    <string name="log_file_share_label">Share log file</string>
 </resources>

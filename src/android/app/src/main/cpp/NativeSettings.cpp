@@ -348,7 +348,6 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_getCustomDriverPath(JNIEnv* e
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_setCustomDriverPath(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring custom_driver_path)
 {
-	throw std::runtime_error("todo");
 	g_config.data().custom_driver_path = JNIUtils::toString(env, custom_driver_path);
 }
 

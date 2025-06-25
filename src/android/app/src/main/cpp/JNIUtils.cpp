@@ -87,11 +87,3 @@ jobject JNIUtils::createJavaStringArrayList(JNIEnv* env, const std::vector<std::
 	}
 	return arrayListObject;
 }
-
-void JNIUtils::fiberSafeJNICall(const std::function<void(JNIEnv*)>& func)
-{
-	std::thread([&]() {
-		ScopedJNIENV env;
-		func(*env);
-	}).join();
-}
