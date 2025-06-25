@@ -90,7 +90,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
         }
-        create("githubRelease") {
+        create("github") {
             if (keystoreFilePath != null) {
                 initWith(getByName("release"))
                 isMinifyEnabled = true
@@ -177,16 +177,16 @@ abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
             assetDir.mkdirs()
         }
 
-        val cemuDataFilesFile = File(project.projectDir, cemuDataFolder.get())
+        val cemuDataFilesDir = File(project.projectDir, cemuDataFolder.get())
         val hashFile = File(assetDir, "hash.txt")
         val md = MessageDigest.getInstance("SHA-256")
 
-        if (!cemuDataFilesFile.isDirectory) {
+        if (!cemuDataFilesDir.isDirectory) {
             hashFile.writeText("invalid")
             return
         }
 
-        val fileHashes = cemuDataFilesFile.walkTopDown()
+        val fileHashes = cemuDataFilesDir.walkTopDown()
             .filter { it.isFile && !isFileIgnored(it) }
             .sortedBy { it.path }
             .map {
@@ -204,10 +204,10 @@ abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
     }
 }
 
-tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
+val computeCemuDataFilesHashTask =tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
     cemuDataFolder = cemuDataFilesFolder
 }
-tasks.preBuild.dependsOn("computeCemuDataFilesHash")
+tasks.preBuild.dependsOn(computeCemuDataFilesHashTask)
 
 dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)

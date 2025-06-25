@@ -27,23 +27,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
 import info.cemu.cemu.emulation.EmulationActivity
-import info.cemu.cemu.provider.DocumentsProvider
 import info.cemu.cemu.gamelist.GameListRoute
 import info.cemu.cemu.gamelist.gameListNavigation
 import info.cemu.cemu.graphicpacks.GraphicPacksRoute
 import info.cemu.cemu.graphicpacks.graphicPacksNavigation
 import info.cemu.cemu.guicore.components.ActivityContent
+import info.cemu.cemu.nativeinterface.NativeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import info.cemu.cemu.nativeinterface.NativeSettings
+import info.cemu.cemu.provider.DocumentsProvider
 import info.cemu.cemu.settings.SettingsRoute
 import info.cemu.cemu.settings.settingsNavigation
 import info.cemu.cemu.titlemanager.TitleManagerRoute
 import info.cemu.cemu.titlemanager.titleManagerNavigation
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +56,11 @@ class MainActivity : ComponentActivity() {
                 MainNav()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        NativeSettings.saveSettings()
     }
 
     override fun onPause() {
@@ -123,7 +131,7 @@ private fun GameListToolBarActionsMenu(
     ) {
         Icon(
             imageVector = Icons.Filled.MoreVert,
-            contentDescription = "More options"
+            contentDescription = stringResource(R.string.more_options)
         )
     }
     DropdownMenu(
@@ -147,28 +155,55 @@ private fun GameListToolBarActionsMenu(
             text = stringResource(R.string.open_cemu_folder)
         )
         DropdownMenuItem(
+            onClick = { shareLogFile(context) },
+            text = stringResource(R.string.log_file_share_label),
+        )
+        DropdownMenuItem(
             onClick = goToAboutCemu,
             text = stringResource(R.string.about_cemu),
         )
     }
 }
 
+private fun shareLogFile(context: Context) {
+    val logFileName = "log.txt"
+    val logFile = File(NativeActiveSettings.getUserDataPath()).resolve(logFileName)
+
+    if (!logFile.isFile) {
+        Toast.makeText(context, R.string.log_file_not_available, Toast.LENGTH_LONG).show()
+        return
+    }
+
+    val fileUri = DocumentsContract.buildDocumentUri(
+        DocumentsProvider.AUTHORITY,
+        DocumentsProvider.ROOT_ID + "/$logFileName"
+    )
+
+    val documentFile = DocumentFile.fromSingleUri(context, fileUri) ?: return
+
+    val intent = Intent(Intent.ACTION_SEND)
+        .setDataAndType(documentFile.uri, "text/plain")
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        .putExtra(Intent.EXTRA_STREAM, documentFile.uri)
+
+    context.startActivity(Intent.createChooser(intent, null))
+}
+
 private fun openCemuFolder(context: Context) {
     try {
-        Intent(Intent.ACTION_VIEW).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            data = DocumentsContract.buildRootUri(
-                DocumentsProvider.AUTHORITY,
-                DocumentsProvider.ROOT_ID
-            )
-            addFlags(
+        val intent = Intent(Intent.ACTION_VIEW)
+            .addCategory(Intent.CATEGORY_DEFAULT)
+            .addFlags(
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
                         or Intent.FLAG_GRANT_READ_URI_PERMISSION
                         or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
                         or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            context.startActivity(this@apply)
-        }
+        intent.data = DocumentsContract.buildRootUri(
+            DocumentsProvider.AUTHORITY,
+            DocumentsProvider.ROOT_ID
+        )
+        context.startActivity(intent)
     } catch (activityNotFoundException: ActivityNotFoundException) {
         Toast.makeText(context, R.string.failed_to_open_cemu_folder, Toast.LENGTH_LONG).show()
     }

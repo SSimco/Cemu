@@ -68,6 +68,7 @@ class AArch64Allocator : public Allocator
 #else
 	inline static Allocator s_allocator;
 #endif
+	inline static std::mutex s_allocatorMutex;
 	Allocator* m_allocatorImpl;
 	bool m_freeDisabled = false;
 
@@ -77,6 +78,7 @@ class AArch64Allocator : public Allocator
 
 	uint32* alloc(size_t size) override
 	{
+		std::lock_guard lock{s_allocatorMutex};
 		return m_allocatorImpl->alloc(size);
 	}
 
@@ -87,8 +89,11 @@ class AArch64Allocator : public Allocator
 
 	void free(uint32* p) override
 	{
-		if (!m_freeDisabled)
-			m_allocatorImpl->free(p);
+		if (m_freeDisabled)
+			return;
+
+		std::lock_guard lock{s_allocatorMutex};
+		m_allocatorImpl->free(p);
 	}
 
 	[[nodiscard]] bool useProtect() const override

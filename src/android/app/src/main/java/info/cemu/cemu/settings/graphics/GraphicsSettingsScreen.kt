@@ -30,12 +30,12 @@ fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: 
         appBarText = stringResource(R.string.general_settings),
         navigateBack = navigateBack,
     ) {
-//        if (supportsLoadingCustomDrivers) {
-//            Button(
-//                label = stringResource(R.string.custom_drivers),
-//                onClick = goToCustomDriversSettings
-//            )
-//        }
+        if (supportsLoadingCustomDrivers) {
+            Button(
+                label = stringResource(R.string.custom_drivers),
+                onClick = goToCustomDriversSettings
+            )
+        }
         Toggle(
             label = stringResource(R.string.async_shader_compile),
             description = stringResource(R.string.async_shader_compile_description),

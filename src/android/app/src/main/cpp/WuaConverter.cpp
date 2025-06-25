@@ -21,15 +21,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 		  callbacks->onError();
 		  return;
 	  }
-
-	  struct ScopedFd
-	  {
-		  int fd;
-		  ~ScopedFd()
-		  {
-			  close(fd);
-		  }
-	  } scopedFd{.fd = fd};
+	  stdx::scope_exit fdCleanup([fd](){ close(fd); });
 
 	  if (m_started)
 		  return;
