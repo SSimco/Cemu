@@ -6,6 +6,7 @@
 #include "config/ActiveSettings.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Alarm.h"
 #include "input/InputManager.h"
+#include "WindowSystem.h"
 
 #ifdef PUBLIC_RELASE
 #define vpadbreak() 
@@ -262,7 +263,7 @@ namespace vpad
 			PPCCore_switchToScheduler();
 		}
 
-		if (!InputManager::input_config_window_has_focus())
+		if (!WindowSystem::InputConfigWindowHasFocus())
 		{
 			if (channel <= 1 && vpadDelayEnabled)
 			{

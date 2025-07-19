@@ -1,3 +1,4 @@
+#include "WindowSystem.h"
 #include "util/crypto/aes128.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/OS/libs/gx2/GX2.h"
@@ -121,7 +122,7 @@ void CemuCommonInit()
 	WindowsInitCwd();
     ExceptionHandler_Init();
 	// read config
-	g_config.Load();
+	GetConfigHandle().Load();
 	if (NetworkConfig::XMLExists())
 		n_config.Load();
 	// parallelize expensive init code
@@ -230,7 +231,7 @@ int wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LP
 	SDL_SetMainReady();
 	if (!LaunchSettings::HandleCommandline(lpCmdLine))
 		return 0;
-	gui_create();
+	WindowSystem::Create();
 	return 0;
 }
 
@@ -242,7 +243,7 @@ int main(int argc, char* argv[])
 	SDL_SetMainReady();
 	if (!LaunchSettings::HandleCommandline(argc, argv))
 		return 0;
-	gui_create();
+	WindowSystem::Create();
 	return 0;
 }
 
@@ -256,7 +257,7 @@ int main(int argc, char *argv[])
 #endif
     if (!LaunchSettings::HandleCommandline(argc, argv))
 		return 0;
-	gui_create();
+	WindowSystem::Create();
 	return 0;
 }
 #endif

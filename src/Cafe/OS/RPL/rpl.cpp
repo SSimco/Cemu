@@ -14,6 +14,7 @@
 #include "util/crypto/crc32.h"
 #include "config/ActiveSettings.h"
 #include "Cafe/OS/libs/coreinit/coreinit_DynLoad.h"
+#include "WindowSystem.h"
 
 class PPCCodeHeap : public VHeap
 {
@@ -1794,8 +1795,7 @@ void RPLLoader_UnloadModule(RPLModule* rpl)
 	RPLLoader_decrementModuleDependencyRefs(rpl);
 
 	// save module config for this module in the debugger
-	auto debuggerInterface = debugger_getDebuggerCallbacks();
-	if (debuggerInterface) debuggerInterface->notifyModuleLoaded(rpl);
+	g_debuggerDispatcher.NotifyModuleUnloaded(rpl);
 
 	// release memory
 	rplLoaderHeap_codeArea2.free(rpl->regionMappingBase_text.GetPtr());
@@ -1878,8 +1878,7 @@ void RPLLoader_Link()
 		RPLLoader_LoadDebugSymbols(rplModuleList[i]);
 		rplModuleList[i]->isLinked = true; // mark as linked
 		GraphicPack2::NotifyModuleLoaded(rplModuleList[i]);
-		auto debuggerCallbacks = debugger_getDebuggerCallbacks();
-		if (debuggerCallbacks) debuggerCallbacks->notifyModuleLoaded(rplModuleList[i]);
+		g_debuggerDispatcher.NotifyModuleLoaded(rplModuleList[i]);
 	}
 }
 

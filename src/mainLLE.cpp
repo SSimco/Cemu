@@ -1,4 +1,5 @@
 #include "util/crypto/aes128.h"
+#include "WindowSystem.h"
 #include "Common/FileStream.h"
 
 void gui_create();
@@ -36,7 +37,7 @@ void mainEmulatorLLE()
 	memory_initPhysicalLayout();
 	
 	// start GUI thread
-	gui_create();
+	WindowSystem::Create();
 	// load kernel ancast image
 	loadPPCBootrom();
 	loadEncryptedPPCAncastKernel();

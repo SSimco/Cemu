@@ -1,3 +1,4 @@
+#include "WindowSystem.h"
 #include "JNIUtils.h"
 #include "AndroidAudio.h"
 #include "AndroidEmulatedController.h"
@@ -6,7 +7,6 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 #include "Cafe/CafeSystem.h"
-#include "Cemu/GuiSystem/GuiSystem.h"
 #include "GameTitleLoader.h"
 #include "input/ControllerFactory.h"
 #include "input/InputManager.h"
@@ -22,7 +22,7 @@ namespace NativeEmulation
 {
 	void initializeAudioDevices()
 	{
-		auto& config = g_config.data();
+		auto& config = GetConfig();
 		if (!config.tv_device.empty())
 			AndroidAudio::createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.tv_channels, config.tv_volume, true);
 
@@ -155,14 +155,14 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setReplaceTVWithPadView([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean swapped)
 {
 	// Emulate pressing the TAB key for showing DRC instead of TV
-	GuiSystem::getWindowInfo().set_keystate(GuiSystem::PlatformKeyCodes::TAB, swapped);
+    WindowSystem::GetWindowInfo().set_keystate(static_cast<uint32>(WindowSystem::PlatformKeyCodes::TAB), swapped);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeEmulation([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
 	FilesystemAndroid::setFilesystemCallbacks(std::make_shared<AndroidFilesystemCallbacks>());
-	g_config.SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
+	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
 	NativeEmulation::createCemuDirectories();
 	NetworkConfig::LoadOnce();
 	ActiveSettings::Init();
@@ -178,16 +178,16 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* e
 	JNIUtils::handleNativeException(env, [&]() {
 		cemu_assert_debug(j_testSurface != nullptr);
 		ANativewindow_Ptr testSurface(ANativeWindow_fromSurface(env, j_testSurface), &ANativeWindow_release);
-		GuiSystem::getWindowInfo().window_main.surface = testSurface.get();
+		WindowSystem::GetWindowInfo().window_main.surface = testSurface.get();
 		g_renderer = std::make_unique<VulkanRenderer>();
-		GuiSystem::getWindowInfo().window_main.surface = nullptr;
+		WindowSystem::GetWindowInfo().window_main.surface = nullptr;
 	});
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setDPI([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jfloat dpi)
 {
-	auto& windowInfo = GuiSystem::getWindowInfo();
+	auto& windowInfo = WindowSystem::GetWindowInfo();
 	windowInfo.dpi_scale = windowInfo.pad_dpi_scale = dpi;
 }
 
@@ -218,7 +218,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 {
 	JNIUtils::handleNativeException(env, [&]() {
 		cemu_assert_debug(surface != nullptr);
-		auto& windowHandleInfo = is_main_canvas ? GuiSystem::getWindowInfo().canvas_main : GuiSystem::getWindowInfo().canvas_pad;
+		auto& windowHandleInfo = is_main_canvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
 		if (windowHandleInfo.surface)
 		{
 			ANativeWindow_release(static_cast<ANativeWindow*>(windowHandleInfo.surface));
@@ -227,9 +227,9 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 		windowHandleInfo.surface = ANativeWindow_fromSurface(env, surface);
 		int width, height;
 		if (is_main_canvas)
-			GuiSystem::getWindowPhysSize(width, height);
+			WindowSystem::GetWindowPhysSize(width, height);
 		else
-			GuiSystem::getPadWindowPhysSize(width, height);
+			WindowSystem::GetPadWindowPhysSize(width, height);
 		VulkanRenderer::GetInstance()->InitializeSurface({width, height}, is_main_canvas);
 	});
 }
@@ -237,7 +237,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint width, jint height, jboolean is_main_canvas)
 {
-	auto& windowInfo = GuiSystem::getWindowInfo();
+	auto& windowInfo = WindowSystem::GetWindowInfo();
 	if (is_main_canvas)
 	{
 		windowInfo.width = windowInfo.phys_width = width;
@@ -253,7 +253,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unuse
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_startGame([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launchPath)
 {
-	GuiSystem::getWindowInfo().set_keystates_up();
+	WindowSystem::GetWindowInfo().set_keystatesup();
 	NativeEmulation::initializeAudioDevices();
 	return NativeEmulation::startGame(JNIUtils::toString(env, launchPath));
 }

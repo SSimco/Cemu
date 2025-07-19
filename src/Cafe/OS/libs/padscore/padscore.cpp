@@ -4,6 +4,7 @@
 #include "Cafe/OS/libs/coreinit/coreinit_Time.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Alarm.h"
 #include "Cafe/OS/libs/coreinit/coreinit_SystemInfo.h"
+#include "WindowSystem.h"
 #include "input/InputManager.h"
 
 // KPAD
@@ -469,7 +470,7 @@ sint32 _KPADRead(uint32 channel, KPADStatus_t* samplingBufs, uint32 length, bety
 	samplingBufs->wpadErr = WPAD_ERR_NONE;
 	samplingBufs->data_format = controller->get_data_format();
 	samplingBufs->devType = controller->get_device_type();
-	if (!InputManager::input_config_window_has_focus())
+	if(!WindowSystem::InputConfigWindowHasFocus())
 	{
 		const auto btn_repeat = padscore::g_padscore.controller_data[channel].btn_repeat;
 		controller->KPADRead(*samplingBufs, btn_repeat);

@@ -101,7 +101,7 @@ namespace JNIUtils
 			}
 			return *this;
 		}
-		jobject& operator*()
+		const jobject& operator*() const
 		{
 			return m_jobject;
 		}
@@ -137,6 +137,12 @@ namespace JNIUtils
 			other.m_jclass = nullptr;
 		}
 
+		explicit Scopedjclass(jclass javaClass)
+		{
+			if (javaClass)
+				m_jclass = static_cast<jclass>(ScopedJNIENV()->NewGlobalRef(javaClass));
+		}
+
 		Scopedjclass& operator=(Scopedjclass&& other) noexcept
 		{
 			if (this != &other)
@@ -168,7 +174,7 @@ namespace JNIUtils
 			return m_jclass != nullptr;
 		}
 
-		jclass& operator*()
+		const jclass& operator*() const
 		{
 			return m_jclass;
 		}

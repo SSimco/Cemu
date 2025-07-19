@@ -182,7 +182,7 @@ std::string get_custom_driver_lib_name(const fs::path& driver_path)
 
 void* load_custom_driver()
 {
-	std::string driver_path = g_config.data().custom_driver_path;
+	std::string driver_path = "test"; //g_config.data().custom_driver_path;
 	if (driver_path.empty())
 		return nullptr;
 	std::string driver_name = get_custom_driver_lib_name(driver_path);

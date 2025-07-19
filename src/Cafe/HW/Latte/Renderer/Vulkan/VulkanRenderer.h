@@ -12,7 +12,6 @@
 #include "util/helpers/Semaphore.h"
 #include "util/containers/flat_hash_map.hpp"
 #include "util/containers/robin_hood.h"
-#include "Cemu/GuiSystem/GuiSystem.h"
 
 struct VkSupportedFormatInfo_t
 {
@@ -126,6 +125,11 @@ public:
 	bool neverSkipAccurateBarrier{false};
 };
 
+namespace WindowSystem
+{
+	struct WindowHandleInfo;
+};
+
 class VulkanRenderer : public Renderer
 {
 	friend class LatteQueryObjectVk;
@@ -214,7 +218,7 @@ public:
 #endif // __ANDROID__
 #endif // BOOST_OS_LINUX
 
-	static VkSurfaceKHR CreateFramebufferSurface(VkInstance instance, GuiSystem::WindowHandleInfo& windowInfo);
+	static VkSurfaceKHR CreateFramebufferSurface(VkInstance instance, struct WindowSystem::WindowHandleInfo& windowInfo);
 
 	void AppendOverlayDebugInfo() override;
 

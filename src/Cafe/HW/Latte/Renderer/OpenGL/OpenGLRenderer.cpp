@@ -1,4 +1,5 @@
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
+#include "WindowSystem.h"
 
 #include "Cafe/HW/Latte/Core/LatteRingBuffer.h"
 #include "Cafe/HW/Latte/Core/LatteDraw.h"
@@ -18,9 +19,38 @@
 #include "Cafe/HW/Latte/ISA/RegDefines.h"
 #include "Cafe/OS/libs/gx2/GX2.h"
 
-#include "Cemu/GuiSystem/GuiSystem.h"
+class DefaultOpenGLCanvasCallbacks : public OpenGLCanvasCallbacks
+{
+} g_defaultOpenGLCanvasCallbacks;
 
-#include "GLCanvas.h"
+OpenGLCanvasCallbacks* g_openGLCanvasCallbacks = &g_defaultOpenGLCanvasCallbacks;
+
+void SetOpenGLCanvasCallbacks(OpenGLCanvasCallbacks* callbacks)
+{
+	cemu_assert_debug(g_openGLCanvasCallbacks == &g_defaultOpenGLCanvasCallbacks);
+	g_openGLCanvasCallbacks = callbacks;
+}
+
+void ClearOpenGLCanvasCallbacks()
+{
+	cemu_assert_debug(g_openGLCanvasCallbacks != &g_defaultOpenGLCanvasCallbacks);
+	g_openGLCanvasCallbacks = &g_defaultOpenGLCanvasCallbacks;
+}
+
+bool GLCanvas_HasPadViewOpen()
+{
+	return g_openGLCanvasCallbacks->HasPadViewOpen();
+}
+
+bool GLCanvas_MakeCurrent(bool padView)
+{
+	return g_openGLCanvasCallbacks->MakeCurrent(padView);
+}
+
+void GLCanvas_SwapBuffers(bool swapTV, bool swapDRC)
+{
+	g_openGLCanvasCallbacks->SwapBuffers(swapTV, swapDRC);
+}
 
 #define STRINGIFY2(X) #X
 #define STRINGIFY(X) STRINGIFY2(X)
@@ -494,8 +524,7 @@ void OpenGLRenderer::ClearColorbuffer(bool padView)
 
 void OpenGLRenderer::HandleScreenshotRequest(LatteTextureView* texView, bool padView)
 {
-	const bool hasScreenshotRequest = std::exchange(m_screenshot_requested, false);
-	if(!hasScreenshotRequest && m_screenshot_state == ScreenshotState::None)
+	if(!m_screenshot_requested && m_screenshot_state == ScreenshotState::None)
 		return;
 
 	if (IsPadWindowActive())
@@ -578,9 +607,9 @@ void OpenGLRenderer::DrawBackbufferQuad(LatteTextureView* texView, RendererOutpu
 	{
 		int windowWidth, windowHeight;
 		if (padView)
-			GuiSystem::getPadWindowPhysSize(windowWidth, windowHeight);
+			WindowSystem::GetPadWindowPhysSize(windowWidth, windowHeight);
 		else
-			GuiSystem::getWindowPhysSize(windowWidth, windowHeight);
+			WindowSystem::GetWindowPhysSize(windowWidth, windowHeight);
 		g_renderer->renderTarget_setViewport(0, 0, windowWidth, windowHeight, 0.0f, 1.0f);
 		g_renderer->ClearColorbuffer(padView);
 	}

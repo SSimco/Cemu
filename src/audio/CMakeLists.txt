@@ -32,6 +32,7 @@ target_include_directories(CemuAudio PUBLIC "../")
 
 target_link_libraries(CemuAudio PRIVATE
 	CemuCafe
+	CemuGui
 	CemuCommon
 	CemuConfig
 	CemuUtil

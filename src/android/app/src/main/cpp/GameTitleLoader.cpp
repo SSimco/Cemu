@@ -39,7 +39,7 @@ void GameTitleLoader::reloadGameTitles()
 	}
 	m_gameInfos.clear();
 	CafeTitleList::ClearScanPaths();
-	for (auto&& gamePath : g_config.data().game_paths)
+	for (auto&& gamePath : GetConfig().game_paths)
 		CafeTitleList::AddScanPath(gamePath);
 	CafeTitleList::Refresh();
 	m_callbackIdTitleList = CafeTitleList::RegisterCallback([](CafeTitleListCallbackEvent* evt, void* ctx) { static_cast<GameTitleLoader*>(ctx)->HandleTitleListCallback(evt); }, this);

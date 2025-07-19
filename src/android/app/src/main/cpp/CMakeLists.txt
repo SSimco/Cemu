@@ -25,5 +25,6 @@ target_link_libraries(CemuAndroid PRIVATE
         CemuComponents
         CemuCafe
         CemuBin
+        CemuGui
         ZArchive::zarchive
 )

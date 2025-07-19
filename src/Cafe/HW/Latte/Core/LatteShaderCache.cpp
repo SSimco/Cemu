@@ -4,9 +4,9 @@
 #include "Cafe/HW/Latte/Core/LatteShader.h"
 #include "Cafe/HW/Latte/LegacyShaderDecompiler/LatteDecompiler.h"
 #include "Cafe/HW/Latte/Core/FetchShader.h"
-#include "Cafe/GameProfile/GameProfile.h"
 #include "Cemu/FileCache/FileCache.h"
-#include "Cemu/GuiSystem/GuiSystem.h"
+#include "Cafe/GameProfile/GameProfile.h"
+#include "WindowSystem.h"
 
 #include "Cafe/HW/Latte/Renderer/Renderer.h"
 #include "Cafe/HW/Latte/Renderer/OpenGL/RendererShaderGL.h"
@@ -23,6 +23,7 @@
 #include "Cafe/HW/Latte/Common/RegisterSerializer.h"
 #include "Cafe/HW/Latte/Common/ShaderSerializer.h"
 #include "util/helpers/Serializer.h"
+
 #include <audio/IAudioAPI.h>
 #include <util/bootSound/BootSoundReader.h>
 #include <thread>
@@ -205,7 +206,7 @@ class BootSoundPlayer
 
 		try
 		{
-			bootSndAudioDev = IAudioAPI::CreateDeviceFromConfig(true, sampleRate, nChannels, samplesPerBlock, bitsPerSample);
+			bootSndAudioDev = IAudioAPI::CreateDeviceFromConfig(IAudioAPI::AudioType::TV, sampleRate, nChannels, samplesPerBlock, bitsPerSample);
 			if(!bootSndAudioDev)
 				return;
 		}
@@ -456,6 +457,7 @@ void LatteShaderCache_Load()
 	if (g_renderer->GetType() == RendererAPI::Vulkan)
         LatteShaderCache_LoadVulkanPipelineCache(cacheTitleId);
 
+
 	g_renderer->BeginFrame(true);
 	if (g_renderer->ImguiBegin(true))
 	{
@@ -503,7 +505,7 @@ void LatteShaderCache_ShowProgress(const std::function <bool(void)>& loadUpdateF
 			continue;
 
 		int w, h;
-		GuiSystem::getWindowPhysSize(w, h);
+		WindowSystem::GetWindowPhysSize(w, h);
 		const Vector2f window_size{ (float)w,(float)h };
 
 		ImGui_GetFont(window_size.y / 32.0f); // = 24 by default

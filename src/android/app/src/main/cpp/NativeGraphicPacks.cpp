@@ -19,7 +19,7 @@ namespace NativeGraphicPacks
 
 	void saveGraphicPackStateToConfig(GraphicPackPtr graphicPack)
 	{
-		auto& data = g_config.data();
+		auto& data = GetConfig();
 		auto filename = _utf8ToPath(graphicPack->GetNormalizedPathString());
 		if (data.graphic_pack_entries.contains(filename))
 			data.graphic_pack_entries.erase(filename);

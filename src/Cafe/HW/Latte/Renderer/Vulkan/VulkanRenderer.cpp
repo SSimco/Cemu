@@ -13,12 +13,12 @@
 
 #include "Cafe/CafeSystem.h"
 
-#include "Cemu/GuiSystem/GuiSystem.h"
 #include "util/helpers/helpers.h"
 #include "util/helpers/StringHelpers.h"
 
 #include "config/ActiveSettings.h"
 #include "config/CemuConfig.h"
+#include "WindowSystem.h"
 
 #include "imgui/imgui_extension.h"
 #include "imgui/imgui_impl_vulkan.h"
@@ -27,6 +27,7 @@
 
 #include "Cafe/HW/Latte/Core/LatteTiming.h" // vsync control
 
+#include <cstdint>
 #include <glslang/Public/ShaderLang.h>
 
 #ifndef VK_API_VERSION_MAJOR
@@ -111,15 +112,15 @@ std::vector<VulkanRenderer::DeviceInfo> VulkanRenderer::GetDevices()
 	requiredExtensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	#if BOOST_OS_WINDOWS
 	requiredExtensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-    #elif BOOST_OS_LINUX
-    #if __ANDROID__
+	#elif BOOST_OS_LINUX
+	#if __ANDROID__
 	requiredExtensions.emplace_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
     #else
-	auto backend = GuiSystem::getWindowInfo().window_main.backend;
-	if(backend == GuiSystem::WindowHandleInfo::Backend::X11)
+	auto backend = WindowSystem::GetWindowInfo().window_main.backend;
+	if(backend == WindowSystem::WindowHandleInfo::Backend::X11)
 		requiredExtensions.emplace_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 	#ifdef HAS_WAYLAND
-	else if (backend == GuiSystem::WindowHandleInfo::Backend::Wayland)
+	else if (backend == WindowSystem::WindowHandleInfo::Backend::Wayland)
 		requiredExtensions.emplace_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
     #endif // HAS_WAYLAND
     #endif // __ANDROID__
@@ -159,7 +160,7 @@ std::vector<VulkanRenderer::DeviceInfo> VulkanRenderer::GetDevices()
 			throw std::runtime_error("Failed to find a GPU with Vulkan support.");
 
 		// create tmp surface to create a logical device
-		auto surface = CreateFramebufferSurface(instance, GuiSystem::getWindowInfo().window_main);
+		auto surface = CreateFramebufferSurface(instance, WindowSystem::GetWindowInfo().window_main);
 		std::vector<VkPhysicalDevice> devices(device_count);
 		vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
 		for (const auto& device : devices)
@@ -313,8 +314,12 @@ void VulkanRenderer::GetDeviceFeatures()
 		cemuLog_log(LogType::Force, "Shader round mode control not available on this device or driver. Some rendering issues might occur.");
 
 	if (!m_featureControl.deviceExtensions.pipeline_creation_cache_control)
+	{
 		cemuLog_log(LogType::Force, "VK_EXT_pipeline_creation_cache_control not supported. Cannot use asynchronous shader and pipeline compilation");
-
+		// if async shader compilation is enabled show warning message
+		if (GetConfig().async_compile)
+			LatteOverlay_pushNotification(_tr("Async shader compile is enabled but not supported by the graphics driver\nCemu will use synchronous compilation which can cause additional stutter"), 10000);
+	}
 	if (!m_featureControl.deviceExtensions.custom_border_color_without_format)
 	{
 		if (m_featureControl.deviceExtensions.custom_border_color)
@@ -406,7 +411,7 @@ VulkanRenderer::VulkanRenderer()
 		throw std::runtime_error("Failed to find a GPU with Vulkan support.");
 
 	// create tmp surface to create a logical device
-	auto surface = CreateFramebufferSurface(m_instance, GuiSystem::getWindowInfo().window_main);
+	auto surface = CreateFramebufferSurface(m_instance, WindowSystem::GetWindowInfo().window_main);
 
 	auto& config = GetConfig();
 	decltype(config.graphic_device_uuid) zero{};
@@ -781,7 +786,7 @@ VulkanRenderer* VulkanRenderer::GetInstance()
 
 void VulkanRenderer::InitializeSurface(const Vector2i& size, bool mainWindow)
 {
-	auto& windowHandleInfo = mainWindow ? GuiSystem::getWindowInfo().canvas_main : GuiSystem::getWindowInfo().canvas_pad;
+	auto& windowHandleInfo = mainWindow ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
 
 	if (mainWindow)
 	{
@@ -822,8 +827,7 @@ bool VulkanRenderer::IsPadWindowActive()
 
 void VulkanRenderer::HandleScreenshotRequest(LatteTextureView* texView, bool padView)
 {
-	const bool hasScreenshotRequest = std::exchange(m_screenshot_requested, false);
-	if (!hasScreenshotRequest && m_screenshot_state == ScreenshotState::None)
+	if (!m_screenshot_requested && m_screenshot_state == ScreenshotState::None)
 		return;
 
 	if (IsSwapchainInfoValid(false))
@@ -1327,15 +1331,16 @@ std::vector<const char*> VulkanRenderer::CheckInstanceExtensionSupport(FeatureCo
 	requiredInstanceExtensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	#if BOOST_OS_WINDOWS
 	requiredInstanceExtensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-    #elif BOOST_OS_LINUX
-    #if __ANDROID__
+<<<<<<< Updated upstream
+	#elif BOOST_OS_LINUX
+	#if __ANDROID__
 	requiredInstanceExtensions.emplace_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
     #else
-	auto backend = GuiSystem::getWindowInfo().window_main.backend;
-	if(backend == GuiSystem::WindowHandleInfo::Backend::X11)
+	auto backend = WindowSystem::GetWindowInfo().window_main.backend;
+	if(backend == WindowSystem::WindowHandleInfo::Backend::X11)
 		requiredInstanceExtensions.emplace_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 	#if HAS_WAYLAND
-	else if (backend == GuiSystem::WindowHandleInfo::Backend::Wayland)
+	else if (backend == WindowSystem::WindowHandleInfo::Backend::Wayland)
 		requiredInstanceExtensions.emplace_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
     #endif // HAS_WAYLAND
     #endif // __ANDROID__
@@ -1498,18 +1503,18 @@ VkSurfaceKHR VulkanRenderer::CreateWaylandSurface(VkInstance instance, wl_displa
 #endif // __ANDROID__
 #endif // BOOST_OS_LINUX
 
-VkSurfaceKHR VulkanRenderer::CreateFramebufferSurface(VkInstance instance, struct GuiSystem::WindowHandleInfo& windowInfo)
+VkSurfaceKHR VulkanRenderer::CreateFramebufferSurface(VkInstance instance, WindowSystem::WindowHandleInfo& windowInfo)
 {
 #if BOOST_OS_WINDOWS
-	return CreateWinSurface(instance, reinterpret_cast<HWND>(windowInfo.hwnd));
+	return CreateWinSurface(instance, static_cast<HWND>(windowInfo.surface));
 #elif BOOST_OS_LINUX
 #if __ANDROID__
 	return CreateAndroidSurface(instance, static_cast<ANativeWindow*>(windowInfo.surface));
 #else
-	if(windowInfo.backend == GuiSystem::WindowHandleInfo::Backend::X11)
+	if(windowInfo.backend == WindowSystem::WindowHandleInfo::Backend::X11)
 		return CreateXlibSurface(instance, static_cast<Display*>(windowInfo.display), reinterpret_cast<Window>(windowInfo.surface));
 	#ifdef HAS_WAYLAND
-	if(windowInfo.backend == GuiSystem::WindowHandleInfo::Backend::Wayland)
+	if(windowInfo.backend == WindowSystem::WindowHandleInfo::Backend::Wayland)
 		return CreateWaylandSurface(instance, static_cast<wl_display*>(windowInfo.display), static_cast<wl_surface*>(windowInfo.surface));
 	#endif
 	return {};
@@ -2880,11 +2885,11 @@ void VulkanRenderer::RecreateSwapchain(bool mainWindow, bool skipCreate)
 	if (mainWindow)
 	{
 		ImGui_ImplVulkan_Shutdown();
-		GuiSystem::getWindowPhysSize(size.x, size.y);
+		WindowSystem::GetWindowPhysSize(size.x, size.y);
 	}
 	else
 	{
-		GuiSystem::getPadWindowPhysSize(size.x, size.y);
+		WindowSystem::GetPadWindowPhysSize(size.x, size.y);
 	}
 
 	chainInfo.swapchainImageIndex = -1;
@@ -2914,9 +2919,9 @@ bool VulkanRenderer::UpdateSwapchainProperties(bool mainWindow)
 
 	int width, height;
 	if (mainWindow)
-		GuiSystem::getWindowPhysSize(width, height);
+		WindowSystem::GetWindowPhysSize(width, height);
 	else
-		GuiSystem::getPadWindowPhysSize(width, height);
+		WindowSystem::GetPadWindowPhysSize(width, height);
 	auto extent = chainInfo.getExtent();
 	if (width != extent.width || height != extent.height)
 		stateChanged = true;

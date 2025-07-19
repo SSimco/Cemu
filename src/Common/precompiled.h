@@ -74,6 +74,7 @@
 #include <type_traits>
 #include <optional>
 #include <span>
+#include <ranges>
 
 #include <boost/predef.h>
 #include <boost/nowide/convert.hpp>
@@ -155,6 +156,14 @@ using sint32 = int32_t;
 using sint16 = int16_t;
 using sint8 = int8_t;
 
+#if _MSC_VER
+#ifndef _SSIZE_T_DEFINED
+#define _SSIZE_T_DEFINED
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+#endif
+
 // types with explicit big endian order
 #include "betype.h"
 
@@ -167,6 +176,39 @@ using uint8le = uint8_t;
 // logging
 #include "Cemu/Logging/CemuDebugLogging.h"
 #include "Cemu/Logging/CemuLogging.h"
+
+// localization
+namespace
+{
+	std::function<std::string(std::string_view)> g_translate;
+}
+
+inline void SetTranslationCallback(std::function<std::string(std::string_view)> translate)
+{
+	g_translate = translate;
+}
+
+#define TR_NOOP(str) str
+
+inline std::string _tr(std::string_view text)
+{
+	if (g_translate)
+		return g_translate(text);
+
+	return std::string{text};
+}
+
+template<typename... TArgs>
+inline std::string _tr(fmt::format_string<TArgs...> text, TArgs... args)
+{
+	if (g_translate)
+	{
+		std::string_view textSV{text.get().data(), text.get().size()};
+		return fmt::format(fmt::runtime(g_translate(textSV)), std::forward<TArgs>(args)...);
+	}
+
+	return fmt::format(text, std::forward<TArgs>(args)...);
+}
 
 // manual endian-swapping
 
@@ -352,9 +394,10 @@ FORCE_INLINE int BSF(uint32 v) // returns index of first bit set, counting from 
 
 // On aarch64 we handle some of the x86 intrinsics by implementing them as wrappers
 #if defined(__aarch64__)
-inline void _mm_pause(void)
+
+inline void _mm_pause()
 {
-    asm volatile("isb");
+    asm volatile("yield");
 }
 
 inline uint64 __rdtsc()
@@ -366,7 +409,8 @@ inline uint64 __rdtsc()
 
 inline void _mm_mfence()
 {
-
+	asm volatile("" ::: "memory");
+	std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 inline unsigned char _addcarry_u64(unsigned char carry, unsigned long long a, unsigned long long b, unsigned long long *result)
@@ -441,8 +485,6 @@ template <typename T1, typename T2>
 constexpr bool HAS_FLAG(T1 flags, T2 test_flag) { return (flags & (T1)test_flag) == (T1)test_flag; }
 template <typename T1, typename T2>
 constexpr bool HAS_BIT(T1 value, T2 index) { return (value & ((T1)1 << index)) != 0; }
-template <typename T>
-constexpr void SAFE_RELEASE(T& p) { if (p) { p->Release(); p = nullptr; } }
 
 template <typename T>
 constexpr uint32_t ppcsizeof() { return (uint32_t) sizeof(T); }
@@ -530,24 +572,16 @@ inline std::string_view _utf8Wrapper(std::u8string_view input)
 // convert fs::path to utf8 encoded string
 inline std::string _pathToUtf8(const fs::path& path)
 {
-#if __ANDROID__
-    return path.generic_string();
-#else
     std::u8string strU8 = path.generic_u8string();
     std::string v((const char*)strU8.data(), strU8.size());
     return v;
-#endif // __ANDROID__
 }
 
 // convert utf8 encoded string to fs::path
 inline fs::path _utf8ToPath(std::string_view input)
 {
-#if __ANDROID__
-    return fs::path(input);
-#else
     std::basic_string_view<char8_t> v((char8_t*)input.data(), input.size());
     return fs::path(v);
-#endif // __ANDROID__
 }
 
 // locale-independent variant of tolower() which also matches Wii U behavior
@@ -590,7 +624,7 @@ std::atomic<T>* _rawPtrToAtomic(T* ptr)
     return reinterpret_cast<std::atomic<T>*>(ptr);
 }
 
-#if defined(__GNUC__) && defined(ARCH_X86_64)
+#if defined(__GNUC__)
 #define ATTR_MS_ABI __attribute__((ms_abi))
 #else
 #define ATTR_MS_ABI
@@ -680,4 +714,36 @@ namespace stdx
 		scope_exit& operator=(scope_exit) = delete;
 		void release() { m_released = true;}
 	};
+
+	// Xcode 16 doesn't have std::atomic_ref support and we provide a minimalist reimplementation as fallback
+#ifdef __cpp_lib_atomic_ref
+	#include <atomic>
+	template<typename T>
+	using atomic_ref = std::atomic_ref<T>;
+#else
+	template<typename T>
+	class atomic_ref
+	{
+		static_assert(std::is_trivially_copyable<T>::value, "atomic_ref requires trivially copyable types");
+	public:
+		using value_type = T;
+
+		explicit atomic_ref(T& obj) noexcept : ptr_(std::addressof(obj)) {}
+
+		T load(std::memory_order order = std::memory_order_seq_cst) const noexcept
+		{
+			auto aptr = reinterpret_cast<std::atomic<T>*>(ptr_);
+			return aptr->load(order);
+		}
+
+		void store(T desired, std::memory_order order = std::memory_order_seq_cst) const noexcept
+		{
+			auto aptr = reinterpret_cast<std::atomic<T>*>(ptr_);
+			aptr->store(desired, order);
+		}
+
+	private:
+		T* ptr_;
+	};
+#endif
 }

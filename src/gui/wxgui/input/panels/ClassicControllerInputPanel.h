@@ -1,0 +1,23 @@
+#pragma once
+
+#include <wx/gbsizer.h>
+#include "input/emulated/ClassicController.h"
+<<<<<<< HEAD:src/gui/input/panels/ClassicControllerInputPanel.h
+#include "input/panels/InputPanel.h"
+=======
+#include "wxgui/input/panels/InputPanel.h"
+>>>>>>> public/main:src/gui/wxgui/input/panels/ClassicControllerInputPanel.h
+
+class wxInputDraw;
+
+class ClassicControllerInputPanel : public InputPanel
+{
+public:
+	ClassicControllerInputPanel(wxWindow* parent);
+
+private:
+	wxInputDraw* m_left_draw, * m_right_draw;
+
+	void add_button_row(wxGridBagSizer *sizer, sint32 row, sint32 column, const ClassicController::ButtonId &button_id);
+};
+

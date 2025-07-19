@@ -5,8 +5,6 @@ add_library(CemuComponents
   ExpressionParser/ExpressionParser.h
   FileCache/FileCache.cpp
   FileCache/FileCache.h
-  GuiSystem/GuiSystem.cpp
-  GuiSystem/GuiSystem.h
   Logging/CemuDebugLogging.h
   Logging/CemuLogging.cpp
   Logging/CemuLogging.h
@@ -42,6 +40,7 @@ target_link_libraries(CemuComponents PRIVATE
 	CemuCafe
 	CemuCommon
 	CemuConfig
+	CemuGui
 	CemuUtil
 	Boost::headers
 	CURL::libcurl

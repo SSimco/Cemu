@@ -1,5 +1,5 @@
 #include "input/api/DirectInput/DirectInputController.h"
-#include "gui/guiWrapper.h"
+#include "WindowSystem.h"
 
 DirectInputController::DirectInputController(const GUID& guid)
 	: base_type(StringFromGUID(guid), fmt::format("[{}]", StringFromGUID(guid))),
@@ -15,9 +15,6 @@ DirectInputController::DirectInputController(const GUID& guid, std::string_view 
 
 DirectInputController::~DirectInputController()
 {
-	if (m_effect)
-		m_effect->Release();
-	
 	if (m_device)
 	{
 		m_device->Unacquire();
@@ -39,8 +36,8 @@ DirectInputController::~DirectInputController()
 		if (kGameCubeController == m_product_guid)
 			should_release_device = false;
 
-		if (should_release_device)
-			m_device->Release();
+		if (!should_release_device)
+			m_device.Detach();
 	}
 }
 
@@ -104,18 +101,16 @@ bool DirectInputController::connect()
 	// set data format
 	if (FAILED(m_device->SetDataFormat(m_provider->get_data_format())))
 	{
-		SAFE_RELEASE(m_device);
 		return false;
 	}
 
-	HWND hwndMainWindow = gui_getWindowInfo().window_main.hwnd;
+	HWND hwndMainWindow = static_cast<HWND>(WindowSystem::GetWindowInfo().window_main.surface);
 
 	// set access
 	if (FAILED(m_device->SetCooperativeLevel(hwndMainWindow, DISCL_BACKGROUND | DISCL_EXCLUSIVE)))
 	{
 		if (FAILED(m_device->SetCooperativeLevel(hwndMainWindow, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)))
 		{
-			SAFE_RELEASE(m_device);
 			return false;
 		}
 		// rumble can only be used with exclusive access
