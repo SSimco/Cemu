@@ -179,6 +179,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* e
 		cemu_assert_debug(j_testSurface != nullptr);
 		ANativewindow_Ptr testSurface(ANativeWindow_fromSurface(env, j_testSurface), &ANativeWindow_release);
 		WindowSystem::GetWindowInfo().window_main.surface = testSurface.get();
+		WindowSystem::GetWindowInfo().window_main.backend = WindowSystem::WindowHandleInfo::Backend::Android;
 		g_renderer = std::make_unique<VulkanRenderer>();
 		WindowSystem::GetWindowInfo().window_main.surface = nullptr;
 	});
@@ -219,6 +220,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 	JNIUtils::handleNativeException(env, [&]() {
 		cemu_assert_debug(surface != nullptr);
 		auto& windowHandleInfo = is_main_canvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
+		windowHandleInfo.backend = WindowSystem::WindowHandleInfo::Backend::Android;
 		if (windowHandleInfo.surface)
 		{
 			ANativeWindow_release(static_cast<ANativeWindow*>(windowHandleInfo.surface));

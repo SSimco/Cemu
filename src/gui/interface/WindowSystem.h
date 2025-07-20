@@ -13,6 +13,7 @@ namespace WindowSystem
 			Wayland,
 			Cocoa,
 			Windows,
+			Android,
 		} backend;
 		void* display = nullptr;
 		void* surface = nullptr;

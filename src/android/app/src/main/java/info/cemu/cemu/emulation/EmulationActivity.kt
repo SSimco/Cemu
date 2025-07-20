@@ -17,7 +17,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.Keep
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -27,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.R
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.databinding.ActivityEmulationBinding
 import info.cemu.cemu.databinding.LayoutSideMenuCheckboxItemBinding
 import info.cemu.cemu.databinding.LayoutSideMenuEmulationBinding
@@ -65,7 +65,7 @@ class EmulationActivity : AppCompatActivity() {
                 NativeEmulation.setSurface(surfaceHolder.surface, isMainCanvas)
                 surfaceSet = true
             } catch (exception: NativeException) {
-                onEmulationError(getString(R.string.failed_create_surface_error, exception.message))
+                onEmulationError(tr(">Failed creating surface: {0}", exception.message!!))
             }
         }
 
@@ -171,10 +171,12 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun LayoutSideMenuTextItemBinding.configure(
+        label: String,
         isEnabled: Boolean = true,
         onClick: () -> Unit,
     ) {
         setEnabled(isEnabled)
+        this.label = label
         textItem.setOnClickListener {
             onClick()
             binding.drawerLayout.close()
@@ -182,9 +184,11 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun LayoutSideMenuCheckboxItemBinding.configure(
+        label: String,
         initialCheckedStatus: Boolean = false,
         onCheckChanged: (Boolean) -> Unit,
     ) {
+        this.label = label
         checkbox.isChecked = initialCheckedStatus
         checkboxItem.setOnClickListener {
             checkbox.isChecked = !checkbox.isChecked
@@ -195,25 +199,41 @@ class EmulationActivity : AppCompatActivity() {
 
     private fun LayoutSideMenuEmulationBinding.configureSideMenu() {
         val isInputOverlayEnabled = overlaySettings.isOverlayEnabled
-
-        enableMotionCheckbox.configure(onCheckChanged = ::setMotionEnabled)
-        replaceTvWithPadCheckbox.configure(onCheckChanged = NativeEmulation::setReplaceTVWithPadView)
-        showPadCheckbox.configure(onCheckChanged = ::setPadViewVisibility)
-        showInputOverlayCheckbox.configure(initialCheckedStatus = isInputOverlayEnabled) { showInputOverlay ->
-            editInputsMenuItem.setEnabled(showInputOverlay)
-            resetInputOverlayMenuItem.setEnabled(showInputOverlay)
-            inputOverlaySurfaceView.setVisible(showInputOverlay)
-        }
-        editInputsMenuItem.configure(isEnabled = isInputOverlayEnabled) {
-            binding.editInputsLayout.visibility = View.VISIBLE
-            binding.finishEditInputsButton.visibility = View.VISIBLE
-            binding.moveInputsButton.performClick()
-        }
+        enableMotionCheckbox.configure(
+            label = tr("Enable motion"),
+            onCheckChanged = ::setMotionEnabled
+        )
+        replaceTvWithPadCheckbox.configure(
+            label = tr("Replace TV with PAD"),
+            onCheckChanged = NativeEmulation::setReplaceTVWithPadView
+        )
+        showPadCheckbox.configure(
+            label = tr(text = "Show PAD"),
+            onCheckChanged = ::setPadViewVisibility
+        )
+        showInputOverlayCheckbox.configure(
+            tr(text = "Show input overlay"),
+            initialCheckedStatus = isInputOverlayEnabled,
+            onCheckChanged = { showInputOverlay ->
+                editInputsMenuItem.setEnabled(showInputOverlay)
+                resetInputOverlayMenuItem.setEnabled(showInputOverlay)
+                inputOverlaySurfaceView.setVisible(showInputOverlay)
+            }
+        )
+        editInputsMenuItem.configure(
+            label = tr("Edit inputs"),
+            isEnabled = isInputOverlayEnabled,
+            onClick = {
+                binding.editInputsLayout.visibility = View.VISIBLE
+                binding.finishEditInputsButton.visibility = View.VISIBLE
+                binding.moveInputsButton.performClick()
+            })
         resetInputOverlayMenuItem.configure(
+            tr(text = "Reset input overlay"),
             isEnabled = isInputOverlayEnabled,
             onClick = inputOverlaySurfaceView::resetInputs
         )
-        exitMenuItem.configure(onClick = onBackPressedDispatcher::onBackPressed)
+        exitMenuItem.configure(tr("Exit"), onClick = onBackPressedDispatcher::onBackPressed)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -233,7 +253,7 @@ class EmulationActivity : AppCompatActivity() {
             }
             binding.resizeInputsButton.alpha = 0.5f
             binding.moveInputsButton.alpha = 1.0f
-            toastMessage(R.string.input_mode_edit_position)
+            toastMessage(tr("Edit input positions"))
             inputOverlaySurfaceView.setInputMode(InputOverlaySurfaceView.InputMode.EDIT_POSITION)
         }
         binding.resizeInputsButton.setOnClickListener { _ ->
@@ -242,14 +262,15 @@ class EmulationActivity : AppCompatActivity() {
             }
             binding.moveInputsButton.alpha = 0.5f
             binding.resizeInputsButton.alpha = 1.0f
-            toastMessage(R.string.input_mode_edit_size)
+            toastMessage(tr("Edit input size"))
             inputOverlaySurfaceView.setInputMode(InputOverlaySurfaceView.InputMode.EDIT_SIZE)
         }
+        binding.finishEditInputsButton.text = tr("Done")
         binding.finishEditInputsButton.setOnClickListener { _ ->
             inputOverlaySurfaceView.setInputMode(InputOverlaySurfaceView.InputMode.DEFAULT)
             binding.finishEditInputsButton.visibility = View.GONE
             binding.editInputsLayout.visibility = View.GONE
-            toastMessage(R.string.input_mode_default)
+            toastMessage(tr("Exited input edit mode"))
         }
 
         if (emulationScreenSettings.isDrawerButtonVisible) {
@@ -267,12 +288,7 @@ class EmulationActivity : AppCompatActivity() {
             testSurface.release()
             testSurfaceTexture.release()
         } catch (exception: NativeException) {
-            onEmulationError(
-                getString(
-                    R.string.failed_initialize_renderer_error,
-                    exception.message
-                )
-            )
+            onEmulationError(tr("Failed to initialize renderer: {0}", exception.message!!))
             return
         }
 
@@ -303,9 +319,9 @@ class EmulationActivity : AppCompatActivity() {
         mainCanvas.setOnTouchListener(CanvasOnTouchListener(isTV = true))
     }
 
-    private fun toastMessage(@StringRes toastTextResId: Int) {
+    private fun toastMessage(text: String) {
         toast?.cancel()
-        toast = Toast.makeText(this, toastTextResId, Toast.LENGTH_SHORT)
+        toast = Toast.makeText(this, text, Toast.LENGTH_SHORT)
             .also { it.show() }
     }
 
@@ -315,10 +331,10 @@ class EmulationActivity : AppCompatActivity() {
             return
         }
         val errorMessage = when (result) {
-            NativeEmulation.START_GAME_ERROR_GAME_BASE_FILES_NOT_FOUND -> getString(R.string.game_not_found)
-            NativeEmulation.START_GAME_ERROR_NO_DISC_KEY -> getString(R.string.no_disk_key)
-            NativeEmulation.START_GAME_ERROR_NO_TITLE_TIK -> getString(R.string.no_title_tik)
-            else -> getString(R.string.game_files_unknown_error, launchPath)
+            NativeEmulation.START_GAME_ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
+            NativeEmulation.START_GAME_ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
+            NativeEmulation.START_GAME_ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
+            else -> tr("Unable to launch game\nPath: {0}", launchPath)
         }
         onEmulationError(errorMessage)
     }
@@ -358,18 +374,18 @@ class EmulationActivity : AppCompatActivity() {
 
     private fun showExitConfirmationDialog() {
         val builder = MaterialAlertDialogBuilder(this)
-        builder.setTitle(R.string.exit_confirmation_title)
-            .setMessage(R.string.exit_confirm_message)
-            .setPositiveButton(R.string.yes) { _, _ -> quit() }
-            .setNegativeButton(R.string.no) { _, _ -> }
+        builder.setTitle(tr("Exit confirmation"))
+            .setMessage(tr("Are you sure you want to exit?"))
+            .setPositiveButton(tr("Yes")) { _, _ -> quit() }
+            .setNegativeButton(tr("No")) { _, _ -> }
             .show()
     }
 
     private fun onEmulationError(emulationError: String?) {
         val builder = MaterialAlertDialogBuilder(this)
-        builder.setTitle(R.string.error)
+        builder.setTitle(tr("Error"))
             .setMessage(emulationError)
-            .setNeutralButton(R.string.quit) { _, _ -> }
+            .setNeutralButton(tr("Quit")) { _, _ -> }
             .setOnDismissListener { _ -> quit() }
             .show()
     }
@@ -415,7 +431,7 @@ class EmulationActivity : AppCompatActivity() {
                 val dialog = MaterialAlertDialogBuilder(emulationActivity)
                     .setView(inputEditTextLayout)
                     .setCancelable(false)
-                    .setPositiveButton(R.string.done) { _, _ -> }.show()
+                    .setPositiveButton(tr("Done")) { _, _ -> }.show()
                 val doneButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)!!
                 doneButton.isEnabled = false
                 doneButton.setOnClickListener { _ -> inputEditText.onFinishedEdit() }

@@ -23,13 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContent
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.translation.tr
 
 // TODO
 @Composable
 fun AboutCemuScreen(navigateBack: () -> Unit) {
     ScreenContent(
-        appBarText = stringResource(R.string.about_cemu),
+        appBarText = tr("About Cemu"),
         navigateBack = navigateBack,
         contentModifier = Modifier
             .fillMaxWidth()
@@ -38,16 +39,16 @@ fun AboutCemuScreen(navigateBack: () -> Unit) {
     ) {
         AboutSection {
             Text(
-                text = stringResource(R.string.cemu),
+                text = stringResource(R.string.app_name),
                 fontSize = 32.sp,
             )
             Text(
-                text = stringResource(R.string.cemu_version, BuildConfig.VERSION_NAME),
+                text = tr("Version: {0}", BuildConfig.VERSION_NAME),
                 fontSize = 18.sp,
             )
             Text(
-                text = stringResource(
-                    R.string.original_authors,
+                text = tr(
+                    "Original authors: {0}",
                     stringResource(R.string.cemu_original_authors)
                 ),
                 fontSize = 18.sp,
@@ -56,19 +57,19 @@ fun AboutCemuScreen(navigateBack: () -> Unit) {
         }
         AboutSection {
             Text(
-                text = stringResource(R.string.cemu_description),
+                text = tr("Cemu is a Wii U emulator.\n\nWii and Wii U are trademarks of Nintendo.\nCemu is not affiliated with Nintendo."),
                 fontSize = 18.sp
             )
         }
         AboutSection {
             Text(
-                text = stringResource(R.string.used_libraries),
+                text = tr("Used libraries:"),
                 fontSize = 18.sp,
             )
             UsedLibraries.forEach {
                 Library(it)
             }
-            Text(stringResource(R.string.ih264_library_description))
+            Text(tr("Modified ih264 from Android project"))
         }
     }
 }
@@ -77,7 +78,7 @@ fun AboutCemuScreen(navigateBack: () -> Unit) {
 fun CemuWebsite() {
     Text(
         buildAnnotatedString {
-            append(stringResource(R.string.website))
+            append(tr("Website:"))
             append(" ")
             withLink(
                 LinkAnnotation.Url(

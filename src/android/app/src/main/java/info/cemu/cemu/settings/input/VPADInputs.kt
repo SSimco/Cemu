@@ -1,10 +1,8 @@
 package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.Toggle
-import info.cemu.cemu.guicore.nativeenummapper.vpadButtonToStringId
+import info.cemu.cemu.core.components.Toggle
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
 @Composable
@@ -21,13 +19,13 @@ fun VPADInputs(
         InputItemsGroup(
             groupName = groupName,
             inputIds = inputIds,
-            inputIdToString = { stringResource(vpadButtonToStringId(it)) },
+            inputIdToString = { vpadButtonToString(it) },
             onInputClick = onInputClick,
             controlsMapping = controlsMapping,
         )
     }
     InputItemsGroup(
-        groupName = stringResource(R.string.buttons),
+        groupName = tr("Buttons"),
         inputIds = listOf(
             NativeInput.VPAD_BUTTON_A,
             NativeInput.VPAD_BUTTON_B,
@@ -42,7 +40,7 @@ fun VPADInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.d_pad),
+        groupName = tr("D-pad"),
         inputIds = listOf(
             NativeInput.VPAD_BUTTON_UP,
             NativeInput.VPAD_BUTTON_DOWN,
@@ -51,7 +49,7 @@ fun VPADInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.left_axis),
+        groupName = tr("Left Axis"),
         inputIds = listOf(
             NativeInput.VPAD_BUTTON_STICKL,
             NativeInput.VPAD_BUTTON_STICKL_UP,
@@ -61,7 +59,7 @@ fun VPADInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.right_axis),
+        groupName = tr("Right Axis"),
         inputIds = listOf(
             NativeInput.VPAD_BUTTON_STICKR,
             NativeInput.VPAD_BUTTON_STICKR_UP,
@@ -71,7 +69,7 @@ fun VPADInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.extra),
+        groupName = tr("Extra"),
         inputIds = listOf(
             NativeInput.VPAD_BUTTON_MIC,
             NativeInput.VPAD_BUTTON_HOME,
@@ -79,9 +77,41 @@ fun VPADInputs(
         )
     )
     Toggle(
-        label = stringResource(R.string.toggle_screen),
-        description = stringResource(R.string.toggle_screen_description),
+        label = tr("Toggle screen"),
+        description = tr("Makes the \"show screen\" button toggle between the TV and gamepad screens"),
         initialCheckedState = { NativeInput.getVPADScreenToggle(controllerIndex) },
         onCheckedChanged = { NativeInput.setVPADScreenToggle(controllerIndex, it) }
     )
+}
+
+
+fun vpadButtonToString(buttonId: Int) = when (buttonId) {
+    NativeInput.VPAD_BUTTON_A -> "A"
+    NativeInput.VPAD_BUTTON_B -> "B"
+    NativeInput.VPAD_BUTTON_X -> "X"
+    NativeInput.VPAD_BUTTON_Y -> "Y"
+    NativeInput.VPAD_BUTTON_L -> "L"
+    NativeInput.VPAD_BUTTON_R -> "R"
+    NativeInput.VPAD_BUTTON_ZL -> "ZL"
+    NativeInput.VPAD_BUTTON_ZR -> "ZR"
+    NativeInput.VPAD_BUTTON_PLUS -> "+"
+    NativeInput.VPAD_BUTTON_MINUS -> "-"
+    NativeInput.VPAD_BUTTON_UP -> tr("up")
+    NativeInput.VPAD_BUTTON_DOWN -> tr("down")
+    NativeInput.VPAD_BUTTON_LEFT -> tr("left")
+    NativeInput.VPAD_BUTTON_RIGHT -> tr("right")
+    NativeInput.VPAD_BUTTON_STICKL -> tr("click")
+    NativeInput.VPAD_BUTTON_STICKR -> tr("click")
+    NativeInput.VPAD_BUTTON_STICKL_UP -> tr("up")
+    NativeInput.VPAD_BUTTON_STICKL_DOWN -> tr("down")
+    NativeInput.VPAD_BUTTON_STICKL_LEFT -> tr("left")
+    NativeInput.VPAD_BUTTON_STICKL_RIGHT -> tr("right")
+    NativeInput.VPAD_BUTTON_STICKR_UP -> tr("up")
+    NativeInput.VPAD_BUTTON_STICKR_DOWN -> tr("down")
+    NativeInput.VPAD_BUTTON_STICKR_LEFT -> tr("left")
+    NativeInput.VPAD_BUTTON_STICKR_RIGHT -> tr("right")
+    NativeInput.VPAD_BUTTON_MIC -> tr("blow mic")
+    NativeInput.VPAD_BUTTON_SCREEN -> tr("show screen")
+    NativeInput.VPAD_BUTTON_HOME -> tr("home")
+    else -> throw IllegalArgumentException("Invalid buttonId $buttonId for VPAD controller type")
 }

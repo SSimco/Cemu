@@ -8,13 +8,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.nativeenummapper.regionToStringId
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -26,7 +25,7 @@ fun GameDetailsScreen(game: Game?, navigateBack: () -> Unit) {
         return
 
     ScreenContent(
-        appBarText = stringResource(R.string.about_title),
+        appBarText = tr("About title"),
         contentModifier = Modifier.padding(16.dp),
         contentVerticalArrangement = Arrangement.spacedBy(16.dp),
         navigateBack = navigateBack,
@@ -41,24 +40,24 @@ fun GameDetails(game: Game) {
         game = game,
         modifier = Modifier.size(128.dp),
     )
-    TitleDetailsEntry(entryName = stringResource(R.string.title_name), entryData = game.name)
-    TitleDetailsEntry(entryName = stringResource(R.string.title_id), entryData = game.titleId)
-    TitleDetailsEntry(entryName = stringResource(R.string.version), entryData = game.version)
-    TitleDetailsEntry(entryName = stringResource(R.string.dlc), entryData = game.dlc)
+    TitleDetailsEntry(entryName = tr("Title name"), entryData = game.name)
+    TitleDetailsEntry(entryName = tr("Title ID"), entryData = game.titleId)
+    TitleDetailsEntry(entryName = tr("Version"), entryData = game.version)
+    TitleDetailsEntry(entryName = tr("DLC"), entryData = game.dlc)
     TitleDetailsEntry(
-        entryName = stringResource(R.string.title_time_played),
+        entryName = tr("You've played"),
         entryData = getTimePlayed(game)
     )
     TitleDetailsEntry(
-        entryName = stringResource(R.string.title_last_played),
+        entryName = tr("Last played"),
         entryData = getLastPlayedDate(game)
     )
     TitleDetailsEntry(
-        entryName = stringResource(R.string.title_region),
-        entryData = stringResource(regionToStringId(game.region))
+        entryName = tr("Region"),
+        entryData = regionToString(game.region)
     )
     TitleDetailsEntry(
-        entryName = stringResource(R.string.title_path),
+        entryName = tr("Path"),
         entryData = game.path
     )
 }
@@ -66,15 +65,15 @@ fun GameDetails(game: Game) {
 
 @ReadOnlyComposable
 @Composable
-fun getTimePlayed(game: Game): String {
+private fun getTimePlayed(game: Game): String {
     if (game.minutesPlayed == 0) {
-        return stringResource(R.string.never_played)
+        return tr("Never played")
     }
     if (game.minutesPlayed < 60) {
-        return stringResource(R.string.minutes_played, game.minutesPlayed)
+        return tr("Minutes: {0}", game.minutesPlayed)
     }
-    return stringResource(
-        R.string.hours_minutes_played,
+    return tr(
+        "Hours: {0} Minutes: {1}",
         game.minutesPlayed / 60,
         game.minutesPlayed % 60
     )
@@ -88,7 +87,7 @@ private val DateFormatter = DateTimeFormatter.ofLocalizedDate(
 @Composable
 private fun getLastPlayedDate(game: Game): String {
     if (game.lastPlayedYear.toInt() == 0) {
-        return stringResource(R.string.never_played)
+        return tr("Never played")
     }
     val lastPlayedDate = LocalDate.of(
         game.lastPlayedYear.toInt(),
@@ -99,7 +98,7 @@ private fun getLastPlayedDate(game: Game): String {
 }
 
 @Composable
-fun <T> TitleDetailsEntry(entryName: String, entryData: T?) {
+private fun <T> TitleDetailsEntry(entryName: String, entryData: T?) {
     Column {
         Text(
             text = entryName,
@@ -112,3 +111,16 @@ fun <T> TitleDetailsEntry(entryName: String, entryData: T?) {
         )
     }
 }
+
+fun regionToString(region: Int): String = when (region) {
+    NativeGameTitles.CONSOLE_REGION_JPN -> tr("Japan")
+    NativeGameTitles.CONSOLE_REGION_USA -> tr("USA")
+    NativeGameTitles.CONSOLE_REGION_EUR -> tr("Europe")
+    NativeGameTitles.CONSOLE_REGION_AUS_DEPR -> tr("Australia")
+    NativeGameTitles.CONSOLE_REGION_CHN -> tr("China")
+    NativeGameTitles.CONSOLE_REGION_KOR -> tr("Korea")
+    NativeGameTitles.CONSOLE_REGION_TWN -> tr("Taiwan")
+    NativeGameTitles.CONSOLE_REGION_AUTO -> tr("Auto")
+    else -> tr("Many")
+}
+

@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlinx.gettext)
 }
 
 fun String.runCommand(workingDir: File = File(".")): String? {
@@ -19,7 +20,7 @@ fun String.runCommand(workingDir: File = File(".")): String? {
             .redirectOutput(ProcessBuilder.Redirect.PIPE)
             .redirectError(ProcessBuilder.Redirect.PIPE)
             .start()
-        proc.waitFor(1, TimeUnit.MINUTES)
+        assert(proc.waitFor(1, TimeUnit.MINUTES))
         return proc.inputStream.bufferedReader().readText()
     } catch (e: IOException) {
         e.printStackTrace()
@@ -204,35 +205,32 @@ abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
     }
 }
 
-val computeCemuDataFilesHashTask =tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
-    cemuDataFolder = cemuDataFilesFolder
-}
+val computeCemuDataFilesHashTask =
+    tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
+        cemuDataFolder = cemuDataFilesFolder
+    }
 tasks.preBuild.dependsOn(computeCemuDataFilesHashTask)
 
+gettext {
+    potFile.set(File(projectDir, "src/messages.pot"))
+    keywords.set(listOf("tr", "trNoop"))
+}
+
 dependencies {
-    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.kotlinx.gettext)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.okhttp)
     implementation(libs.okhttp.coroutines)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.navigation.ui)
-    implementation(libs.androidx.legacy.support.v4)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.core.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

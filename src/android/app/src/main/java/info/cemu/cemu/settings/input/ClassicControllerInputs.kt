@@ -1,9 +1,7 @@
 package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.nativeenummapper.classicControllerButtonToStringId
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
 @Composable
@@ -19,13 +17,13 @@ fun ClassicControllerInputs(
         InputItemsGroup(
             groupName = groupName,
             inputIds = inputIds,
-            inputIdToString = { stringResource(classicControllerButtonToStringId(it)) },
+            inputIdToString = ::classicControllerButtonToString,
             onInputClick = onInputClick,
             controlsMapping = controlsMapping,
         )
     }
     InputItemsGroup(
-        groupName = stringResource(R.string.buttons),
+        groupName = tr("Buttons"),
         inputIds = listOf(
             NativeInput.CLASSIC_BUTTON_A,
             NativeInput.CLASSIC_BUTTON_B,
@@ -41,7 +39,7 @@ fun ClassicControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.d_pad),
+        groupName = tr("D-pad"),
         inputIds = listOf(
             NativeInput.CLASSIC_BUTTON_UP,
             NativeInput.CLASSIC_BUTTON_DOWN,
@@ -50,7 +48,7 @@ fun ClassicControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.left_axis),
+        groupName = tr("Left Axis"),
         inputIds = listOf(
             NativeInput.CLASSIC_BUTTON_STICKL_UP,
             NativeInput.CLASSIC_BUTTON_STICKL_DOWN,
@@ -59,7 +57,7 @@ fun ClassicControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.right_axis),
+        groupName = tr("Right Axis"),
         inputIds = listOf(
             NativeInput.CLASSIC_BUTTON_STICKR_UP,
             NativeInput.CLASSIC_BUTTON_STICKR_DOWN,
@@ -67,4 +65,31 @@ fun ClassicControllerInputs(
             NativeInput.CLASSIC_BUTTON_STICKR_RIGHT
         )
     )
+}
+
+private fun classicControllerButtonToString(buttonId: Int) = when (buttonId) {
+    NativeInput.CLASSIC_BUTTON_A -> "A"
+    NativeInput.CLASSIC_BUTTON_B -> "B"
+    NativeInput.CLASSIC_BUTTON_X -> "X"
+    NativeInput.CLASSIC_BUTTON_Y -> "Y"
+    NativeInput.CLASSIC_BUTTON_L -> "L"
+    NativeInput.CLASSIC_BUTTON_R -> "R"
+    NativeInput.CLASSIC_BUTTON_ZL -> "ZL"
+    NativeInput.CLASSIC_BUTTON_ZR -> "ZR"
+    NativeInput.CLASSIC_BUTTON_PLUS -> "+"
+    NativeInput.CLASSIC_BUTTON_MINUS -> "-"
+    NativeInput.CLASSIC_BUTTON_HOME -> tr("home")
+    NativeInput.CLASSIC_BUTTON_UP -> tr("up")
+    NativeInput.CLASSIC_BUTTON_DOWN -> tr("down")
+    NativeInput.CLASSIC_BUTTON_LEFT -> tr("left")
+    NativeInput.CLASSIC_BUTTON_RIGHT -> tr("right")
+    NativeInput.CLASSIC_BUTTON_STICKL_UP -> tr("up")
+    NativeInput.CLASSIC_BUTTON_STICKL_DOWN -> tr("down")
+    NativeInput.CLASSIC_BUTTON_STICKL_LEFT -> tr("left")
+    NativeInput.CLASSIC_BUTTON_STICKL_RIGHT -> tr("right")
+    NativeInput.CLASSIC_BUTTON_STICKR_UP -> tr("up")
+    NativeInput.CLASSIC_BUTTON_STICKR_DOWN -> tr("down")
+    NativeInput.CLASSIC_BUTTON_STICKR_LEFT -> tr("left")
+    NativeInput.CLASSIC_BUTTON_STICKR_RIGHT -> tr("right")
+    else -> throw IllegalArgumentException("Invalid buttonId $buttonId for Classic controller type")
 }

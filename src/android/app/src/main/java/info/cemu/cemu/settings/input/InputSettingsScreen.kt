@@ -2,12 +2,11 @@ package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.Button
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.nativeenummapper.controllerTypeToStringId
+import info.cemu.cemu.core.components.Button
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.nativeenummapper.controllerTypeToString
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
 data class InputSettingsScreenActions(
@@ -23,20 +22,20 @@ fun InputSettingsScreen(navigateBack: () -> Unit, actions: InputSettingsScreenAc
         }
     }
     ScreenContent(
-        appBarText = stringResource(R.string.input_settings),
+        appBarText = tr("Input settings"),
         navigateBack = navigateBack,
     ) {
         Button(
-            label = stringResource(R.string.input_overlay_settings),
+            label = tr("Input overlay settings"),
             onClick = dropUnlessResumed { actions.goToInputOverlaySettings() },
         )
         controllers.forEach { controllerTypePair ->
             val (controllerIndex, controllerEmulatedType) = controllerTypePair
             Button(
-                label = stringResource(R.string.controller_numbered, controllerIndex + 1),
-                description = stringResource(
-                    R.string.emulated_controller_with_type,
-                    stringResource(controllerTypeToStringId(controllerEmulatedType))
+                label = tr("Controller {0}", controllerIndex + 1),
+                description = tr(
+                    "Emulated controller: {0}",
+                    controllerTypeToString(controllerEmulatedType)
                 ),
                 onClick = dropUnlessResumed { actions.goToControllerSettings(controllerIndex) },
             )

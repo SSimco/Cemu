@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package info.cemu.cemu.guicore.components
+package info.cemu.cemu.core.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,7 +137,7 @@ private fun ScreenContentGeneric(
                     IconButton(onClick = dropUnlessResumed { navigateBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.nav_back)
+                            contentDescription = null
                         )
                     }
                 },

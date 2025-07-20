@@ -34,13 +34,13 @@ fun GameIcon(
         Image(
             modifier = modifier.iconBorder(borderColor),
             bitmap = game.icon,
-            contentDescription = stringResource(R.string.game_icon),
+            contentDescription = null
         )
     } else {
         Icon(
             modifier = modifier.iconBorder(borderColor),
             painter = painterResource(R.drawable.ic_question_mark),
-            contentDescription = stringResource(R.string.game_icon_empty),
+            contentDescription = null
         )
     }
 }

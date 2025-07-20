@@ -179,8 +179,9 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_onTouchMove([[maybe_unused]] JNI
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onMotion([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong timestamp, jfloat gyroX, jfloat gyroY, jfloat gyroZ, jfloat accelX, jfloat accelY, jfloat accelZ)
 {
+	static constexpr float METERS_PER_SECOND_SQ_TO_G = 1.f / 9.81f;
 	float deltaTime = (timestamp - NativeInput::s_lastMotionTimestamp) * 1e-9f;
-	NativeInput::s_wiiUMotionHandler.processMotionSample(deltaTime, gyroX, gyroY, gyroZ, accelX * 0.098066f, -accelY * 0.098066f, -accelZ * 0.098066f);
+	NativeInput::s_wiiUMotionHandler.processMotionSample(deltaTime, gyroX, gyroY, gyroZ, accelX * METERS_PER_SECOND_SQ_TO_G, accelY * METERS_PER_SECOND_SQ_TO_G, accelZ * METERS_PER_SECOND_SQ_TO_G);
 	NativeInput::s_lastMotionTimestamp = timestamp;
 	auto& deviceMotion = InputManager::instance().m_device_motion;
 	std::scoped_lock lock{deviceMotion.m_mutex};

@@ -12,6 +12,7 @@ add_library(CemuAndroid SHARED
         NativeGraphicPacks.cpp
         NativeInput.cpp
         NativeLib.cpp
+        NativeLocalization.cpp
         NativeLogging.cpp
         NativeSettings.cpp
         NativeSwkbd.cpp

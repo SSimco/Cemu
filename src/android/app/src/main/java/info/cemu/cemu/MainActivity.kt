@@ -25,19 +25,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
+import info.cemu.cemu.core.components.ActivityContent
+import info.cemu.cemu.core.translation.TranslatableContent
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.emulation.EmulationActivity
 import info.cemu.cemu.gamelist.GameListRoute
 import info.cemu.cemu.gamelist.gameListNavigation
 import info.cemu.cemu.graphicpacks.GraphicPacksRoute
 import info.cemu.cemu.graphicpacks.graphicPacksNavigation
-import info.cemu.cemu.guicore.components.ActivityContent
 import info.cemu.cemu.nativeinterface.NativeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import info.cemu.cemu.nativeinterface.NativeSettings
@@ -52,8 +53,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ActivityContent {
-                MainNav()
+            TranslatableContent {
+                ActivityContent {
+                    MainNav()
+                }
             }
         }
     }
@@ -131,7 +134,7 @@ private fun GameListToolBarActionsMenu(
     ) {
         Icon(
             imageVector = Icons.Filled.MoreVert,
-            contentDescription = stringResource(R.string.more_options)
+            contentDescription = null
         )
     }
     DropdownMenu(
@@ -140,27 +143,27 @@ private fun GameListToolBarActionsMenu(
     ) {
         DropdownMenuItem(
             onClick = goToSettings,
-            text = stringResource(R.string.settings)
+            text = tr("Settings")
         )
         DropdownMenuItem(
             onClick = goToGraphicPacks,
-            text = stringResource(R.string.graphic_packs)
+            text = tr("Graphic packs")
         )
         DropdownMenuItem(
             onClick = goToTitleManager,
-            text = stringResource(R.string.title_manager)
+            text = tr("Title manager")
         )
         DropdownMenuItem(
             onClick = { openCemuFolder(context) },
-            text = stringResource(R.string.open_cemu_folder)
+            text = tr("Open Cemu folder")
         )
         DropdownMenuItem(
             onClick = { shareLogFile(context) },
-            text = stringResource(R.string.log_file_share_label),
+            text = tr("Share log file"),
         )
         DropdownMenuItem(
             onClick = goToAboutCemu,
-            text = stringResource(R.string.about_cemu),
+            text = tr("About Cemu"),
         )
     }
 }
@@ -170,7 +173,7 @@ private fun shareLogFile(context: Context) {
     val logFile = File(NativeActiveSettings.getUserDataPath()).resolve(logFileName)
 
     if (!logFile.isFile) {
-        Toast.makeText(context, R.string.log_file_not_available, Toast.LENGTH_LONG).show()
+        Toast.makeText(context, tr("Log file doesn't exist"), Toast.LENGTH_LONG).show()
         return
     }
 
@@ -205,6 +208,6 @@ private fun openCemuFolder(context: Context) {
         )
         context.startActivity(intent)
     } catch (activityNotFoundException: ActivityNotFoundException) {
-        Toast.makeText(context, R.string.failed_to_open_cemu_folder, Toast.LENGTH_LONG).show()
+        Toast.makeText(context, tr("Could not open Cemu folder"), Toast.LENGTH_LONG).show()
     }
 }

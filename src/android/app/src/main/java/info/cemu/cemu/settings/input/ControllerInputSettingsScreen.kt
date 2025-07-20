@@ -28,21 +28,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.components.SingleSelection
-import info.cemu.cemu.guicore.nativeenummapper.controllerTypeToStringId
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.components.SingleSelection
+import info.cemu.cemu.core.nativeenummapper.controllerTypeToString
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Button as MaterialButton
-
 
 @Composable
 fun ControllerInputSettingsScreen(
@@ -74,13 +72,13 @@ fun ControllerInputSettingsScreen(
 
     ScreenContent(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        appBarText = stringResource(R.string.controller_numbered, controllerIndex + 1),
+        appBarText = tr("Controller {0}", controllerIndex + 1),
         navigateBack = navigateBack,
     ) {
 
         SingleSelection(
             isChoiceEnabled = controllersViewModel::isControllerTypeAllowed,
-            label = stringResource(R.string.emulated_controller),
+            label = tr("Emulated controller"),
             initialChoice = { controllerType },
             choices = listOf(
                 NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED,
@@ -89,7 +87,7 @@ fun ControllerInputSettingsScreen(
                 NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC,
                 NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE
             ),
-            choiceToString = { stringResource(controllerTypeToStringId(it)) },
+            choiceToString = { controllerTypeToString(it) },
             onChoiceChanged = controllersViewModel::setControllerType
         )
 
@@ -100,12 +98,12 @@ fun ControllerInputSettingsScreen(
                     controllersViewModel.refreshAvailableControllers {
                         coroutineScope.launch {
                             snackbarHostState.currentSnackbarData?.dismiss()
-                            snackbarHostState.showSnackbar(context.getString(R.string.no_controllers_available))
+                            snackbarHostState.showSnackbar(tr("No controllers available"))
                         }
                     }
                 }
             ) {
-                Text(stringResource(R.string.controller_setup_all_inputs))
+                Text(tr("Setup all inputs"))
             }
         }
 
@@ -166,7 +164,7 @@ private fun ControllerSelectDialog(
                     top = 16.dp,
                     bottom = 8.dp
                 ),
-                text = stringResource(R.string.controller_select_dialog_title),
+                text = tr("Select a controller"),
                 fontSize = 24.sp,
             )
             Column(
@@ -195,23 +193,23 @@ private fun ControllerSelectDialog(
                     .padding(8.dp)
                     .align(Alignment.End),
             ) {
-                Text(stringResource(R.string.cancel))
+                Text(tr("Cancel"))
             }
         }
     }
 }
 
-fun openInputDialog(
+private fun openInputDialog(
     context: Context,
     buttonName: String,
     onClear: () -> Unit,
     mapKeyEvent: (KeyEvent) -> Unit,
     tryMapMotionEvent: (MotionEvent) -> Boolean,
 ) {
-    MaterialAlertDialogBuilder(context).setTitle(R.string.inputBindingDialogTitle)
-        .setMessage(context.getString(R.string.inputBindingDialogMessage, buttonName))
-        .setNeutralButton(context.getString(R.string.clear)) { _, _ -> onClear() }
-        .setNegativeButton(context.getString(R.string.cancel)) { _, _ -> }
+    MaterialAlertDialogBuilder(context).setTitle(tr("Input binding"))
+        .setMessage(tr("Trigger an input to bind it to {0}", buttonName))
+        .setNeutralButton(tr("Clear")) { _, _ -> onClear() }
+        .setNegativeButton(tr("Cancel")) { _, _ -> }
         .show()
         .also { alertDialog ->
             alertDialog.requireViewById<TextView>(android.R.id.message).apply {

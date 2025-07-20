@@ -1,4 +1,4 @@
-package info.cemu.cemu.guicore.components
+package info.cemu.cemu.core.components
 
 import android.content.Context
 import android.util.AttributeSet

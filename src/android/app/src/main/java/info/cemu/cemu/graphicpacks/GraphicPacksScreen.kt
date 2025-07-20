@@ -2,7 +2,6 @@
 
 package info.cemu.cemu.graphicpacks
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -50,18 +49,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.DefaultAppBarTitle
-import info.cemu.cemu.guicore.components.ScreenContentLazy
-import info.cemu.cemu.guicore.components.SearchToolbarInput
-import info.cemu.cemu.guicore.components.SingleSelection
+import info.cemu.cemu.core.components.DefaultAppBarTitle
+import info.cemu.cemu.core.components.ScreenContentLazy
+import info.cemu.cemu.core.components.SearchToolbarInput
+import info.cemu.cemu.core.components.SingleSelection
+import info.cemu.cemu.core.translation.tr
 import kotlinx.coroutines.launch
 
 
@@ -83,14 +81,13 @@ fun GraphicPacksRootSectionScreen(
     val context = LocalContext.current
 
     downloadStatus?.let { status ->
-        downloadDialogText =
-            downloadStatusToDialogTextStringId(status)?.let { stringResource(it) }
+        downloadDialogText = downloadStatusToDialogTextString(status)
         LaunchedEffect(status) {
             graphicPacksListViewModel.downloadStatusRead()
 
             val downloadNotificationText =
-                downloadStatusToNotificationStringId(status)?.let(context::getString)
-                    ?: return@LaunchedEffect
+                downloadStatusToNotificationString(status) ?: return@LaunchedEffect
+
             snackbarScope.launch {
                 snackbarHostState.currentSnackbarData?.dismiss()
                 snackbarHostState.showSnackbar(downloadNotificationText)
@@ -128,10 +125,10 @@ fun GraphicPacksRootSectionScreen(
                     SearchToolbarInput(
                         value = query,
                         onValueChange = graphicPacksListViewModel::setFilterText,
-                        hint = stringResource(R.string.search_graphic_packs),
+                        hint = tr("Search graphic packs"),
                     )
                 } else {
-                    DefaultAppBarTitle(stringResource(R.string.graphic_packs))
+                    DefaultAppBarTitle(tr("Graphic packs"))
                 }
             }
         },
@@ -159,20 +156,18 @@ fun GraphicPacksRootSectionScreen(
     }
 }
 
-@StringRes
-private fun downloadStatusToDialogTextStringId(downloadStatus: GraphicPacksDownloadStatus?): Int? =
+private fun downloadStatusToDialogTextString(downloadStatus: GraphicPacksDownloadStatus?): String? =
     when (downloadStatus) {
-        GraphicPacksDownloadStatus.CheckingForUpdates -> R.string.checking_version_download_text
-        GraphicPacksDownloadStatus.Downloading -> R.string.graphic_packs_download_text
+        GraphicPacksDownloadStatus.CheckingForUpdates -> tr("Checking version")
+        GraphicPacksDownloadStatus.Downloading -> tr("Downloading graphic packs")
         else -> null
     }
 
-@StringRes
-private fun downloadStatusToNotificationStringId(downloadStatus: GraphicPacksDownloadStatus?): Int? =
+private fun downloadStatusToNotificationString(downloadStatus: GraphicPacksDownloadStatus?): String? =
     when (downloadStatus) {
-        GraphicPacksDownloadStatus.Error -> R.string.download_graphic_packs_error_text
-        GraphicPacksDownloadStatus.FinishedDownloading -> R.string.download_graphic_packs_finish_text
-        GraphicPacksDownloadStatus.NoUpdatesAvailable -> R.string.graphic_packs_no_updates_text
+        GraphicPacksDownloadStatus.Error -> tr("Failed to download graphic packs")
+        GraphicPacksDownloadStatus.FinishedDownloading -> tr("Downloaded latest graphic packs")
+        GraphicPacksDownloadStatus.NoUpdatesAvailable -> tr("No updates available")
         else -> null
     }
 
@@ -183,7 +178,7 @@ fun GraphicPacksDownloadDialog(
 ) {
     AlertDialog(
         title = {
-            Text(text = stringResource(R.string.graphic_packs_download_dialog_title))
+            Text(text = tr("Graphic packs download"))
         },
         text = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -203,7 +198,7 @@ fun GraphicPacksDownloadDialog(
                     onCancelRequest()
                 }
             ) {
-                Text(stringResource(R.string.cancel))
+                Text(tr("Cancel"))
             }
         }
     )
@@ -223,7 +218,7 @@ fun GraphicPacksRootSectionActions(
         ) {
             Icon(
                 imageVector = Icons.Filled.Search,
-                contentDescription = stringResource(R.string.search_graphic_packs)
+                contentDescription = null
             )
         }
         IconButton(
@@ -231,7 +226,7 @@ fun GraphicPacksRootSectionActions(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_download),
-                contentDescription = stringResource(R.string.download_graphic_packs)
+                contentDescription = null
             )
         }
     }
@@ -241,7 +236,7 @@ fun GraphicPacksRootSectionActions(
     ) {
         Icon(
             imageVector = Icons.Filled.MoreVert,
-            contentDescription = stringResource(R.string.more_options)
+            contentDescription = null
         )
     }
     DropdownMenu(
@@ -253,7 +248,7 @@ fun GraphicPacksRootSectionActions(
                 installedOnlyValueChange(!installedOnlyChecked)
             },
             text = {
-                Text(text = stringResource(R.string.graphic_packs_installed_only))
+                Text(text = tr("Installed only"))
             },
             trailingIcon = {
                 Checkbox(
@@ -301,7 +296,7 @@ fun GraphicPacksSectionScreen(
     graphicPackNodeNavigate: (GraphicPackNode) -> Unit,
     graphicPackSectionNode: GraphicPackSectionNode,
 ) {
-    val appBarText = graphicPackSectionNode.name ?: stringResource(R.string.graphic_packs)
+    val appBarText = graphicPackSectionNode.name ?: tr("Graphic packs")
     ScreenContentLazy(
         appBarText = appBarText,
         navigateBack = navigateBack,
@@ -318,7 +313,7 @@ fun GraphicPackDataScreen(
     navigateBack: () -> Unit,
     graphicPackDataViewModel: GraphicPackDataViewModel,
 ) {
-    val appBarText = graphicPackDataViewModel.name ?: stringResource(R.string.graphic_packs)
+    val appBarText = graphicPackDataViewModel.name ?: tr("Graphic packs")
     val enabled by graphicPackDataViewModel.enabled.collectAsState()
     val presets by graphicPackDataViewModel.presets.collectAsState()
 
@@ -331,7 +326,7 @@ fun GraphicPackDataScreen(
                 modifier = Modifier.padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = stringResource(R.string.graphic_pack_enabled_checkbox_label))
+                Text(text = tr("Enabled"))
                 Switch(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     checked = enabled,
@@ -348,7 +343,7 @@ fun GraphicPackDataScreen(
         items(items = presets) {
             SingleSelection(
                 modifier = Modifier.animateItem(),
-                label = it.category ?: stringResource(R.string.active_preset_category),
+                label = it.category ?: tr("Active preset"),
                 choices = it.presets,
                 choice = it.activePreset,
                 onChoiceChanged = { activePreset ->
@@ -395,7 +390,7 @@ fun GraphicPackDataListItemIcon(isEnabled: Boolean) {
                 .size(16.dp),
             imageVector = Icons.Filled.Check,
             tint = contentColorFor(MaterialTheme.colorScheme.primary),
-            contentDescription = stringResource(R.string.graphic_pack_is_enabled),
+            contentDescription = null
         )
     }
 }
@@ -427,7 +422,7 @@ fun GraphicPackListItemIcon(
         Icon(
             modifier = Modifier.size(28.dp),
             painter = painter,
-            contentDescription = null,
+            contentDescription = null
         )
         if (showExtraInfo) {
             Box(modifier = Modifier.align(Alignment.BottomEnd)) {

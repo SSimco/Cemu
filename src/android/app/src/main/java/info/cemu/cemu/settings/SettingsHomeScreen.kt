@@ -1,12 +1,10 @@
 package info.cemu.cemu.settings
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.Button
-import info.cemu.cemu.guicore.components.ScreenContent
+import info.cemu.cemu.core.components.Button
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.translation.tr
 
 data class SettingsHomeScreenActions(
     val goToGeneralSettings: () -> Unit,
@@ -19,27 +17,27 @@ data class SettingsHomeScreenActions(
 @Composable
 fun SettingsHomeScreen(navigateBack: () -> Unit, actions: SettingsHomeScreenActions) {
     ScreenContent(
-        appBarText = stringResource(R.string.settings),
+        appBarText = tr("Settings"),
         navigateBack = navigateBack,
     ) {
         Button(
-            label = stringResource(R.string.general_settings),
+            label = tr("General settings"),
             onClick = dropUnlessResumed(block = actions.goToGeneralSettings)
         )
         Button(
-            label = stringResource(R.string.input_settings),
+            label = tr("Input settings"),
             onClick = dropUnlessResumed(block = actions.goToInputSettings)
         )
         Button(
-            label = stringResource(R.string.graphics_settings),
+            label = tr("Graphics settings"),
             onClick = dropUnlessResumed(block = actions.goToGraphicsSettings)
         )
         Button(
-            label = stringResource(R.string.audio_settings),
+            label = tr("Audio settings"),
             onClick = dropUnlessResumed(block = actions.goToAudioSettings)
         )
         Button(
-            label = stringResource(R.string.overlay_settings),
+            label = tr("Overlay settings"),
             onClick = dropUnlessResumed(block = actions.goToOverlaySettings)
         )
     }

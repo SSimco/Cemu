@@ -1,9 +1,7 @@
 package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.nativeenummapper.proControllerButtonToStringId
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
 @Composable
@@ -19,13 +17,13 @@ fun ProControllerInputs(
         InputItemsGroup(
             groupName = groupName,
             inputIds = inputIds,
-            inputIdToString = { stringResource(proControllerButtonToStringId(it)) },
+            inputIdToString = { proControllerButtonToString(it) },
             onInputClick = onInputClick,
             controlsMapping = controlsMapping,
         )
     }
     InputItemsGroup(
-        groupName = stringResource(R.string.buttons),
+        groupName = tr("Buttons"),
         inputIds = listOf(
             NativeInput.PRO_BUTTON_A,
             NativeInput.PRO_BUTTON_B,
@@ -41,7 +39,7 @@ fun ProControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.d_pad),
+        groupName = tr("D-pad"),
         inputIds = listOf(
             NativeInput.PRO_BUTTON_UP,
             NativeInput.PRO_BUTTON_DOWN,
@@ -50,7 +48,7 @@ fun ProControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.left_axis),
+        groupName = tr("Left Axis"),
         inputIds = listOf(
             NativeInput.PRO_BUTTON_STICKL,
             NativeInput.PRO_BUTTON_STICKL_UP,
@@ -60,7 +58,7 @@ fun ProControllerInputs(
         )
     )
     InputItemsGroup(
-        groupName = stringResource(R.string.right_axis),
+        groupName = tr("Right Axis"),
         inputIds = listOf(
             NativeInput.PRO_BUTTON_STICKR,
             NativeInput.PRO_BUTTON_STICKR_UP,
@@ -69,4 +67,33 @@ fun ProControllerInputs(
             NativeInput.PRO_BUTTON_STICKR_RIGHT
         )
     )
+}
+
+fun proControllerButtonToString(buttonId: Int) = when (buttonId) {
+    NativeInput.PRO_BUTTON_A -> "A"
+    NativeInput.PRO_BUTTON_B -> "B"
+    NativeInput.PRO_BUTTON_X -> "X"
+    NativeInput.PRO_BUTTON_Y -> "Y"
+    NativeInput.PRO_BUTTON_L -> "L"
+    NativeInput.PRO_BUTTON_R -> "R"
+    NativeInput.PRO_BUTTON_ZL -> "ZL"
+    NativeInput.PRO_BUTTON_ZR -> "ZR"
+    NativeInput.PRO_BUTTON_PLUS -> "+"
+    NativeInput.PRO_BUTTON_MINUS -> "-"
+    NativeInput.PRO_BUTTON_HOME -> "home"
+    NativeInput.PRO_BUTTON_UP -> tr("up")
+    NativeInput.PRO_BUTTON_DOWN -> tr("down")
+    NativeInput.PRO_BUTTON_LEFT -> tr("left")
+    NativeInput.PRO_BUTTON_RIGHT -> tr("right")
+    NativeInput.PRO_BUTTON_STICKL -> tr("click")
+    NativeInput.PRO_BUTTON_STICKR -> tr("click")
+    NativeInput.PRO_BUTTON_STICKL_UP -> tr("up")
+    NativeInput.PRO_BUTTON_STICKL_DOWN -> tr("down")
+    NativeInput.PRO_BUTTON_STICKL_LEFT -> tr("left")
+    NativeInput.PRO_BUTTON_STICKL_RIGHT -> tr("right")
+    NativeInput.PRO_BUTTON_STICKR_UP -> tr("up")
+    NativeInput.PRO_BUTTON_STICKR_DOWN -> tr("down")
+    NativeInput.PRO_BUTTON_STICKR_LEFT -> tr("left")
+    NativeInput.PRO_BUTTON_STICKR_RIGHT -> tr("right")
+    else -> throw IllegalArgumentException("Invalid buttonId $buttonId for Pro controller type")
 }

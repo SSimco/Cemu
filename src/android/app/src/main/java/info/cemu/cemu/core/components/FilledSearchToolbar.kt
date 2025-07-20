@@ -1,4 +1,4 @@
-package info.cemu.cemu.guicore.components
+package info.cemu.cemu.core.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -91,7 +91,7 @@ fun FilledSearchToolbar(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.exit_search_description),
+                                        contentDescription = null
                                     )
                                 }
                             },
@@ -153,7 +153,7 @@ fun SearchToolbarInput(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Clear,
-                    contentDescription = stringResource(R.string.clear_search),
+                    contentDescription = null
                 )
             }
         }
@@ -177,7 +177,7 @@ fun SearchToolbarHint(
                 .size(24.dp),
             imageVector = Icons.Default.Search,
             tint = color,
-            contentDescription = null,
+            contentDescription = null
         )
         Text(
             text = hint,

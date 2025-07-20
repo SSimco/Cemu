@@ -25,12 +25,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContentLazy
+import info.cemu.cemu.core.components.ScreenContentLazy
+import info.cemu.cemu.core.translation.tr
 import kotlinx.coroutines.launch
 
 @Composable
@@ -55,7 +54,7 @@ fun GamePathsScreen(
             if (gamesPaths.contains(gamesPath)) {
                 coroutineScope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar(context.getString(R.string.games_path_already_added))
+                    snackbarHostState.showSnackbar(tr("Games path already added"))
                 }
                 return@rememberLauncherForActivityResult
             }
@@ -63,13 +62,13 @@ fun GamePathsScreen(
         }
     ScreenContentLazy(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        appBarText = stringResource(R.string.game_paths_settings),
+        appBarText = tr("Game paths"),
         navigateBack = navigateBack,
         actions = {
             IconButton(onClick = { launcher.launch(null) }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.add_game_path),
+                    contentDescription = null
                 )
             }
         },
@@ -110,7 +109,7 @@ fun GamePathsListItem(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.remove_game_path),
+                    contentDescription = null
                 )
             }
         }

@@ -4,14 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.Header
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.components.SingleSelection
-import info.cemu.cemu.guicore.components.Toggle
-import info.cemu.cemu.guicore.nativeenummapper.cpuModeToStringId
+import info.cemu.cemu.core.components.Header
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.components.SingleSelection
+import info.cemu.cemu.core.components.Toggle
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 
 @Composable
@@ -21,15 +19,15 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
 
     val titleId = game.titleId
     ScreenContent(
-        appBarText = stringResource(R.string.edit_game_profile),
+        appBarText = tr("Edit game profile"),
         navigateBack = navigateBack,
         contentModifier = Modifier.padding(16.dp),
         contentVerticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Header(text = game.name)
         Toggle(
-            label = stringResource(R.string.load_shared_libraries),
-            description = stringResource(R.string.load_shared_libraries_description),
+            label = tr("Load shared libraries"),
+            description = tr("Load libraries from the cafeLibs directory"),
             initialCheckedState = {
                 NativeGameTitles.isLoadingSharedLibrariesForTitleEnabled(
                     titleId
@@ -43,8 +41,8 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             },
         )
         Toggle(
-            label = stringResource(R.string.shader_multiplication_accuracy),
-            description = stringResource(R.string.shader_multiplication_accuracy_description),
+            label = tr("Shader multiplication accuracy"),
+            description = tr("Controls the accuracy of floating point multiplication in shaders"),
             initialCheckedState = {
                 NativeGameTitles.isShaderMultiplicationAccuracyForTitleEnabled(
                     titleId
@@ -58,7 +56,7 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             },
         )
         SingleSelection(
-            label = stringResource(R.string.cpu_mode),
+            label = tr("CPU mode"),
             initialChoice = { NativeGameTitles.getCpuModeForTitle(titleId) },
             choices = listOf(
                 NativeGameTitles.CPU_MODE_SINGLECOREINTERPRETER,
@@ -66,11 +64,11 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
                 NativeGameTitles.CPU_MODE_MULTICORERECOMPILER,
                 NativeGameTitles.CPU_MODE_AUTO
             ),
-            choiceToString = { cpuMode -> stringResource(cpuModeToStringId(cpuMode)) },
+            choiceToString = { cpuMode -> cpuModeToString(cpuMode) },
             onChoiceChanged = { cpuMode -> NativeGameTitles.setCpuModeForTitle(titleId, cpuMode) }
         )
         SingleSelection(
-            label = stringResource(R.string.thread_quantum),
+            label = tr("Thread quantum"),
             initialChoice = { NativeGameTitles.getThreadQuantumForTitle(titleId) },
             choices = NativeGameTitles.THREAD_QUANTUM_VALUES.toList(),
             choiceToString = { it.toString() },
@@ -79,4 +77,11 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             }
         )
     }
+}
+
+private fun cpuModeToString(cpuMode: Int): String = when (cpuMode) {
+    NativeGameTitles.CPU_MODE_SINGLECOREINTERPRETER -> tr("Single-core interpreter")
+    NativeGameTitles.CPU_MODE_SINGLECORERECOMPILER -> tr("Single-core recompiler")
+    NativeGameTitles.CPU_MODE_MULTICORERECOMPILER -> tr("Multi-core recompiler")
+    else -> tr("Auto (recommended)")
 }

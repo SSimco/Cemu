@@ -3,19 +3,15 @@ package info.cemu.cemu.settings.overlay
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.Header
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.components.SingleSelection
-import info.cemu.cemu.guicore.components.Slider
-import info.cemu.cemu.guicore.components.Toggle
-import info.cemu.cemu.guicore.nativeenummapper.overlayScreenPositionToStringId
+import info.cemu.cemu.core.components.Header
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.components.SingleSelection
+import info.cemu.cemu.core.components.Slider
+import info.cemu.cemu.core.components.Toggle
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
-
 
 private val OverlayPositionChoices = listOf(
     NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED,
@@ -34,15 +30,15 @@ fun OverlaySettingsScreen(navigateBack: () -> Unit) {
     var overlayPosition by rememberSaveable { mutableIntStateOf(NativeSettings.getOverlayPosition()) }
     var notificationsPosition by rememberSaveable { mutableIntStateOf(NativeSettings.getNotificationsPosition()) }
     ScreenContent(
-        appBarText = stringResource(R.string.overlay_settings),
+        appBarText = tr("Overlay settings"),
         navigateBack = navigateBack,
     ) {
-        Header(stringResource(R.string.overlay))
+        Header(tr("Overlay"))
         SingleSelection(
-            label = stringResource(R.string.overlay_position),
+            label = tr("Position"),
             choice = overlayPosition,
             choices = OverlayPositionChoices,
-            choiceToString = { stringResource(overlayScreenPositionToStringId(it)) },
+            choiceToString = { overlayScreenPositionToString(it) },
             onChoiceChanged = {
                 overlayPosition = it
                 NativeSettings.setOverlayPosition(it)
@@ -50,12 +46,12 @@ fun OverlaySettingsScreen(navigateBack: () -> Unit) {
         )
         if (overlayPosition != NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED)
             OverlaySettings()
-        Header(stringResource(R.string.notifications))
+        Header(tr("Notifications"))
         SingleSelection(
-            label = stringResource(R.string.overlay_position),
+            label = tr("Position"),
             choice = notificationsPosition,
             choices = OverlayPositionChoices,
-            choiceToString = { stringResource(overlayScreenPositionToStringId(it)) },
+            choiceToString = { overlayScreenPositionToString(it) },
             onChoiceChanged = {
                 notificationsPosition = it
                 NativeSettings.setNotificationsPosition(it)
@@ -69,7 +65,7 @@ fun OverlaySettingsScreen(navigateBack: () -> Unit) {
 @Composable
 private fun OverlaySettings() {
     Slider(
-        label = stringResource(R.string.overlay_text_scale),
+        label = tr("Scale"),
         initialValue = NativeSettings::getOverlayTextScalePercentage,
         steps = OVERLAY_TEXT_SCALE_STEPS,
         valueFrom = NativeSettings.OVERLAY_TEXT_SCALE_MIN,
@@ -78,32 +74,32 @@ private fun OverlaySettings() {
         labelFormatter = { "${it}%" }
     )
     Toggle(
-        label = stringResource(R.string.fps),
-        description = stringResource(R.string.fps_overlay_description),
+        label = tr("FPS"),
+        description = tr("The number of frames per second. Average over last 5 seconds"),
         initialCheckedState = NativeSettings::isOverlayFPSEnabled,
         onCheckedChanged = NativeSettings::setOverlayFPSEnabled,
     )
     Toggle(
-        label = stringResource(R.string.draw_calls_per_frame),
-        description = stringResource(R.string.draw_calls_per_frame_overlay_description),
+        label = tr("Draw calls per frame"),
+        description = tr("The number of draw calls per frame. Average over last 5 seconds"),
         initialCheckedState = NativeSettings::isOverlayDrawCallsPerFrameEnabled,
         onCheckedChanged = NativeSettings::setOverlayDrawCallsPerFrameEnabled,
     )
     Toggle(
-        label = stringResource(R.string.cpu_usage),
-        description = stringResource(R.string.cpu_usage_overlay_description),
+        label = tr("CPU usage"),
+        description = tr("CPU usage of Cemu in percent"),
         initialCheckedState = NativeSettings::isOverlayCPUUsageEnabled,
         onCheckedChanged = NativeSettings::setOverlayCPUUsageEnabled,
     )
     Toggle(
-        label = stringResource(R.string.ram_usage),
-        description = stringResource(R.string.ram_usage_overlay_description),
+        label = tr("RAM usage"),
+        description = tr("Cemu RAM usage in MB"),
         initialCheckedState = NativeSettings::isOverlayRAMUsageEnabled,
         onCheckedChanged = NativeSettings::setOverlayRAMUsageEnabled,
     )
     Toggle(
-        label = stringResource(R.string.debug),
-        description = stringResource(R.string.debug_overlay_description),
+        label = tr("Debug"),
+        description = tr("Displays internal debug information (Vulkan only)"),
         initialCheckedState = NativeSettings::isOverlayDebugEnabled,
         onCheckedChanged = NativeSettings::setOverlayDebugEnabled,
     )
@@ -112,7 +108,7 @@ private fun OverlaySettings() {
 @Composable
 private fun NotificationSettings() {
     Slider(
-        label = stringResource(R.string.notifications_text_scale),
+        label = tr("Scale"),
         initialValue = NativeSettings::getNotificationsTextScalePercentage,
         steps = OVERLAY_TEXT_SCALE_STEPS,
         valueFrom = NativeSettings.OVERLAY_TEXT_SCALE_MIN,
@@ -121,21 +117,32 @@ private fun NotificationSettings() {
         labelFormatter = { "$it%" }
     )
     Toggle(
-        label = stringResource(R.string.controller_profiles),
-        description = stringResource(R.string.controller_profiles_notification_description),
+        label = tr("Controller profiles"),
+        description = tr("Displays the active controller profile when starting a game"),
         initialCheckedState = NativeSettings::isNotificationControllerProfilesEnabled,
         onCheckedChanged = NativeSettings::setNotificationControllerProfilesEnabled,
     )
     Toggle(
-        label = stringResource(R.string.shader_compiler),
-        description = stringResource(R.string.shader_compiler_notification_description),
+        label = tr("Shader compiler"),
+        description = tr("Shows a notification after shaders have been compiled"),
         initialCheckedState = NativeSettings::isNotificationShaderCompilerEnabled,
         onCheckedChanged = NativeSettings::setNotificationShaderCompilerEnabled,
     )
     Toggle(
-        label = stringResource(R.string.friend_list),
-        description = stringResource(R.string.friend_list_notification_description),
+        label = tr("Friend list"),
+        description = tr("Shows friend list related data if online"),
         initialCheckedState = NativeSettings::isNotificationFriendListEnabled,
         onCheckedChanged = NativeSettings::setNotificationFriendListEnabled,
     )
+}
+
+private fun overlayScreenPositionToString(overlayScreenPosition: Int) = when (overlayScreenPosition) {
+    NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED -> tr("Disabled")
+    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_LEFT -> tr("Top left")
+    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_CENTER -> tr("Top center")
+    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_RIGHT -> tr("Top right")
+    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_LEFT -> tr("Bottom left")
+    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_CENTER -> tr("Bottom center")
+    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_RIGHT -> tr("Bottom right")
+    else -> throw IllegalArgumentException("Invalid overlay position: $overlayScreenPosition")
 }

@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -17,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -45,7 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContentLazy
+import info.cemu.cemu.core.components.ScreenContentLazy
+import info.cemu.cemu.core.translation.tr
 import kotlinx.coroutines.launch
 
 @Composable
@@ -66,9 +65,9 @@ fun CustomDriversScreen(
 
             customDriversViewModel.installDriver(context, uri) { installStatus ->
                 val message = when (installStatus) {
-                    DriverInstallStatus.AlreadyInstalled -> "Driver already installed"
-                    DriverInstallStatus.ErrorInstalling -> "Failed to install driver"
-                    DriverInstallStatus.Installed -> "Driver installed successfully"
+                    DriverInstallStatus.AlreadyInstalled -> tr("Driver already installed")
+                    DriverInstallStatus.ErrorInstalling -> tr("Failed to install driver")
+                    DriverInstallStatus.Installed -> tr("Driver installed successfully")
                 }
 
                 coroutineScope.launch {
@@ -80,13 +79,13 @@ fun CustomDriversScreen(
 
     ScreenContentLazy(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        appBarText = "Custom drivers",
+        appBarText = tr("Custom drivers"),
         navigateBack = navigateBack,
         actions = {
             IconButton(onClick = { customDriversInstallLauncher.launch(arrayOf("application/zip")) }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Add custom driver",
+                    contentDescription = null
                 )
             }
         },
@@ -114,14 +113,14 @@ fun CustomDriversScreen(
 private fun DriverInstallProgressDialog() {
     AlertDialog(
         title = {
-            Text("Installing")
+            Text(tr("Installing"))
         },
         text = {
             Column(
                 modifier = Modifier.padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Installing driver in progress")
+                Text(tr("Installing driver in progress"))
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -138,7 +137,7 @@ private fun DriverInstallProgressDialog() {
 @Composable
 private fun SystemDriverListItem(selected: Boolean, onSelect: () -> Unit) {
     DriverListItem(
-        driverLabel = "System driver",
+        driverLabel = tr("System driver"),
         selected = selected,
         onSelect = onSelect
     )
@@ -157,13 +156,13 @@ private fun CustomDriverListItem(driver: Driver, onDelete: () -> Unit, onSelect:
                 Icon(
                     modifier = Modifier.rotate(if (showDriverInfo) 180f else 0f),
                     imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = "Show driver metadata"
+                    contentDescription = null
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.remove_game_path),
+                    contentDescription = null
                 )
             }
         }
@@ -215,12 +214,12 @@ private fun DriverMetadataInfo(metadata: DriverMetadata) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        DriverMetadataInfo("Description", metadata.description)
-        DriverMetadataInfo("Author", metadata.author)
-        DriverMetadataInfo("Package version", metadata.packageVersion)
-        DriverMetadataInfo("Vendor", metadata.vendor)
-        DriverMetadataInfo("Driver version", metadata.driverVersion)
-        DriverMetadataInfo("Min api", metadata.minApi)
+        DriverMetadataInfo(tr("Description"), metadata.description)
+        DriverMetadataInfo(tr("Author"), metadata.author)
+        DriverMetadataInfo(tr("Package version"), metadata.packageVersion)
+        DriverMetadataInfo(tr("Vendor"), metadata.vendor)
+        DriverMetadataInfo(tr("Driver version"), metadata.driverVersion)
+        DriverMetadataInfo(tr("Min api"), metadata.minApi)
     }
 }
 

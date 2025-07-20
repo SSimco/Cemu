@@ -1,5 +1,5 @@
 @file:OptIn(
-    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
 )
 
 package info.cemu.cemu.gamelist
@@ -54,7 +54,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,8 +62,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
+import info.cemu.cemu.core.components.FilledSearchToolbar
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.emulation.EmulationActivity
-import info.cemu.cemu.guicore.components.FilledSearchToolbar
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import kotlinx.coroutines.delay
@@ -105,7 +105,7 @@ fun GamesListScreen(
         topBar = {
             FilledSearchToolbar(
                 actions = toolbarActions,
-                hint = stringResource(R.string.search_games),
+                hint = tr("Search games"),
                 query = gameSearchQuery,
                 onValueChange = gameListViewModel::setFilterText
             )
@@ -132,7 +132,7 @@ fun GamesListScreen(
                 games = games,
                 setFavorite = gameListViewModel::setGameTitleFavorite,
                 deleteShaderCaches = {
-                    coroutineScope.launch { snackbarHostState.showSnackbar(context.getString(R.string.shader_caches_removed_notification)) }
+                    coroutineScope.launch { snackbarHostState.showSnackbar(tr("Shader caches removed")) }
                     gameListViewModel.removeShadersForGame(it)
                 },
                 startGame = startGame,
@@ -143,9 +143,7 @@ fun GamesListScreen(
                         context,
                         game,
                         onFailedToCreateShortCut = {
-                            val errorMessage =
-                                context.getString(R.string.shortcut_not_supported)
-                            coroutineScope.launch { snackbarHostState.showSnackbar(errorMessage) }
+                            coroutineScope.launch { snackbarHostState.showSnackbar(tr("Device doesn't support creating shortcuts")) }
                         }
                     )
                 },
@@ -221,16 +219,16 @@ fun ShaderCachesConfirmationDialog(
 ) {
     AlertDialog(
         title = {
-            Text(stringResource(R.string.remove_shader_caches))
+            Text(tr("Remove shader caches"))
         },
         text = {
-            Text(stringResource(R.string.remove_shader_caches_message, gameName))
+            Text(tr("Remove the shader caches for {0}?", gameName))
         },
         dismissButton = {
             TextButton(
                 onClick = onDismissRequest
             ) {
-                Text(stringResource(R.string.no))
+                Text(tr("No"))
             }
         },
         onDismissRequest = onDismissRequest,
@@ -238,7 +236,7 @@ fun ShaderCachesConfirmationDialog(
             TextButton(
                 onClick = onConfirm
             ) {
-                Text(stringResource(R.string.yes))
+                Text(tr("Yes"))
             }
         }
     )
@@ -283,7 +281,7 @@ fun GameListItem(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     painter = painterResource(R.drawable.ic_favorite),
                     tint = MaterialTheme.colorScheme.primary,
-                    contentDescription = stringResource(R.string.game_favorite_description),
+                    contentDescription = null
                 )
             }
         }
@@ -346,29 +344,29 @@ fun GameContextMenu(
         }
         GameContextMenuItem(
             onClick = { onIsFavoriteChanged(!game.isFavorite) },
-            text = stringResource(R.string.game_favorite),
+            text = tr("Favorite"),
             trailingIcon = {
                 Checkbox(checked = game.isFavorite, onCheckedChange = null)
             }
         )
         GameContextMenuItem(
             onClick = onEditGameProfile,
-            text = stringResource(R.string.edit_game_profile)
+            text = tr("Edit game profile")
         )
         GameContextMenuItem(
             enabled = gameTitleHasCaches,
             onClick = {
                 onRemoveShaderCaches()
             },
-            text = stringResource(R.string.remove_shader_caches)
+            text = tr("Remove shader caches")
         )
         GameContextMenuItem(
             onClick = onAboutTitle,
-            text = stringResource(R.string.about_title),
+            text = tr("About title"),
         )
         GameContextMenuItem(
             onClick = onCreateShortcut,
-            text = stringResource(R.string.create_shortcut)
+            text = tr("Create shortcut")
         )
     }
 }

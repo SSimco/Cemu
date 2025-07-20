@@ -3,11 +3,11 @@ package info.cemu.cemu.settings.audio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import info.cemu.cemu.R
-import info.cemu.cemu.guicore.components.ScreenContent
-import info.cemu.cemu.guicore.components.SingleSelection
-import info.cemu.cemu.guicore.components.Slider
-import info.cemu.cemu.guicore.components.Toggle
-import info.cemu.cemu.guicore.nativeenummapper.channelsToStringId
+import info.cemu.cemu.core.components.ScreenContent
+import info.cemu.cemu.core.components.SingleSelection
+import info.cemu.cemu.core.components.Slider
+import info.cemu.cemu.core.components.Toggle
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 private const val AUDIO_LATENCY_STEPS = 22
@@ -15,11 +15,11 @@ private const val AUDIO_LATENCY_STEPS = 22
 @Composable
 fun AudioSettingsScreen(navigateBack: () -> Unit) {
     ScreenContent(
-        appBarText = stringResource(R.string.audio_settings),
+        appBarText = tr("Audio settings"),
         navigateBack = navigateBack,
     ) {
         Slider(
-            label = stringResource(R.string.audio_latency),
+            label = tr("Latency"),
             initialValue = NativeSettings::getAudioLatency,
             valueFrom = 0,
             steps = AUDIO_LATENCY_STEPS,
@@ -28,16 +28,16 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             labelFormatter = { "${it}ms" }
         )
         Toggle(
-            label = stringResource(R.string.tv_audio),
-            description = stringResource(R.string.tv_audio_description),
+            label = tr("TV"),
+            description = tr("Enable audio output for the Wii U TV"),
             initialCheckedState = { NativeSettings.getAudioDeviceEnabled(true) },
             onCheckedChanged = { NativeSettings.setAudioDeviceEnabled(it, true) }
         )
         SingleSelection(
-            label = stringResource(R.string.tv_channels),
+            label = tr("TV channels"),
             initialChoice = { NativeSettings.getAudioDeviceChannels(true) },
             onChoiceChanged = { NativeSettings.setAudioDeviceChannels(it, true) },
-            choiceToString = { stringResource(channelsToStringId(it)) },
+            choiceToString = { channelsToString(it) },
             choices = listOf(
                 NativeSettings.AUDIO_CHANNELS_MONO,
                 NativeSettings.AUDIO_CHANNELS_STEREO,
@@ -45,7 +45,7 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             ),
         )
         Slider(
-            label = stringResource(R.string.tv_volume),
+            label = tr("TV volume"),
             initialValue = { NativeSettings.getAudioDeviceVolume(true) },
             valueFrom = NativeSettings.AUDIO_MIN_VOLUME,
             valueTo = NativeSettings.AUDIO_MAX_VOLUME,
@@ -53,22 +53,22 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             labelFormatter = { "$it%" }
         )
         Toggle(
-            label = stringResource(R.string.gamepad_audio),
-            description = stringResource(R.string.gamepad_audio_description),
+            label = tr("Gamepad"),
+            description = tr("Enable audio output for the Wii U Gamepad"),
             initialCheckedState = { NativeSettings.getAudioDeviceEnabled(false) },
             onCheckedChanged = { NativeSettings.setAudioDeviceEnabled(false, it) }
         )
         SingleSelection(
-            label = stringResource(R.string.gamepad_channels),
+            label = tr("Gamepad channels"),
             initialChoice = { NativeSettings.getAudioDeviceChannels(false) },
             onChoiceChanged = { NativeSettings.setAudioDeviceChannels(it, false) },
-            choiceToString = { stringResource(channelsToStringId(it)) },
+            choiceToString = { channelsToString(it) },
             choices = listOf(
                 NativeSettings.AUDIO_CHANNELS_STEREO,
             ),
         )
         Slider(
-            label = stringResource(R.string.gamepad_volume),
+            label = tr("Gamepad volume"),
             initialValue = { NativeSettings.getAudioDeviceVolume(false) },
             valueFrom = NativeSettings.AUDIO_MIN_VOLUME,
             valueTo = NativeSettings.AUDIO_MAX_VOLUME,
@@ -76,4 +76,11 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             labelFormatter = { "$it%" }
         )
     }
+}
+
+fun channelsToString(channels: Int) = when (channels) {
+    NativeSettings.AUDIO_CHANNELS_MONO -> tr("Mono")
+    NativeSettings.AUDIO_CHANNELS_STEREO -> tr("Stereo")
+    NativeSettings.AUDIO_CHANNELS_SURROUND -> tr("Surround")
+    else -> throw IllegalArgumentException("Invalid channels type: $channels")
 }

@@ -10,13 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import info.cemu.cemu.guicore.components.Header
+import info.cemu.cemu.core.components.Header
 
 @Composable
 fun InputItemsGroup(
     groupName: String,
     inputIds: List<Int>,
-    inputIdToString: @Composable (Int) -> String,
+    inputIdToString: (Int) -> String,
     onInputClick: (String, Int) -> Unit,
     controlsMapping: Map<Int, String>,
 ) {

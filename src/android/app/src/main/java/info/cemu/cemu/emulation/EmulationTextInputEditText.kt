@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import android.view.inputmethod.EditorInfo
 import com.google.android.material.R
 import com.google.android.material.textfield.TextInputEditText
+import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSwkbd
 import java.util.regex.Pattern
 
@@ -34,6 +35,8 @@ class EmulationTextInputEditText @JvmOverloads constructor(
     private var onTextChangedListener: ((CharSequence) -> Unit)? = null
 
     init {
+        hint = tr("Input text")
+
         appendFilter { source: CharSequence, _, _, _, _, _ ->
             if (INPUT_PATTERN.matcher(source).matches()) null else ""
         }

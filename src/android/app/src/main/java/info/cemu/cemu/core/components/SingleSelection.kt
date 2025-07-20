@@ -1,4 +1,4 @@
-package info.cemu.cemu.guicore.components
+package info.cemu.cemu.core.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import info.cemu.cemu.R
+import info.cemu.cemu.core.translation.tr
 
 @Composable
 fun SingleSelection(
@@ -179,7 +180,7 @@ private fun <T> SelectDialog(
                     .padding(8.dp)
                     .align(Alignment.End),
             ) {
-                Text(stringResource(R.string.cancel))
+                Text(tr("Cancel"))
             }
         }
     }

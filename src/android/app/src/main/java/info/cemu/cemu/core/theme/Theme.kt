@@ -1,4 +1,4 @@
-package info.cemu.cemu.guicore.theme
+package info.cemu.cemu.core.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

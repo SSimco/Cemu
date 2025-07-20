@@ -1,14 +1,21 @@
 package info.cemu.cemu
 
 import android.app.Application
+import android.content.res.Resources
+import android.util.Log
+import info.cemu.cemu.core.translation.setLanguage
+import info.cemu.cemu.core.translation.setTranslations
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.initializeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setInternalDir
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setNativeLibDir
 import info.cemu.cemu.nativeinterface.NativeEmulation.initializeEmulation
 import info.cemu.cemu.nativeinterface.NativeEmulation.setDPI
 import info.cemu.cemu.nativeinterface.NativeGraphicPacks.refreshGraphicPacks
+import info.cemu.cemu.nativeinterface.NativeLocalization
 import info.cemu.cemu.nativeinterface.NativeLogging.crashLog
 import info.cemu.cemu.nativeinterface.NativeSwkbd.initializeSwkbd
+import info.cemu.cemu.settings.SettingsManager
+import info.cemu.cemu.utils.parsePoFile
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
@@ -32,8 +39,14 @@ class CemuApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         configureExceptionHandler()
+        initializeTranslations()
         initializeCemu()
         saveDataFiles()
+    }
+
+    private fun initializeTranslations() {
+        setTranslations(this)
+        setLanguage(SettingsManager(this).guiSettings.language, this)
     }
 
     private fun saveDataFiles() {
@@ -46,18 +59,12 @@ class CemuApplication : Application() {
         val hashFileName = "hash.txt"
         val hashFile = dataFolder.resolve(hashFileName)
         val oldHash = if (hashFile.isFile) hashFile.readText() else "invalid"
-        
-        val assetsFileStream = try {
-            assets.open(hashFileName)
-        } catch (_: IOException) {
-            null
-        }
 
-        if (assetsFileStream == null) {
+        val newHash = try {
+            assets.open(hashFileName).use { it.reader().readText() }
+        } catch (_: IOException) {
             return
         }
-
-        val newHash = assetsFileStream.reader().readText()
 
         if (oldHash == newHash) {
             return
@@ -98,7 +105,8 @@ class CemuApplication : Application() {
 
             val outFile = dataFolder.resolve(assetFile)
             outFile.parentFile?.mkdirs()
-            assets.open(assetFile).copyTo(outFile.outputStream())
+            assets.open(assetFile)
+                .use { asset -> outFile.outputStream().use { out -> asset.copyTo(out) } }
         }
     }
 

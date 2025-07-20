@@ -23,38 +23,31 @@
 
                 <include
                     android:id="@+id/enable_motion_checkbox"
-                    layout="@layout/layout_side_menu_checkbox_item"
-                    app:label="@{@string/enable_motion}" />
+                    layout="@layout/layout_side_menu_checkbox_item" />
 
                 <include
                     android:id="@+id/replace_tv_with_pad_checkbox"
-                    layout="@layout/layout_side_menu_checkbox_item"
-                    app:label="@{@string/replace_tv_with_pad}" />
+                    layout="@layout/layout_side_menu_checkbox_item" />
 
                 <include
                     android:id="@+id/show_pad_checkbox"
-                    layout="@layout/layout_side_menu_checkbox_item"
-                    app:label="@{@string/show_pad}" />
+                    layout="@layout/layout_side_menu_checkbox_item" />
 
                 <include
                     android:id="@+id/edit_inputs_menu_item"
-                    layout="@layout/layout_side_menu_text_item"
-                    app:label="@{@string/edit_inputs}" />
+                    layout="@layout/layout_side_menu_text_item" />
 
                 <include
                     android:id="@+id/reset_input_overlay_menu_item"
-                    layout="@layout/layout_side_menu_text_item"
-                    app:label="@{@string/reset_input_overlay}" />
+                    layout="@layout/layout_side_menu_text_item" />
 
                 <include
                     android:id="@+id/show_input_overlay_checkbox"
-                    layout="@layout/layout_side_menu_checkbox_item"
-                    app:label="@{@string/show_input_overlay}" />
+                    layout="@layout/layout_side_menu_checkbox_item" />
 
                 <include
                     android:id="@+id/exit_menu_item"
-                    layout="@layout/layout_side_menu_text_item"
-                    app:label="@{@string/exit}" />
+                    layout="@layout/layout_side_menu_text_item" />
             </LinearLayout>
 
         </ScrollView>
