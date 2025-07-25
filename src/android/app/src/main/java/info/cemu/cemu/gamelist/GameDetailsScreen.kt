@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,8 +62,6 @@ fun GameDetails(game: Game) {
 }
 
 
-@ReadOnlyComposable
-@Composable
 private fun getTimePlayed(game: Game): String {
     if (game.minutesPlayed == 0) {
         return tr("Never played")
@@ -83,8 +80,6 @@ private val DateFormatter = DateTimeFormatter.ofLocalizedDate(
     FormatStyle.SHORT
 )
 
-@ReadOnlyComposable
-@Composable
 private fun getLastPlayedDate(game: Game): String {
     if (game.lastPlayedYear.toInt() == 0) {
         return tr("Never played")

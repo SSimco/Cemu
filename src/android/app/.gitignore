@@ -1,4 +1,4 @@
 /build
-assets/hash.txt
+/src/main/assets/hash.txt
 *.po
 *.pot

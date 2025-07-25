@@ -4,18 +4,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Rect
 import android.util.DisplayMetrics.DENSITY_DEFAULT
-import androidx.annotation.IntRange
 import info.cemu.cemu.R
-import info.cemu.cemu.nativeinterface.NativeInput
 import kotlin.math.max
 import kotlin.math.min
 
 class OverlaySettings(
     var isVibrateOnTouchEnabled: Boolean,
     var isOverlayEnabled: Boolean,
-    @IntRange(0, (NativeInput.MAX_CONTROLLERS - 1L))
     var controllerIndex: Int,
-    @IntRange(0, 255)
     var alpha: Int,
 ) {
     companion object {
