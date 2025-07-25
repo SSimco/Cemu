@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.gettext)
+    alias(libs.plugins.aboutlibraries.android)
 }
 
 fun String.runCommand(workingDir: File = File(".")): String? {
@@ -217,6 +218,7 @@ gettext {
 }
 
 dependencies {
+    implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.kotlinx.gettext)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)

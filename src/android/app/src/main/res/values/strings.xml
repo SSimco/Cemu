@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name" translatable="false">Cemu</string>
     <string name="cemu_original_authors" translatable="false">Exzap, Petergov</string>
+    <string name="cemu_website" translatable="false">https://cemu.info</string>
 </resources>
