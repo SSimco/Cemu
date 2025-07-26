@@ -1,12 +1,3 @@
-<<<<<<< HEAD:src/gui/components/wxDownloadManagerList.cpp
-#include "components/wxDownloadManagerList.h"
-
-#include "helpers/wxHelpers.h"
-#include "util/helpers/SystemException.h"
-#include "Cafe/TitleList/GameInfo.h"
-#include "components/wxGameList.h"
-#include "helpers/wxCustomEvents.h"
-=======
 #include "wxgui/components/wxDownloadManagerList.h"
 
 #include "wxgui/helpers/wxHelpers.h"
@@ -14,7 +5,6 @@
 #include "Cafe/TitleList/GameInfo.h"
 #include "wxgui/components/wxGameList.h"
 #include "wxgui/helpers/wxCustomEvents.h"
->>>>>>> public/main:src/gui/wxgui/components/wxDownloadManagerList.cpp
 
 #include <wx/imaglist.h>
 #include <wx/wupdlock.h>
@@ -28,17 +18,10 @@
 #include <functional>
 
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/components/wxDownloadManagerList.cpp
-#include "ChecksumTool.h"
-#include "Cemu/Tools/DownloadManager/DownloadManager.h"
-#include "Cafe/TitleList/TitleId.h"
-#include "MainWindow.h"
-=======
 #include "wxgui/ChecksumTool.h"
 #include "Cemu/Tools/DownloadManager/DownloadManager.h"
 #include "Cafe/TitleList/TitleId.h"
 #include "wxgui/MainWindow.h"
->>>>>>> public/main:src/gui/wxgui/components/wxDownloadManagerList.cpp
 
 wxDEFINE_EVENT(wxEVT_REMOVE_ENTRY, wxCommandEvent);
 

@@ -1,10 +1,6 @@
 #pragma once
 #include <wx/dialog.h>
-<<<<<<< HEAD:src/gui/ChecksumTool.h
-#include "components/wxTitleManagerList.h"
-=======
 #include "wxgui/components/wxTitleManagerList.h"
->>>>>>> public/main:src/gui/wxgui/ChecksumTool.h
 #include "Cafe/TitleList/TitleInfo.h"
 #include <rapidjson/document.h>
 

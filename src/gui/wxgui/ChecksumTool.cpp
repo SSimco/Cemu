@@ -1,12 +1,3 @@
-<<<<<<< HEAD:src/gui/ChecksumTool.cpp
-#include "ChecksumTool.h"
-
-#include "Cafe/TitleList/GameInfo.h"
-#include "helpers/wxCustomEvents.h"
-#include "util/helpers/helpers.h"
-#include "helpers/wxHelpers.h"
-#include "wxHelper.h"
-=======
 #include "wxgui/ChecksumTool.h"
 
 #include "Cafe/TitleList/GameInfo.h"
@@ -14,7 +5,6 @@
 #include "util/helpers/helpers.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/wxHelper.h"
->>>>>>> public/main:src/gui/wxgui/ChecksumTool.cpp
 #include "Cafe/Filesystem/WUD/wud.h"
 
 #include <zip.h>

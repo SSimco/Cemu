@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/CemuUpdateWindow.cpp
-#include "CemuUpdateWindow.h"
-=======
 #include "wxgui/CemuUpdateWindow.h"
->>>>>>> public/main:src/gui/wxgui/CemuUpdateWindow.cpp
 
 #include "Common/version.h"
 #include "util/helpers/helpers.h"

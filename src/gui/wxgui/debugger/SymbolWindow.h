@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/debugger/SymbolWindow.h
-#include "debugger/SymbolCtrl.h"
-=======
 #include "wxgui/debugger/SymbolCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/SymbolWindow.h
 
 class DebuggerWindow2;
 

@@ -1,18 +1,9 @@
-<<<<<<< HEAD:src/gui/debugger/RegisterWindow.cpp
-#include "wxgui.h"
-#include "debugger/RegisterWindow.h"
-
-#include <sstream>
-
-#include "debugger/DebuggerWindow2.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/RegisterWindow.h"
 
 #include <sstream>
 
 #include "wxgui/debugger/DebuggerWindow2.h"
->>>>>>> public/main:src/gui/wxgui/debugger/RegisterWindow.cpp
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/OS/RPL/rpl_structs.h"

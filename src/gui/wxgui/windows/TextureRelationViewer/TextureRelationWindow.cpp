@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/windows/TextureRelationViewer/TextureRelationWindow.cpp
-#include "wxgui.h"
-=======
 #include "wxgui/wxgui.h"
->>>>>>> public/main:src/gui/wxgui/windows/TextureRelationViewer/TextureRelationWindow.cpp
 #include "TextureRelationWindow.h"
 #include "Cafe/HW/Latte/Core/LatteTexture.h"
 

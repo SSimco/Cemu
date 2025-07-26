@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/components/TextList.cpp
-#include "wxgui.h"
-=======
 #include "wxgui/wxgui.h"
->>>>>>> public/main:src/gui/wxgui/components/TextList.cpp
 #include "TextList.h"
 #include <wx/setup.h>
 #include <wx/tooltip.h>

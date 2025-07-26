@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/components/wxLogCtrl.cpp
-#include "components/wxLogCtrl.h"
-=======
 #include "wxgui/components/wxLogCtrl.h"
->>>>>>> public/main:src/gui/wxgui/components/wxLogCtrl.cpp
 
 #include <boost/algorithm/string.hpp>
 

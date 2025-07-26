@@ -1,11 +1,7 @@
 #pragma once
 
 #include <wx/gbsizer.h>
-<<<<<<< HEAD:src/gui/input/panels/VPADInputPanel.h
-#include "input/panels/InputPanel.h"
-=======
 #include "wxgui/input/panels/InputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/VPADInputPanel.h
 
 class wxInputDraw;
 class wxCheckBox;

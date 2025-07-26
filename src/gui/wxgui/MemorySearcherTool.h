@@ -6,11 +6,7 @@
 
 #include "Cafe/HW/MMU/MMU.h"
 #include "util/helpers/helpers.h"
-<<<<<<< HEAD:src/gui/MemorySearcherTool.h
-#include "helpers/wxCustomEvents.h"
-=======
 #include "wxgui/helpers/wxCustomEvents.h"
->>>>>>> public/main:src/gui/wxgui/MemorySearcherTool.h
 
 enum SearchDataType
 {

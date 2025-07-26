@@ -1,9 +1,5 @@
 #pragma once
-<<<<<<< HEAD:src/gui/debugger/RegisterCtrl.h
-#include "components/TextList.h"
-=======
 #include "wxgui/components/TextList.h"
->>>>>>> public/main:src/gui/wxgui/debugger/RegisterCtrl.h
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 
 class RegisterCtrl : public TextList

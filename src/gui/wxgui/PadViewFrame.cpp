@@ -1,67 +1,45 @@
-<<<<<<< HEAD:src/gui/PadViewFrame.cpp
-#include "wxgui.h"
-#include "PadViewFrame.h"
-=======
 #include "interface/WindowSystem.h"
 #include "wxgui/wxgui.h"
 #include "wxgui/PadViewFrame.h"
->>>>>>> public/main:src/gui/wxgui/PadViewFrame.cpp
 
 #include <wx/display.h>
 
 #include "config/ActiveSettings.h"
 #include "Cafe/OS/libs/swkbd/swkbd.h"
-<<<<<<< HEAD:src/gui/PadViewFrame.cpp
-#include "canvas/OpenGLCanvas.h"
-#include "canvas/VulkanCanvas.h"
-#include "config/CemuConfig.h"
-#include "MainWindow.h"
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/canvas/OpenGLCanvas.h"
 #include "wxgui/canvas/VulkanCanvas.h"
 #include "config/CemuConfig.h"
 #include "wxgui/MainWindow.h"
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/PadViewFrame.cpp
 #include "input/InputManager.h"
-#include "Cemu/GuiSystem/GuiSystem.h"
 
 #if BOOST_OS_LINUX || BOOST_OS_MACOS
 #include "resource/embedded/resources.h"
 #endif
 #include "wxHelper.h"
 
-<<<<<<< HEAD:src/gui/PadViewFrame.cpp
-=======
 extern WindowSystem::WindowInfo g_window_info;
 
->>>>>>> public/main:src/gui/wxgui/PadViewFrame.cpp
 #define PAD_MIN_WIDTH  320
 #define PAD_MIN_HEIGHT 180
 
 PadViewFrame::PadViewFrame(wxFrame* parent)
 	: wxFrame(nullptr, wxID_ANY, _("GamePad View"), wxDefaultPosition, wxDefaultSize, wxMINIMIZE_BOX | wxMAXIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxCLOSE_BOX | wxWANTS_CHARS)
 {
-<<<<<<< HEAD:src/gui/PadViewFrame.cpp
-	auto& windowInfo = GuiSystem::getWindowInfo();
-	windowInfo.window_pad = get_window_handle_info_for_wxWindow(this);
-=======
 	g_window_info.window_pad = initHandleContextFromWxWidgetsWindow(this);
 
->>>>>>> public/main:src/gui/wxgui/PadViewFrame.cpp
 	SetIcon(wxICON(M_WND_ICON128));
 	wxWindow::EnableTouchEvents(wxTOUCH_PAN_GESTURES);
 
 	SetMinClientSize({ PAD_MIN_WIDTH, PAD_MIN_HEIGHT });
 
-	SetPosition({ windowInfo.restored_pad_x, windowInfo.restored_pad_y });
-	if (windowInfo.restored_pad_width >= PAD_MIN_WIDTH && windowInfo.restored_pad_height >= PAD_MIN_HEIGHT)
-		SetClientSize({ windowInfo.restored_pad_width, windowInfo.restored_pad_height });
+	SetPosition({ g_window_info.restored_pad_x, g_window_info.restored_pad_y });
+	if (g_window_info.restored_pad_width >= PAD_MIN_WIDTH && g_window_info.restored_pad_height >= PAD_MIN_HEIGHT)
+		SetClientSize({ g_window_info.restored_pad_width, g_window_info.restored_pad_height });
 	else
 		SetClientSize(wxSize(854, 480));
 
-	if (windowInfo.pad_maximized)
+	if (g_window_info.pad_maximized)
 		Maximize();
 
 	Bind(wxEVT_SIZE, &PadViewFrame::OnSizeEvent, this);
@@ -71,22 +49,21 @@ PadViewFrame::PadViewFrame(wxFrame* parent)
 
 	Bind(wxEVT_SET_WINDOW_TITLE, &PadViewFrame::OnSetWindowTitle, this);
 
-	windowInfo.pad_open = true;
+	g_window_info.pad_open = true;
 }
 
 PadViewFrame::~PadViewFrame()
 {
-	GuiSystem::getWindowInfo().pad_open = false;
+	g_window_info.pad_open = false;
 }
 
 bool PadViewFrame::Initialize()
 {
-	auto& windowInfo = GuiSystem::getWindowInfo();
 	const wxSize client_size = GetClientSize();
-	windowInfo.pad_width = client_size.GetWidth();
-	windowInfo.pad_height = client_size.GetHeight();
-	windowInfo.phys_pad_width = ToPhys(client_size.GetWidth());
-	windowInfo.phys_pad_height = ToPhys(client_size.GetHeight());
+	g_window_info.pad_width = client_size.GetWidth();
+	g_window_info.pad_height = client_size.GetHeight();
+	g_window_info.phys_pad_width = ToPhys(client_size.GetWidth());
+	g_window_info.phys_pad_height = ToPhys(client_size.GetHeight());
 
 	return true;
 }
@@ -129,20 +106,19 @@ void PadViewFrame::DestroyCanvas()
 
 void PadViewFrame::OnSizeEvent(wxSizeEvent& event)
 {
-	auto& windowInfo = GuiSystem::getWindowInfo();
 	if (!IsMaximized() && !IsFullScreen())
 	{
-		windowInfo.restored_pad_width = GetSize().x;
-		windowInfo.restored_pad_height = GetSize().y;
+		g_window_info.restored_pad_width = GetSize().x;
+		g_window_info.restored_pad_height = GetSize().y;
 	}
-	windowInfo.pad_maximized = IsMaximized() && !IsFullScreen();
+	g_window_info.pad_maximized = IsMaximized() && !IsFullScreen();
 
 	const wxSize client_size = GetClientSize();
-	windowInfo.pad_width = client_size.GetWidth();
-	windowInfo.pad_height = client_size.GetHeight();
-	windowInfo.phys_pad_width = ToPhys(client_size.GetWidth());
-	windowInfo.phys_pad_height = ToPhys(client_size.GetHeight());
-	windowInfo.pad_dpi_scale = GetDPIScaleFactor();
+	g_window_info.pad_width = client_size.GetWidth();
+	g_window_info.pad_height = client_size.GetHeight();
+	g_window_info.phys_pad_width = ToPhys(client_size.GetWidth());
+	g_window_info.phys_pad_height = ToPhys(client_size.GetHeight());
+	g_window_info.pad_dpi_scale = GetDPIScaleFactor();
 
 	event.Skip();
 }
@@ -150,22 +126,20 @@ void PadViewFrame::OnSizeEvent(wxSizeEvent& event)
 void PadViewFrame::OnDPIChangedEvent(wxDPIChangedEvent& event)
 {
 	event.Skip();
-	auto& windowInfo = GuiSystem::getWindowInfo();
 	const wxSize client_size = GetClientSize();
-	windowInfo.pad_width = client_size.GetWidth();
-	windowInfo.pad_height = client_size.GetHeight();
-	windowInfo.phys_pad_width = ToPhys(client_size.GetWidth());
-	windowInfo.phys_pad_height = ToPhys(client_size.GetHeight());
-	windowInfo.pad_dpi_scale = GetDPIScaleFactor();
+	g_window_info.pad_width = client_size.GetWidth();
+	g_window_info.pad_height = client_size.GetHeight();
+	g_window_info.phys_pad_width = ToPhys(client_size.GetWidth());
+	g_window_info.phys_pad_height = ToPhys(client_size.GetHeight());
+	g_window_info.pad_dpi_scale = GetDPIScaleFactor();
 }
 
 void PadViewFrame::OnMoveEvent(wxMoveEvent& event)
 {
 	if (!IsMaximized() && !IsFullScreen())
 	{
-		auto& windowInfo = GuiSystem::getWindowInfo();
-		windowInfo.restored_pad_x = GetPosition().x;
-		windowInfo.restored_pad_y = GetPosition().y;
+		g_window_info.restored_pad_x = GetPosition().x;
+		g_window_info.restored_pad_y = GetPosition().y;
 	}
 }
 

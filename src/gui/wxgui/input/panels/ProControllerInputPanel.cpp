@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/input/panels/ProControllerInputPanel.cpp
-#include "input/panels/ProControllerInputPanel.h"
-=======
 #include "wxgui/input/panels/ProControllerInputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/ProControllerInputPanel.cpp
 
 #include <wx/gbsizer.h>
 #include <wx/stattext.h>
@@ -10,13 +6,8 @@
 #include <wx/textctrl.h>
 
 #include "input/emulated/ProController.h"
-<<<<<<< HEAD:src/gui/input/panels/ProControllerInputPanel.cpp
-#include "helpers/wxHelpers.h"
-#include "components/wxInputDraw.h"
-=======
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/components/wxInputDraw.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/ProControllerInputPanel.cpp
 
 const ProController::ButtonId g_kFirstColumnItems[] = { ProController::kButtonId_A, ProController::kButtonId_B, ProController::kButtonId_X, ProController::kButtonId_Y, ProController::kButtonId_L, ProController::kButtonId_R, ProController::kButtonId_ZL, ProController::kButtonId_ZR, ProController::kButtonId_Plus, ProController::kButtonId_Minus };
 const ProController::ButtonId g_kSecondColumnItems[] = { ProController::kButtonId_StickL, ProController::kButtonId_StickL_Up, ProController::kButtonId_StickL_Down, ProController::kButtonId_StickL_Left, ProController::kButtonId_StickL_Right };

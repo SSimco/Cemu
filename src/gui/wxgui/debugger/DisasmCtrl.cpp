@@ -1,10 +1,5 @@
-<<<<<<< HEAD:src/gui/debugger/DisasmCtrl.cpp
-#include "wxgui.h"
-#include "debugger/DisasmCtrl.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/DisasmCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DisasmCtrl.cpp
 
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include "Cafe/OS/RPL/rpl.h"
@@ -12,11 +7,7 @@
 #include "Cafe/OS/RPL/rpl_debug_symbols.h"
 #include "Cemu/PPCAssembler/ppcAssembler.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
-<<<<<<< HEAD:src/gui/debugger/DisasmCtrl.cpp
-#include "debugger/DebuggerWindow2.h"
-=======
 #include "wxgui/debugger/DebuggerWindow2.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DisasmCtrl.cpp
 #include "util/helpers/helpers.h"
 
 #include "Cemu/ExpressionParser/ExpressionParser.h"
@@ -841,7 +832,9 @@ void DisasmCtrl::GoToAddressDialog()
 			const auto result = (uint32)parser.Evaluate(value);
 			m_lastGotoTarget = result;
 			CenterOffset(result);
-			debugger_getDebuggerCallbacks()->updateViewThreadsafe();
+			wxCommandEvent evt(wxEVT_DISASMCTRL_NOTIFY_GOTO_ADDRESS);
+			evt.SetExtraLong(static_cast<long>(result));
+			wxPostEvent(GetParent(), evt);
 		}
 		else
 		{

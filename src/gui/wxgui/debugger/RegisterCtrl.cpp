@@ -1,21 +1,12 @@
-<<<<<<< HEAD:src/gui/debugger/RegisterCtrl.cpp
-#include "wxgui.h"
-#include "debugger/RegisterCtrl.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/RegisterCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/RegisterCtrl.cpp
 
 #include <sstream>
 
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
-<<<<<<< HEAD:src/gui/debugger/RegisterCtrl.cpp
-#include "debugger/DebuggerWindow2.h"
-=======
 #include "wxgui/debugger/DebuggerWindow2.h"
->>>>>>> public/main:src/gui/wxgui/debugger/RegisterCtrl.cpp
 
 #define COLOR_DEBUG_ACTIVE_BP	0xFFFFA0FF
 #define COLOR_DEBUG_ACTIVE		0xFFFFA080

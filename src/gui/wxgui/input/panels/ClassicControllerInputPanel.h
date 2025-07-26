@@ -2,11 +2,7 @@
 
 #include <wx/gbsizer.h>
 #include "input/emulated/ClassicController.h"
-<<<<<<< HEAD:src/gui/input/panels/ClassicControllerInputPanel.h
-#include "input/panels/InputPanel.h"
-=======
 #include "wxgui/input/panels/InputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/ClassicControllerInputPanel.h
 
 class wxInputDraw;
 

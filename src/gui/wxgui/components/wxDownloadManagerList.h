@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/components/wxDownloadManagerList.h
-#include "helpers/wxCustomData.h"
-=======
 #include "wxgui/helpers/wxCustomData.h"
->>>>>>> public/main:src/gui/wxgui/components/wxDownloadManagerList.h
 #include "config/CemuConfig.h"
 
 #include <wx/listctrl.h>

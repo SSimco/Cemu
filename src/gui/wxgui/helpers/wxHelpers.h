@@ -5,8 +5,6 @@
 #include <wx/listbase.h>
 #include <wx/string.h>
 
-#include "Cemu/GuiSystem/GuiSystem.h"
-
 template <>
 struct fmt::formatter<wxString> : formatter<string_view>
 {
@@ -113,12 +111,4 @@ void update_slider_text(wxCommandEvent& event, const wxFormatString& format = "%
 
 uint32 fix_raw_keycode(uint32 keycode, uint32 raw_flags);
 
-<<<<<<< HEAD:src/gui/helpers/wxHelpers.h
-std::string rawKeyCodeToString(uint32 keyCode);
-
-std::optional<GuiSystem::PlatformKeyCodes> rawKeyCodeToPlatformKeyCode(uint32 keyCode);
-
-GuiSystem::WindowHandleInfo get_window_handle_info_for_wxWindow(wxWindow* wxw);
-=======
 WindowSystem::WindowHandleInfo initHandleContextFromWxWidgetsWindow(wxWindow* wxw);
->>>>>>> public/main:src/gui/wxgui/helpers/wxHelpers.h

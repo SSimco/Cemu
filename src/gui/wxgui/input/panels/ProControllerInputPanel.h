@@ -2,13 +2,8 @@
 
 #include <wx/gbsizer.h>
 #include "input/emulated/ProController.h"
-<<<<<<< HEAD:src/gui/input/panels/ProControllerInputPanel.h
-#include "input/panels/InputPanel.h"
-#include "components/wxInputDraw.h"
-=======
 #include "wxgui/input/panels/InputPanel.h"
 #include "wxgui/components/wxInputDraw.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/ProControllerInputPanel.h
 
 class ProControllerInputPanel : public InputPanel
 {

@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/dialogs/CreateAccount/wxCreateAccountDialog.cpp
-#include "dialogs/CreateAccount/wxCreateAccountDialog.h"
-=======
 #include "wxgui/dialogs/CreateAccount/wxCreateAccountDialog.h"
->>>>>>> public/main:src/gui/wxgui/dialogs/CreateAccount/wxCreateAccountDialog.cpp
 #include "Cafe/Account/Account.h"
 
 #include <wx/sizer.h>

@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/helpers/wxWayland.cpp
-#include "helpers/wxWayland.h"
-=======
 #include "wxgui/helpers/wxWayland.h"
->>>>>>> public/main:src/gui/wxgui/helpers/wxWayland.cpp
 
 #if BOOST_OS_LINUX && HAS_WAYLAND
 

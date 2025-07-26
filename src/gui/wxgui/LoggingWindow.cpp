@@ -1,29 +1,17 @@
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-#include "LoggingWindow.h"
-
-#include "helpers/wxLogEvent.h"
-=======
 #include "wxgui/LoggingWindow.h"
 
 #include "Cemu/Logging/CemuLogging.h"
 #include "wxgui/helpers/wxLogEvent.h"
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/wupdlock.h>
 
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-#include "helpers/wxHelpers.h"
-
-=======
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 wxDEFINE_EVENT(EVT_LOG, wxLogEvent);
 
 LoggingWindow::LoggingWindow(wxFrame* parent)
 	: wxFrame(parent, wxID_ANY, _("Logging window"), wxDefaultPosition, wxSize(800, 600), wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL)
 {
-	cemuLog_registerLogCallbacks(this);
 	auto*  sizer = new wxBoxSizer( wxVERTICAL );
 	{
 		auto filter_row = new wxBoxSizer( wxHORIZONTAL );
@@ -50,49 +38,33 @@ LoggingWindow::LoggingWindow(wxFrame* parent)
 	this->Layout();
 
 	this->Bind(EVT_LOG, &LoggingWindow::OnLogMessage, this);
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-=======
 
 	cemuLog_setCallbacks(this);
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 }
 
 LoggingWindow::~LoggingWindow()
 {
-	cemuLog_unregisterLogCallbacks();
 	this->Unbind(EVT_LOG, &LoggingWindow::OnLogMessage, this);
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-=======
 
 	cemuLog_clearCallbacks();
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 }
 
 void LoggingWindow::Log(std::string_view filter, std::string_view message)
 {
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-
-	wxLogEvent event(std::string {filter}, std::string{ message });
-	OnLogMessage(event);
-=======
 	wxLogEvent event(std::string {filter}, std::string{ message });
 	OnLogMessage(event);
 
 	//const auto log_event = new wxLogEvent(filter, message);
 	//wxQueueEvent(s_instance, log_event);
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 }
 
 void LoggingWindow::Log(std::string_view filter, std::wstring_view message)
 {
 	wxLogEvent event(std::string {filter}, std::wstring{ message });
 	OnLogMessage(event);
-<<<<<<< HEAD:src/gui/LoggingWindow.cpp
-=======
 
 	//const auto log_event = new wxLogEvent(filter, message);
 	//wxQueueEvent(s_instance, log_event);
->>>>>>> public/main:src/gui/wxgui/LoggingWindow.cpp
 }
 
 void LoggingWindow::OnLogMessage(wxLogEvent& event)

@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/debugger/DebuggerWindow2.h
-#include "debugger/DisasmCtrl.h"
-=======
 #include "wxgui/debugger/DisasmCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DebuggerWindow2.h
 #include "config/XMLConfig.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 #include "Cafe/OS/RPL/rpl.h"
@@ -60,11 +56,7 @@ struct DebuggerModuleStorage
 };
 typedef XMLDataConfig<DebuggerModuleStorage> XMLDebuggerModuleConfig;
 
-<<<<<<< HEAD:src/gui/debugger/DebuggerWindow2.h
-class DebuggerWindow2 : public wxFrame, DebuggerCallbacks
-=======
 class DebuggerWindow2 : public wxFrame, public DebuggerCallbacks
->>>>>>> public/main:src/gui/wxgui/debugger/DebuggerWindow2.h
 {
 public:
 	void CreateToolBar();
@@ -80,14 +72,6 @@ public:
 
 	bool Show(bool show = true) override;
 	std::wstring GetModuleStoragePath(std::string module_name, uint32_t crc_hash) const;
-
-	virtual void updateViewThreadsafe() override;
-	virtual void notifyDebugBreakpointHit() override;
-	virtual void notifyRun() override;
-	virtual void moveIP() override;
-	virtual void notifyModuleLoaded(void* module) override;
-	virtual void notifyModuleUnloaded(void* module) override;
-
 private:
 	void OnBreakpointHit(wxCommandEvent& event);
 	void OnRunProgram(wxCommandEvent& event);

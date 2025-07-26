@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/input/settings/WiimoteControllerSettings.cpp
-#include "input/settings/WiimoteControllerSettings.h"
-=======
 #include "wxgui/input/settings/WiimoteControllerSettings.h"
->>>>>>> public/main:src/gui/wxgui/input/settings/WiimoteControllerSettings.cpp
 
 #include <wx/sizer.h>
 #include <wx/stattext.h>
@@ -13,17 +9,10 @@
 #include <wx/checkbox.h>
 #include <wx/statbox.h>
 
-<<<<<<< HEAD:src/gui/input/settings/WiimoteControllerSettings.cpp
-#include "helpers/wxControlObject.h"
-#include "helpers/wxHelpers.h"
-#include "components/wxInputDraw.h"
-#include "input/InputAPIAddWindow.h"
-=======
 #include "wxgui/helpers/wxControlObject.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/components/wxInputDraw.h"
 #include "wxgui/input/InputAPIAddWindow.h"
->>>>>>> public/main:src/gui/wxgui/input/settings/WiimoteControllerSettings.cpp
 
 #ifdef SUPPORTS_WIIMOTE
 

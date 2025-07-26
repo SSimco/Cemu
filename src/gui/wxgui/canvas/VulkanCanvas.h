@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/canvas/VulkanCanvas.h
-#include "canvas/IRenderCanvas.h"
-=======
 #include "wxgui/canvas/IRenderCanvas.h"
->>>>>>> public/main:src/gui/wxgui/canvas/VulkanCanvas.h
 
 #include <wx/frame.h>
 

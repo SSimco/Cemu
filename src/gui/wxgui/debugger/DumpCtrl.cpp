@@ -1,10 +1,5 @@
-<<<<<<< HEAD:src/gui/debugger/DumpCtrl.cpp
-#include "wxgui.h"
-#include "debugger/DumpCtrl.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/DumpCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DumpCtrl.cpp
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/OS/RPL/rpl_structs.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"

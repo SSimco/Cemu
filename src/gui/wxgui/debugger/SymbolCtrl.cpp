@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/debugger/SymbolCtrl.cpp
-#include "debugger/SymbolCtrl.h"
-=======
 #include "wxgui/debugger/SymbolCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/SymbolCtrl.cpp
 #include "Cafe/OS/RPL/rpl_symbol_storage.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 #include <wx/listctrl.h>
@@ -117,11 +113,7 @@ void SymbolListCtrl::OnLeftDClick(wxListEvent& event)
 	if (address == 0)
 		return;
 	debuggerState.debugSession.instructionPointer = address;
-<<<<<<< HEAD:src/gui/debugger/SymbolCtrl.cpp
-	debugger_getDebuggerCallbacks()->moveIP();
-=======
 	g_debuggerDispatcher.MoveIP();
->>>>>>> public/main:src/gui/wxgui/debugger/SymbolCtrl.cpp
 }
 
 void SymbolListCtrl::OnRightClick(wxListEvent& event)

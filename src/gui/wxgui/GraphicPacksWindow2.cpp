@@ -1,12 +1,6 @@
-<<<<<<< HEAD:src/gui/GraphicPacksWindow2.cpp
-#include "wxgui.h"
-#include "GraphicPacksWindow2.h"
-#include "DownloadGraphicPacksWindow.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/GraphicPacksWindow2.h"
 #include "wxgui/DownloadGraphicPacksWindow.h"
->>>>>>> public/main:src/gui/wxgui/GraphicPacksWindow2.cpp
 #include "Cafe/GraphicPack/GraphicPack2.h"
 #include "config/CemuConfig.h"
 #include "config/ActiveSettings.h"

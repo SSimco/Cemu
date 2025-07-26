@@ -1,15 +1,11 @@
-<<<<<<< HEAD:src/gui/canvas/OpenGLCanvas.cpp
-#include "canvas/OpenGLCanvas.h"
-=======
 #include "wxgui/canvas/OpenGLCanvas.h"
 
 #include "wxgui/canvas/IRenderCanvas.h"
 
->>>>>>> public/main:src/gui/wxgui/canvas/OpenGLCanvas.cpp
 #include "Cafe/HW/Latte/Renderer/OpenGL/OpenGLRenderer.h"
 
 #include "config/CemuConfig.h"
-#include "Cafe/HW/Latte/Renderer/OpenGL/GLCanvas.h"
+
 #include "Common/GLInclude/GLInclude.h"
 #include <wx/glcanvas.h> // this includes GL/gl.h, avoid using this in a header because it would contaminate our own OpenGL definitions (GLInclude)
 
@@ -87,7 +83,7 @@ class GLCanvasManager : public OpenGLCanvasCallbacks
 	OpenGLCanvas* m_padView = nullptr;
 } s_glCanvasManager;
 
-class OpenGLCanvas : public IRenderCanvas, public wxGLCanvas, public OpenGLRenderer::OpenGLCallbacks
+class OpenGLCanvas : public IRenderCanvas, public wxGLCanvas
 {
 public:
 	OpenGLCanvas(wxWindow* parent, const wxSize& size, bool is_main_window)
@@ -95,16 +91,10 @@ public:
 	{
 		if (m_is_main_window)
 		{
-<<<<<<< HEAD:src/gui/canvas/OpenGLCanvas.cpp
-			sGLTVView = this;
-			sGLContext = new wxGLContext(this);
-=======
 			s_glCanvasManager.SetTVView(this);
 			s_glCanvasManager.SetGLContext(new wxGLContext(this));
 
->>>>>>> public/main:src/gui/wxgui/canvas/OpenGLCanvas.cpp
 			g_renderer = std::make_unique<OpenGLRenderer>();
-			OpenGLRenderer::GetInstance()->RegisterOpenGLCallbacks(this);
 		}
 		else
 		{
@@ -125,10 +115,6 @@ public:
 
 		s_glCanvasManager.DeleteGLContext();
 	}
-
-	bool GLCanvas_HasPadViewOpen() override;
-	bool GLCanvas_MakeCurrent(bool padView) override;
-	void GLCanvas_SwapBuffers(bool swapTV, bool swapDRC) override;
 
 	void UpdateVSyncState()
 	{
@@ -163,11 +149,7 @@ wxWindow* GLCanvas_Create(wxWindow* parent, const wxSize& size, bool is_main_win
 	return new OpenGLCanvas(parent, size, is_main_window);
 }
 
-<<<<<<< HEAD:src/gui/canvas/OpenGLCanvas.cpp
-bool OpenGLCanvas::GLCanvas_HasPadViewOpen()
-=======
 void GLCanvasManager::SwapBuffers(bool swapTV, bool swapDRC)
->>>>>>> public/main:src/gui/wxgui/canvas/OpenGLCanvas.cpp
 {
 	if (swapTV && m_tvView)
 	{
@@ -186,37 +168,11 @@ void GLCanvasManager::SwapBuffers(bool swapTV, bool swapDRC)
 	MakeCurrent(false);
 }
 
-<<<<<<< HEAD:src/gui/canvas/OpenGLCanvas.cpp
-bool OpenGLCanvas::GLCanvas_MakeCurrent(bool padView)
-=======
 bool GLCanvasManager::MakeCurrent(bool padView)
->>>>>>> public/main:src/gui/wxgui/canvas/OpenGLCanvas.cpp
 {
 	OpenGLCanvas* canvas = padView ? m_padView : m_tvView;
 	if (!canvas)
 		return false;
 	m_glContext->SetCurrent(*canvas);
 	return true;
-<<<<<<< HEAD:src/gui/canvas/OpenGLCanvas.cpp
 }
-
-void OpenGLCanvas::GLCanvas_SwapBuffers(bool swapTV, bool swapDRC)
-{
-	if (swapTV && sGLTVView)
-	{
-		GLCanvas_MakeCurrent(false);
-		sGLTVView->SwapBuffers();
-		sGLTVView->UpdateVSyncState();
-	}
-	if (swapDRC && sGLPadView)
-	{
-		GLCanvas_MakeCurrent(true);
-		sGLPadView->SwapBuffers();
-		sGLPadView->UpdateVSyncState();
-	}
-
-	GLCanvas_MakeCurrent(false);
-}
-=======
-}
->>>>>>> public/main:src/gui/wxgui/canvas/OpenGLCanvas.cpp

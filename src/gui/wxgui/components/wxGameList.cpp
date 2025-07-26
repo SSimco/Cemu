@@ -1,17 +1,9 @@
-<<<<<<< HEAD:src/gui/components/wxGameList.cpp
-#include "components/wxGameList.h"
-
-#include "helpers/wxCustomData.h"
-#include "util/helpers/helpers.h"
-#include "GameProfileWindow.h"
-=======
 #include "wxgui/components/wxGameList.h"
 
 #include "wxgui/helpers/wxCustomData.h"
 #include "wxCemuConfig.h"
 #include "util/helpers/helpers.h"
 #include "wxgui/GameProfileWindow.h"
->>>>>>> public/main:src/gui/wxgui/components/wxGameList.cpp
 
 #include <numeric>
 
@@ -37,15 +29,9 @@
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/TitleList/TitleList.h"
 
-<<<<<<< HEAD:src/gui/components/wxGameList.cpp
-#include "CemuApp.h"
-#include "helpers/wxHelpers.h"
-#include "MainWindow.h"
-=======
 #include "wxgui/CemuApp.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/MainWindow.h"
->>>>>>> public/main:src/gui/wxgui/components/wxGameList.cpp
 
 #include "../wxHelper.h"
 

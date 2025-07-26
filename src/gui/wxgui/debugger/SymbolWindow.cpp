@@ -1,12 +1,6 @@
-<<<<<<< HEAD:src/gui/debugger/SymbolWindow.cpp
-#include "wxgui.h"
-#include "debugger/SymbolWindow.h"
-#include "debugger/DebuggerWindow2.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/SymbolWindow.h"
 #include "wxgui/debugger/DebuggerWindow2.h"
->>>>>>> public/main:src/gui/wxgui/debugger/SymbolWindow.cpp
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 #include "Cafe/OS/RPL/rpl_symbol_storage.h"
 

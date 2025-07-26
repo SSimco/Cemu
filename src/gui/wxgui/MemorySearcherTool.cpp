@@ -1,12 +1,6 @@
-<<<<<<< HEAD:src/gui/MemorySearcherTool.cpp
-#include "wxgui.h"
-
-#include "MemorySearcherTool.h"
-=======
 #include "wxgui/wxgui.h"
 
 #include "wxgui/MemorySearcherTool.h"
->>>>>>> public/main:src/gui/wxgui/MemorySearcherTool.cpp
 
 #include <vector>
 #include <sstream>
@@ -14,11 +8,7 @@
 #include <wx/listctrl.h>
 
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/MemorySearcherTool.cpp
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/MemorySearcherTool.cpp
 #include "Common/FileStream.h"
 #include "util/IniParser/IniParser.h"
 #include "util/helpers/StringHelpers.h"

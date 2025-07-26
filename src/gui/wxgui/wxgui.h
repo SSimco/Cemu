@@ -36,6 +36,7 @@
 #include <wx/infobar.h>
 #include <wx/splitter.h>
 
+extern bool g_inputConfigWindowHasFocus;
 
 inline bool SendSliderEvent(wxSlider* slider, int new_value)
 {

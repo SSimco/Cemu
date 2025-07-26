@@ -1,18 +1,8 @@
-<<<<<<< HEAD:src/gui/canvas/VulkanCanvas.cpp
-#include "canvas/VulkanCanvas.h"
-#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
-#include "Cemu/GuiSystem/GuiSystem.h"
-#include "helpers/wxHelpers.h"
-
-#if BOOST_OS_LINUX && HAS_WAYLAND
-#include "helpers/wxWayland.h"
-=======
 #include "wxgui/canvas/VulkanCanvas.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
 
 #if BOOST_OS_LINUX && HAS_WAYLAND
 #include "wxgui/helpers/wxWayland.h"
->>>>>>> public/main:src/gui/wxgui/canvas/VulkanCanvas.cpp
 #endif
 
 #include <wx/msgdlg.h>
@@ -24,17 +14,10 @@ VulkanCanvas::VulkanCanvas(wxWindow* parent, const wxSize& size, bool is_main_wi
 	Bind(wxEVT_PAINT, &VulkanCanvas::OnPaint, this);
 	Bind(wxEVT_SIZE, &VulkanCanvas::OnResize, this);
 
-<<<<<<< HEAD:src/gui/canvas/VulkanCanvas.cpp
-	auto& canvas = is_main_window ? GuiSystem::getWindowInfo().canvas_main : GuiSystem::getWindowInfo().canvas_pad;
-	canvas = get_window_handle_info_for_wxWindow(this);
-	#if BOOST_OS_LINUX && HAS_WAYLAND
-	if (canvas.backend == GuiSystem::WindowHandleInfo::Backend::Wayland)
-=======
 	auto& canvas = is_main_window ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
 	canvas = initHandleContextFromWxWidgetsWindow(this);
 	#if BOOST_OS_LINUX && HAS_WAYLAND
 	if (canvas.backend == WindowSystem::WindowHandleInfo::Backend::Wayland)
->>>>>>> public/main:src/gui/wxgui/canvas/VulkanCanvas.cpp
 	{
 		m_subsurface = std::make_unique<wxWlSubsurface>(this);
 		canvas.surface = m_subsurface->getSurface();

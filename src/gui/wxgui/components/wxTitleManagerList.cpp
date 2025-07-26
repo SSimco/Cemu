@@ -1,23 +1,12 @@
-<<<<<<< HEAD:src/gui/components/wxTitleManagerList.cpp
-#include "components/wxTitleManagerList.h"
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/components/wxTitleManagerList.h"
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/components/wxTitleManagerList.cpp
 #include "util/helpers/SystemException.h"
 #include "Cafe/TitleList/GameInfo.h"
 #include "Cafe/TitleList/TitleInfo.h"
 #include "Cafe/TitleList/TitleList.h"
-<<<<<<< HEAD:src/gui/components/wxTitleManagerList.cpp
-#include "components/wxGameList.h"
-#include "helpers/wxCustomEvents.h"
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/components/wxGameList.h"
 #include "wxgui/helpers/wxCustomEvents.h"
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/components/wxTitleManagerList.cpp
 
 #include <wx/imaglist.h>
 #include <wx/wupdlock.h>
@@ -33,13 +22,8 @@
 #include <functional>
 
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/components/wxTitleManagerList.cpp
-#include "ChecksumTool.h"
-#include "MainWindow.h"
-=======
 #include "wxgui/ChecksumTool.h"
 #include "wxgui/MainWindow.h"
->>>>>>> public/main:src/gui/wxgui/components/wxTitleManagerList.cpp
 #include "Cafe/TitleList/TitleId.h"
 #include "Cafe/TitleList/SaveList.h"
 #include "Cafe/TitleList/TitleList.h"

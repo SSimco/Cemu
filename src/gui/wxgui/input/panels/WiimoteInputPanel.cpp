@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/input/panels/WiimoteInputPanel.cpp
-#include "input/panels/WiimoteInputPanel.h"
-=======
 #include "wxgui/input/panels/WiimoteInputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/WiimoteInputPanel.cpp
 
 #include <wx/button.h>
 #include <wx/gbsizer.h>
@@ -12,18 +8,10 @@
 #include <wx/slider.h>
 #include <wx/checkbox.h>
 
-<<<<<<< HEAD:src/gui/input/panels/WiimoteInputPanel.cpp
-#include "helpers/wxControlObject.h"
-#include "input/emulated/WiimoteController.h"
-#include "helpers/wxHelpers.h"
-#include "components/wxInputDraw.h"
-#include "../PairingDialog.h"
-=======
 #include "wxgui/helpers/wxControlObject.h"
 #include "input/emulated/WiimoteController.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/components/wxInputDraw.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/WiimoteInputPanel.cpp
 
 constexpr WiimoteController::ButtonId g_kFirstColumnItems[] =
 {

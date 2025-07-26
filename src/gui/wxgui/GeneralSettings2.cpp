@@ -1,15 +1,8 @@
-<<<<<<< HEAD:src/gui/GeneralSettings2.cpp
-#include "wxgui.h"
-#include "GeneralSettings2.h"
-#include "CemuApp.h"
-#include "helpers/wxControlObject.h"
-=======
 #include "wxCemuConfig.h"
 #include "wxgui/wxgui.h"
 #include "wxgui/GeneralSettings2.h"
 #include "wxgui/CemuApp.h"
 #include "wxgui/helpers/wxControlObject.h"
->>>>>>> public/main:src/gui/wxgui/GeneralSettings2.cpp
 
 #include "util/helpers/helpers.h"
 
@@ -39,11 +32,7 @@
 
 #include <boost/tokenizer.hpp>
 #include "util/helpers/SystemException.h"
-<<<<<<< HEAD:src/gui/GeneralSettings2.cpp
-#include "dialogs/CreateAccount/wxCreateAccountDialog.h"
-=======
 #include "wxgui/dialogs/CreateAccount/wxCreateAccountDialog.h"
->>>>>>> public/main:src/gui/wxgui/GeneralSettings2.cpp
 
 #if BOOST_OS_WINDOWS
 #include <VersionHelpers.h>
@@ -51,11 +40,7 @@
 
 #include "config/LaunchSettings.h"
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/GeneralSettings2.cpp
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/GeneralSettings2.cpp
 
 #include "resource/embedded/resources.h"
 
@@ -1164,7 +1149,7 @@ void GeneralSettings2::DisableSettings(bool game_launched)
 
 void GeneralSettings2::OnAudioLatencyChanged(wxCommandEvent& event)
 {
-	IAudioAPI::s_audioDelay = event.GetInt();
+	IAudioAPI::SetAudioDelay(event.GetInt());
 	event.Skip();
 }
 

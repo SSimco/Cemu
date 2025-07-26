@@ -1,18 +1,9 @@
-<<<<<<< HEAD:src/gui/debugger/DumpWindow.cpp
-#include "wxgui.h"
-#include "debugger/DumpWindow.h"
-
-#include "debugger/DebuggerWindow2.h"
-#include "Cafe/HW/Espresso/Debugger/Debugger.h"
-#include "debugger/DumpCtrl.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/debugger/DumpWindow.h"
 
 #include "wxgui/debugger/DebuggerWindow2.h"
 #include "Cafe/HW/Espresso/Debugger/Debugger.h"
 #include "wxgui/debugger/DumpCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DumpWindow.cpp
 
 enum
 {

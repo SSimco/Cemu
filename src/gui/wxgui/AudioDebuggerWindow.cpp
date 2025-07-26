@@ -1,9 +1,5 @@
 #include "wxgui.h"
-<<<<<<<< HEAD:src/gui/wxgui/debugger/AudioDebuggerWindow.cpp
-#include "debugger/AudioDebuggerWindow.h"
-========
 #include "AudioDebuggerWindow.h"
->>>>>>>> public/main:src/gui/wxgui/AudioDebuggerWindow.cpp
 
 #include "Cafe/OS/libs/snd_core/ax.h"
 #include "Cafe/OS/libs/snd_core/ax_internal.h"

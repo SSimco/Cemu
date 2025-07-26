@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/input/panels/WiimoteInputPanel.h
-#include "input/panels/InputPanel.h"
-=======
 #include "wxgui/input/panels/InputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/WiimoteInputPanel.h
 #include "input/emulated/WiimoteController.h"
 #include <wx/slider.h>
 

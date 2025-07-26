@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/components/wxInputDraw.cpp
-#include "components/wxInputDraw.h"
-=======
 #include "wxgui/components/wxInputDraw.h"
->>>>>>> public/main:src/gui/wxgui/components/wxInputDraw.cpp
 
 #include <wx/dcbuffer.h>
 

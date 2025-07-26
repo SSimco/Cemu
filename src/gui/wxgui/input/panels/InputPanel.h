@@ -5,11 +5,7 @@
 #include "input/emulated/EmulatedController.h"
 #include "input/api/Controller.h"
 
-<<<<<<< HEAD:src/gui/input/panels/InputPanel.h
-#include "wxHelper.h"
-=======
 #include "wxgui/wxHelper.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/InputPanel.h
 
 class ControllerBase;
 class wxTextCtrl;

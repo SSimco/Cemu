@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/input/panels/VPADInputPanel.cpp
-#include "input/panels/VPADInputPanel.h"
-=======
 #include "wxgui/input/panels/VPADInputPanel.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/VPADInputPanel.cpp
 
 #include <wx/gbsizer.h>
 #include <wx/stattext.h>
@@ -12,15 +8,9 @@
 #include <wx/checkbox.h>
 
 
-<<<<<<< HEAD:src/gui/input/panels/VPADInputPanel.cpp
-#include "helpers/wxControlObject.h"
-#include "helpers/wxHelpers.h"
-#include "components/wxInputDraw.h"
-=======
 #include "wxgui/helpers/wxControlObject.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/components/wxInputDraw.h"
->>>>>>> public/main:src/gui/wxgui/input/panels/VPADInputPanel.cpp
 #include "input/emulated/VPADController.h"
 
 constexpr VPADController::ButtonId g_kFirstColumnItems[] =

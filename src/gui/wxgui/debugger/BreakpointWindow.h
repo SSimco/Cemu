@@ -1,9 +1,5 @@
 #pragma once
-<<<<<<< HEAD:src/gui/debugger/BreakpointWindow.h
-#include "wxcomponents/checkedlistctrl.h"
-=======
 #include "wxgui/wxcomponents/checkedlistctrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/BreakpointWindow.h
 
 class DebuggerWindow2;
 

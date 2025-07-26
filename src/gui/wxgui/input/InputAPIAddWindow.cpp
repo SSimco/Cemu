@@ -1,16 +1,8 @@
-<<<<<<< HEAD:src/gui/input/InputAPIAddWindow.cpp
-#include "input/InputAPIAddWindow.h"
-
-#include "input/InputManager.h"
-#include "helpers/wxCustomData.h"
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/input/InputAPIAddWindow.h"
 
 #include "input/InputManager.h"
 #include "wxgui/helpers/wxCustomData.h"
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/input/InputAPIAddWindow.cpp
 #include "input/api/Controller.h"
 
 #include <wx/sizer.h>

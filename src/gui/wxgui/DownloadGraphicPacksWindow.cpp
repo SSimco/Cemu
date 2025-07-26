@@ -1,10 +1,5 @@
-<<<<<<< HEAD:src/gui/DownloadGraphicPacksWindow.cpp
-#include "wxgui.h"
-#include "DownloadGraphicPacksWindow.h"
-=======
 #include "wxgui/wxgui.h"
 #include "wxgui/DownloadGraphicPacksWindow.h"
->>>>>>> public/main:src/gui/wxgui/DownloadGraphicPacksWindow.cpp
 
 #include <filesystem>
 #include <curl/curl.h>

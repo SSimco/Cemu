@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/GettingStartedDialog.cpp
-#include "GettingStartedDialog.h"
-=======
 #include "wxgui/GettingStartedDialog.h"
->>>>>>> public/main:src/gui/wxgui/GettingStartedDialog.cpp
 
 #include <wx/sizer.h>
 #include <wx/filepicker.h>
@@ -12,18 +8,11 @@
 #include <wx/button.h>
 
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/GettingStartedDialog.cpp
-#include "CemuApp.h"
-#include "DownloadGraphicPacksWindow.h"
-#include "GraphicPacksWindow2.h"
-#include "input/InputSettings2.h"
-=======
 #include "wxCemuConfig.h"
 #include "wxgui/CemuApp.h"
 #include "wxgui/DownloadGraphicPacksWindow.h"
 #include "wxgui/GraphicPacksWindow2.h"
 #include "wxgui/input/InputSettings2.h"
->>>>>>> public/main:src/gui/wxgui/GettingStartedDialog.cpp
 #include "config/CemuConfig.h"
 
 #include "Cafe/TitleList/TitleList.h"

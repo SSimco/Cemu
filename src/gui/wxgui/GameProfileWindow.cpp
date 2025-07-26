@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/GameProfileWindow.cpp
-#include "GameProfileWindow.h"
-=======
 #include "wxgui/GameProfileWindow.h"
->>>>>>> public/main:src/gui/wxgui/GameProfileWindow.cpp
 
 #include <wx/statbox.h>
 #include <wx/sizer.h>
@@ -12,11 +8,7 @@
 #include <wx/wupdlock.h>
 #include <wx/slider.h>
 
-<<<<<<< HEAD:src/gui/GameProfileWindow.cpp
-#include "helpers/wxHelpers.h"
-=======
 #include "wxgui/helpers/wxHelpers.h"
->>>>>>> public/main:src/gui/wxgui/GameProfileWindow.cpp
 #include "input/InputManager.h"
 
 #if BOOST_OS_LINUX || BOOST_OS_MACOS

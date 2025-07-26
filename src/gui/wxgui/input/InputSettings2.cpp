@@ -1,21 +1,11 @@
-<<<<<<< HEAD:src/gui/input/InputSettings2.cpp
-#include "input/InputSettings2.h"
-=======
 #include "wxgui/input/InputSettings2.h"
->>>>>>> public/main:src/gui/wxgui/input/InputSettings2.cpp
 
 #include <wx/gbsizer.h>
 
 #include "input/InputManager.h"
-<<<<<<< HEAD:src/gui/input/InputSettings2.cpp
-#include "helpers/wxHelpers.h"
-#include "helpers/wxControlObject.h"
-#include "helpers/wxCustomData.h"
-=======
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/helpers/wxControlObject.h"
 #include "wxgui/helpers/wxCustomData.h"
->>>>>>> public/main:src/gui/wxgui/input/InputSettings2.cpp
 
 #include <wx/sizer.h>
 #include <wx/notebook.h>
@@ -27,20 +17,6 @@
 #include <wx/bmpbuttn.h>
 
 #include "config/ActiveSettings.h"
-<<<<<<< HEAD:src/gui/input/InputSettings2.cpp
-#include "input/InputAPIAddWindow.h"
-#include "input/ControllerFactory.h"
-
-#include "input/PairingDialog.h"
-
-#include "input/panels/VPADInputPanel.h"
-#include "input/panels/ProControllerInputPanel.h"
-
-#include "input/settings/DefaultControllerSettings.h"
-#include "input/panels/ClassicControllerInputPanel.h"
-#include "input/panels/WiimoteInputPanel.h"
-#include "input/settings/WiimoteControllerSettings.h"
-=======
 #include "wxgui/input/InputAPIAddWindow.h"
 #include "input/ControllerFactory.h"
 
@@ -53,7 +29,6 @@
 #include "wxgui/input/panels/ClassicControllerInputPanel.h"
 #include "wxgui/input/panels/WiimoteInputPanel.h"
 #include "wxgui/input/settings/WiimoteControllerSettings.h"
->>>>>>> public/main:src/gui/wxgui/input/InputSettings2.cpp
 #include "util/EventService.h"
 
 #include "resource/embedded/resources.h"

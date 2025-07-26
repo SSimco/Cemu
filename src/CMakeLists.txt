@@ -42,11 +42,7 @@ add_compile_definitions(VK_NO_PROTOTYPES)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_subdirectory(Common)
-if(ANDROID)
-	add_subdirectory(android/app/src/main/cpp)
-else()
-	add_subdirectory(gui)
-endif()
+add_subdirectory(gui)
 add_subdirectory(Cafe)
 add_subdirectory(Cemu)
 add_subdirectory(config)
@@ -57,10 +53,11 @@ add_subdirectory(imgui)
 add_subdirectory(resource)
 
 if(ANDROID)
-	add_library(CemuBin STATIC
-		main.cpp
-		mainLLE.cpp
-	)
+    add_library(CemuBin STATIC
+        main.cpp
+        mainLLE.cpp
+    )
+    add_subdirectory(android/app/src/main/cpp)
 else()
 	add_executable(CemuBin
 		main.cpp
@@ -145,15 +142,12 @@ target_link_libraries(CemuBin PRIVATE
 	CemuAudio
 	CemuCafe
 	CemuCommon
+	CemuGui
 	CemuComponents
 	CemuConfig
 	CemuInput
 	CemuUtil
 )
-
-if(NOT ANDROID)
-	target_link_libraries(CemuBin PRIVATE CemuGui)
-endif()
 
 if(ENABLE_OPENGL)
 	target_link_libraries(CemuBin PRIVATE OpenGL::GL)

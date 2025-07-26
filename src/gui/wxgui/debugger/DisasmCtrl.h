@@ -1,9 +1,5 @@
 #pragma once
-<<<<<<< HEAD:src/gui/debugger/DisasmCtrl.h
-#include "components/TextList.h"
-=======
 #include "wxgui/components/TextList.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DisasmCtrl.h
 
 wxDECLARE_EVENT(wxEVT_DISASMCTRL_NOTIFY_GOTO_ADDRESS, wxCommandEvent); // Notify parent that goto address operation completed. Event contains the address that was jumped to.
 

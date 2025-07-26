@@ -18,11 +18,7 @@
 #endif
 
 // includes
-<<<<<<< HEAD:src/gui/wxcomponents/checkedlistctrl.cpp
-#include "wxcomponents/checkedlistctrl.h"
-=======
 #include "wxgui/wxcomponents/checkedlistctrl.h"
->>>>>>> public/main:src/gui/wxgui/wxcomponents/checkedlistctrl.cpp
 #include <wx/icon.h>
 
 #include <wx/settings.h>
@@ -31,17 +27,10 @@
 
 // resources
 
-<<<<<<< HEAD:src/gui/wxcomponents/checkedlistctrl.cpp
-#include "wxcomponents/checked.xpm"
-#include "wxcomponents/unchecked.xpm"
-#include "wxcomponents/checked_dis.xpm"
-#include "wxcomponents/unchecked_dis.xpm"
-=======
 #include "wxgui/wxcomponents/checked.xpm"
 #include "wxgui/wxcomponents/unchecked.xpm"
 #include "wxgui/wxcomponents/checked_dis.xpm"
 #include "wxgui/wxcomponents/unchecked_dis.xpm"
->>>>>>> public/main:src/gui/wxgui/wxcomponents/checkedlistctrl.cpp
 
 IMPLEMENT_CLASS(wxCheckedListCtrl, wxListCtrl)
 BEGIN_EVENT_TABLE(wxCheckedListCtrl, wxListCtrl)

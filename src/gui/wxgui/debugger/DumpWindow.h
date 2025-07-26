@@ -1,10 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD:src/gui/debugger/DumpWindow.h
-#include "debugger/DumpCtrl.h"
-=======
 #include "wxgui/debugger/DumpCtrl.h"
->>>>>>> public/main:src/gui/wxgui/debugger/DumpWindow.h
 
 class DebuggerWindow2;
 

@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/input/settings/DefaultControllerSettings.cpp
-#include "input/settings/DefaultControllerSettings.h"
-=======
 #include "wxgui/input/settings/DefaultControllerSettings.h"
->>>>>>> public/main:src/gui/wxgui/input/settings/DefaultControllerSettings.cpp
 
 #include <wx/sizer.h>
 #include <wx/stattext.h>
@@ -13,17 +9,10 @@
 #include <wx/checkbox.h>
 #include <wx/statbox.h>
 
-<<<<<<< HEAD:src/gui/input/settings/DefaultControllerSettings.cpp
-#include "helpers/wxControlObject.h"
-#include "helpers/wxHelpers.h"
-#include "components/wxInputDraw.h"
-#include "input/InputAPIAddWindow.h"
-=======
 #include "wxgui/helpers/wxControlObject.h"
 #include "wxgui/helpers/wxHelpers.h"
 #include "wxgui/components/wxInputDraw.h"
 #include "wxgui/input/InputAPIAddWindow.h"
->>>>>>> public/main:src/gui/wxgui/input/settings/DefaultControllerSettings.cpp
 
 
 DefaultControllerSettings::DefaultControllerSettings(wxWindow* parent, const wxPoint& position, std::shared_ptr<ControllerBase> controller)

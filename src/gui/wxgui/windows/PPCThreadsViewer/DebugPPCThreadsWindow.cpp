@@ -1,8 +1,4 @@
-<<<<<<< HEAD:src/gui/windows/PPCThreadsViewer/DebugPPCThreadsWindow.cpp
-#include "wxgui.h"
-=======
 #include "wxgui/wxgui.h"
->>>>>>> public/main:src/gui/wxgui/windows/PPCThreadsViewer/DebugPPCThreadsWindow.cpp
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Scheduler.h"
 #include "DebugPPCThreadsWindow.h"
