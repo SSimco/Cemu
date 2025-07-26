@@ -213,7 +213,7 @@ val computeCemuDataFilesHashTask =
 tasks.preBuild.dependsOn(computeCemuDataFilesHashTask)
 
 gettext {
-    potFile.set(File(projectDir, "src/messages.pot"))
+    potFile.set(File(projectDir, "cemu_kt.pot"))
     keywords.set(listOf("tr", "trNoop"))
 }
 
