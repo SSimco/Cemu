@@ -4,10 +4,6 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import info.cemu.cemu.nativeinterface.NativeInput
-import info.cemu.cemu.nativeinterface.NativeInput.VPadButtons
-import info.cemu.cemu.nativeinterface.NativeInput.ProControllerButtons
-import info.cemu.cemu.nativeinterface.NativeInput.ClassicControllerButtons
-import info.cemu.cemu.nativeinterface.NativeInput.WiimoteButtons
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeAxis
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeKey
 import info.cemu.cemu.nativeinterface.NativeInput.setControllerMapping
@@ -21,24 +17,24 @@ class InputManager {
     private fun getNativeAxisKey(axis: Int, isPositive: Boolean): Int {
         return if (isPositive) {
             when (axis) {
-                MotionEvent.AXIS_X -> NativeInput.AXIS_X_POS
-                MotionEvent.AXIS_Y -> NativeInput.AXIS_Y_POS
-                MotionEvent.AXIS_RX, MotionEvent.AXIS_Z -> NativeInput.ROTATION_X_POS
-                MotionEvent.AXIS_RY, MotionEvent.AXIS_RZ -> NativeInput.ROTATION_Y_POS
-                MotionEvent.AXIS_LTRIGGER -> NativeInput.TRIGGER_X_POS
-                MotionEvent.AXIS_RTRIGGER -> NativeInput.TRIGGER_Y_POS
-                MotionEvent.AXIS_HAT_X -> NativeInput.DPAD_RIGHT
-                MotionEvent.AXIS_HAT_Y -> NativeInput.DPAD_DOWN
+                MotionEvent.AXIS_X -> NativeInput.Axis.X_POS
+                MotionEvent.AXIS_Y -> NativeInput.Axis.Y_POS
+                MotionEvent.AXIS_RX, MotionEvent.AXIS_Z -> NativeInput.Axis.ROTATION_X_POS
+                MotionEvent.AXIS_RY, MotionEvent.AXIS_RZ -> NativeInput.Axis.ROTATION_Y_POS
+                MotionEvent.AXIS_LTRIGGER -> NativeInput.Axis.TRIGGER_X_POS
+                MotionEvent.AXIS_RTRIGGER -> NativeInput.Axis.TRIGGER_Y_POS
+                MotionEvent.AXIS_HAT_X -> NativeInput.Axis.DPAD_RIGHT
+                MotionEvent.AXIS_HAT_Y -> NativeInput.Axis.DPAD_DOWN
                 else -> throw InvalidAxisException(axis)
             }
         } else {
             when (axis) {
-                MotionEvent.AXIS_X -> NativeInput.AXIS_X_NEG
-                MotionEvent.AXIS_Y -> NativeInput.AXIS_Y_NEG
-                MotionEvent.AXIS_RX, MotionEvent.AXIS_Z -> NativeInput.ROTATION_X_NEG
-                MotionEvent.AXIS_RY, MotionEvent.AXIS_RZ -> NativeInput.ROTATION_Y_NEG
-                MotionEvent.AXIS_HAT_X -> NativeInput.DPAD_LEFT
-                MotionEvent.AXIS_HAT_Y -> NativeInput.DPAD_UP
+                MotionEvent.AXIS_X -> NativeInput.Axis.X_NEG
+                MotionEvent.AXIS_Y -> NativeInput.Axis.Y_NEG
+                MotionEvent.AXIS_RX, MotionEvent.AXIS_Z -> NativeInput.Axis.ROTATION_X_NEG
+                MotionEvent.AXIS_RY, MotionEvent.AXIS_RZ -> NativeInput.Axis.ROTATION_Y_NEG
+                MotionEvent.AXIS_HAT_X -> NativeInput.Axis.DPAD_LEFT
+                MotionEvent.AXIS_HAT_Y -> NativeInput.Axis.DPAD_UP
                 else -> throw InvalidAxisException(axis)
             }
         }
@@ -66,7 +62,7 @@ class InputManager {
             var axis: Int
             try {
                 axis = getNativeAxisKey(motionRange.axis, axisValue > 0)
-            } catch (e: InvalidAxisException) {
+            } catch (_: InvalidAxisException) {
                 continue
             }
             if (abs(axisValue.toDouble()) > maxAbsAxisValue) {
@@ -226,7 +222,7 @@ class InputManager {
             }
         }
 
-        val buttons = NativeInput.getNativeButtonsForControllerType(controllerType)
+        val buttons = getNativeButtonsForControllerType(controllerType)
 
         for (button in buttons) {
             val mapping = getButtonMappings(button).firstOrNull { inputs[it] == true }
@@ -261,7 +257,7 @@ class InputManager {
         }
     }
 
-    private fun getButtonMappings(button: NativeInput.NativeInputButton): Array<InputMapping> {
+    private fun getButtonMappings(button: NativeInputButton): Array<InputMapping> {
         return when (button) {
             VPadButtons.A,
             ProControllerButtons.A,

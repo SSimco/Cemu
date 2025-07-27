@@ -15,4 +15,7 @@ object NativeActiveSettings {
 
     @JvmStatic
     external fun getUserDataPath(): String
+
+    @JvmStatic
+    external fun hasRequiredOnlineFiles(): Boolean
 }

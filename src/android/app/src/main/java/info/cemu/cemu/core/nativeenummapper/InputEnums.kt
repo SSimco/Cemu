@@ -1,13 +1,13 @@
 package info.cemu.cemu.core.nativeenummapper
 
 import info.cemu.cemu.core.translation.tr
-import info.cemu.cemu.nativeinterface.NativeInput
+import info.cemu.cemu.nativeinterface.NativeInput.EmulatedControllerType
 
 fun controllerTypeToString(type: Int) = when (type) {
-    NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED -> tr("Disabled")
-    NativeInput.EMULATED_CONTROLLER_TYPE_VPAD -> tr("Wii U GamePad")
-    NativeInput.EMULATED_CONTROLLER_TYPE_PRO -> tr("Wii U Pro Controller")
-    NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE -> tr("Wiimote")
-    NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC -> tr("Wii U Classic Controller")
+    EmulatedControllerType.DISABLED -> tr("Disabled")
+    EmulatedControllerType.VPAD -> tr("Wii U GamePad")
+    EmulatedControllerType.PRO -> tr("Wii U Pro Controller")
+    EmulatedControllerType.WIIMOTE -> tr("Wiimote")
+    EmulatedControllerType.CLASSIC -> tr("Wii U Classic Controller")
     else -> throw IllegalArgumentException("Invalid controller type: $type")
 }

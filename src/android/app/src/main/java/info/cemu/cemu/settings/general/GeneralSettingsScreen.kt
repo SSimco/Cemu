@@ -24,7 +24,7 @@ fun GeneralSettingsScreen(
         navigateBack = navigateBack,
     ) {
         Button(
-            label = "Add game path",
+            label = tr("Add game path"),
             description = tr("Add the root directory of your game(s). It will scan all directories in it for games"),
             onClick = dropUnlessResumed { goToGamePathsSettings() },
         )
@@ -41,18 +41,18 @@ fun GeneralSettingsScreen(
             onChoiceChanged = NativeSettings::setConsoleLanguage,
             choiceToString = { consoleLanguageToString(it) },
             choices = listOf(
-                NativeSettings.CONSOLE_LANGUAGE_JAPANESE,
-                NativeSettings.CONSOLE_LANGUAGE_ENGLISH,
-                NativeSettings.CONSOLE_LANGUAGE_FRENCH,
-                NativeSettings.CONSOLE_LANGUAGE_GERMAN,
-                NativeSettings.CONSOLE_LANGUAGE_ITALIAN,
-                NativeSettings.CONSOLE_LANGUAGE_SPANISH,
-                NativeSettings.CONSOLE_LANGUAGE_CHINESE,
-                NativeSettings.CONSOLE_LANGUAGE_KOREAN,
-                NativeSettings.CONSOLE_LANGUAGE_DUTCH,
-                NativeSettings.CONSOLE_LANGUAGE_PORTUGUESE,
-                NativeSettings.CONSOLE_LANGUAGE_RUSSIAN,
-                NativeSettings.CONSOLE_LANGUAGE_TAIWANESE,
+                NativeSettings.ConsoleLanguage.JAPANESE,
+                NativeSettings.ConsoleLanguage.ENGLISH,
+                NativeSettings.ConsoleLanguage.FRENCH,
+                NativeSettings.ConsoleLanguage.GERMAN,
+                NativeSettings.ConsoleLanguage.ITALIAN,
+                NativeSettings.ConsoleLanguage.SPANISH,
+                NativeSettings.ConsoleLanguage.CHINESE,
+                NativeSettings.ConsoleLanguage.KOREAN,
+                NativeSettings.ConsoleLanguage.DUTCH,
+                NativeSettings.ConsoleLanguage.PORTUGUESE,
+                NativeSettings.ConsoleLanguage.RUSSIAN,
+                NativeSettings.ConsoleLanguage.TAIWANESE,
             ),
         )
         Toggle(
@@ -67,17 +67,17 @@ fun GeneralSettingsScreen(
 }
 
 private fun consoleLanguageToString(channels: Int): String = when (channels) {
-    NativeSettings.CONSOLE_LANGUAGE_JAPANESE -> tr("Japanese")
-    NativeSettings.CONSOLE_LANGUAGE_ENGLISH -> tr("English")
-    NativeSettings.CONSOLE_LANGUAGE_FRENCH -> tr("French")
-    NativeSettings.CONSOLE_LANGUAGE_GERMAN -> tr("German")
-    NativeSettings.CONSOLE_LANGUAGE_ITALIAN -> tr("Italian")
-    NativeSettings.CONSOLE_LANGUAGE_SPANISH -> tr("Spanish")
-    NativeSettings.CONSOLE_LANGUAGE_CHINESE -> tr("Chinese")
-    NativeSettings.CONSOLE_LANGUAGE_KOREAN -> tr("Korean")
-    NativeSettings.CONSOLE_LANGUAGE_DUTCH -> tr("Dutch")
-    NativeSettings.CONSOLE_LANGUAGE_PORTUGUESE -> tr("Portuguese")
-    NativeSettings.CONSOLE_LANGUAGE_RUSSIAN -> tr("Russian")
-    NativeSettings.CONSOLE_LANGUAGE_TAIWANESE -> tr("Taiwanese")
+    NativeSettings.ConsoleLanguage.JAPANESE -> tr("Japanese")
+    NativeSettings.ConsoleLanguage.ENGLISH -> tr("English")
+    NativeSettings.ConsoleLanguage.FRENCH -> tr("French")
+    NativeSettings.ConsoleLanguage.GERMAN -> tr("German")
+    NativeSettings.ConsoleLanguage.ITALIAN -> tr("Italian")
+    NativeSettings.ConsoleLanguage.SPANISH -> tr("Spanish")
+    NativeSettings.ConsoleLanguage.CHINESE -> tr("Chinese")
+    NativeSettings.ConsoleLanguage.KOREAN -> tr("Korean")
+    NativeSettings.ConsoleLanguage.DUTCH -> tr("Dutch")
+    NativeSettings.ConsoleLanguage.PORTUGUESE -> tr("Portuguese")
+    NativeSettings.ConsoleLanguage.RUSSIAN -> tr("Russian")
+    NativeSettings.ConsoleLanguage.TAIWANESE -> tr("Taiwanese")
     else -> throw IllegalArgumentException("Invalid console language: $channels")
 }

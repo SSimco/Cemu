@@ -21,11 +21,13 @@ object NativeEmulation {
     @JvmStatic
     external fun initializeRenderer(surface: Surface?)
 
-    const val START_GAME_SUCCESSFUL: Int = 0
-    const val START_GAME_ERROR_GAME_BASE_FILES_NOT_FOUND: Int = 1
-    const val START_GAME_ERROR_NO_DISC_KEY: Int = 2
-    const val START_GAME_ERROR_NO_TITLE_TIK: Int = 3
-    const val START_GAME_ERROR_UNKNOWN: Int = 4
+    object StartGameStatusCode {
+        const val SUCCESSFUL: Int = 0
+        const val ERROR_GAME_BASE_FILES_NOT_FOUND: Int = 1
+        const val ERROR_NO_DISC_KEY: Int = 2
+        const val ERROR_NO_TITLE_TIK: Int = 3
+        const val ERROR_UNKNOWN: Int = 4
+    }
 
     @JvmStatic
     external fun startGame(launchPath: String?): Int

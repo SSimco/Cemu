@@ -14,13 +14,13 @@ import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 private val OverlayPositionChoices = listOf(
-    NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED,
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_LEFT,
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_CENTER,
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_RIGHT,
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_LEFT,
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_CENTER,
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_RIGHT
+    NativeSettings.OverlayScreenPosition.DISABLED,
+    NativeSettings.OverlayScreenPosition.TOP_LEFT,
+    NativeSettings.OverlayScreenPosition.TOP_CENTER,
+    NativeSettings.OverlayScreenPosition.TOP_RIGHT,
+    NativeSettings.OverlayScreenPosition.BOTTOM_LEFT,
+    NativeSettings.OverlayScreenPosition.BOTTOM_CENTER,
+    NativeSettings.OverlayScreenPosition.BOTTOM_RIGHT
 )
 
 private const val OVERLAY_TEXT_SCALE_STEPS = 9
@@ -44,7 +44,7 @@ fun OverlaySettingsScreen(navigateBack: () -> Unit) {
                 NativeSettings.setOverlayPosition(it)
             },
         )
-        if (overlayPosition != NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED)
+        if (overlayPosition != NativeSettings.OverlayScreenPosition.DISABLED)
             OverlaySettings()
         Header(tr("Notifications"))
         SingleSelection(
@@ -57,7 +57,7 @@ fun OverlaySettingsScreen(navigateBack: () -> Unit) {
                 NativeSettings.setNotificationsPosition(it)
             },
         )
-        if (notificationsPosition != NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED)
+        if (notificationsPosition != NativeSettings.OverlayScreenPosition.DISABLED)
             NotificationSettings()
     }
 }
@@ -137,12 +137,12 @@ private fun NotificationSettings() {
 }
 
 private fun overlayScreenPositionToString(overlayScreenPosition: Int) = when (overlayScreenPosition) {
-    NativeSettings.OVERLAY_SCREEN_POSITION_DISABLED -> tr("Disabled")
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_LEFT -> tr("Top left")
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_CENTER -> tr("Top center")
-    NativeSettings.OVERLAY_SCREEN_POSITION_TOP_RIGHT -> tr("Top right")
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_LEFT -> tr("Bottom left")
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_CENTER -> tr("Bottom center")
-    NativeSettings.OVERLAY_SCREEN_POSITION_BOTTOM_RIGHT -> tr("Bottom right")
+    NativeSettings.OverlayScreenPosition.DISABLED -> tr("Disabled")
+    NativeSettings.OverlayScreenPosition.TOP_LEFT -> tr("Top left")
+    NativeSettings.OverlayScreenPosition.TOP_CENTER -> tr("Top center")
+    NativeSettings.OverlayScreenPosition.TOP_RIGHT -> tr("Top right")
+    NativeSettings.OverlayScreenPosition.BOTTOM_LEFT -> tr("Bottom left")
+    NativeSettings.OverlayScreenPosition.BOTTOM_CENTER -> tr("Bottom center")
+    NativeSettings.OverlayScreenPosition.BOTTOM_RIGHT -> tr("Bottom right")
     else -> throw IllegalArgumentException("Invalid overlay position: $overlayScreenPosition")
 }

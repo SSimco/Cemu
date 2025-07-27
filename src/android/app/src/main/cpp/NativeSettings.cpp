@@ -1,6 +1,7 @@
 #include "JNIUtils.h"
 #include "audio/IAudioAPI.h"
 #include "config/CemuConfig.h"
+#include "config/NetworkSettings.h"
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_getOverlayPosition([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
@@ -175,7 +176,7 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_addGamesPath(JNIEnv* env, [[m
 {
 	auto& gamePaths = GetConfig().game_paths;
 	auto gamePath = JNIUtils::toString(env, uri);
-	if (std::any_of(gamePaths.begin(), gamePaths.end(), [&](auto path) { return path == gamePath; }))
+	if (std::any_of(gamePaths.begin(), gamePaths.end(), [&](const auto& path) { return path == gamePath; }))
 		return;
 	gamePaths.push_back(gamePath);
 }
@@ -185,7 +186,7 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_removeGamesPath(JNIEnv* env, 
 {
 	auto gamePath = JNIUtils::toString(env, uri);
 	auto& gamePaths = GetConfig().game_paths;
-	std::erase_if(gamePaths, [&](auto path) { return path == gamePath; });
+	std::erase_if(gamePaths, [&](const auto& path) { return path == gamePath; });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
@@ -320,8 +321,9 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_getAudioLatency([[maybe_unuse
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_setAudioLatency([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint latency)
 {
-	GetConfig().audio_delay = latency / 12;
-//	IAudioAPI::SetAudioDelayOverride(GetConfig().audio_delay);
+	sint32 audioDelay = latency / 12;
+	GetConfig().audio_delay = audioDelay;
+	IAudioAPI::SetAudioDelay(audioDelay);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
@@ -349,6 +351,36 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_setCustomDriverPath(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring custom_driver_path)
 {
 	GetConfig().custom_driver_path = JNIUtils::toString(env, custom_driver_path);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeSettings_getAccountNetworkService([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id)
+{
+	return static_cast<jint>(GetConfig().GetAccountNetworkService(persistent_id));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeSettings_setAccountNetworkService([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id, jint network_service)
+{
+	GetConfig().SetAccountSelectedService(persistent_id, static_cast<NetworkService>(network_service));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeSettings_getAccountPersistentId([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	return static_cast<jint>(GetConfig().account.m_persistent_id);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeSettings_setAccountPersistentId([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id)
+{
+	GetConfig().account.m_persistent_id = persistent_id;
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeSettings_hasCustomNetworkConfiguration([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	return NetworkConfig::XMLExists();
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL

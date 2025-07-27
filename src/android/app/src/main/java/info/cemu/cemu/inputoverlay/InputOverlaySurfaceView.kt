@@ -3,7 +3,6 @@ package info.cemu.cemu.inputoverlay
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
-import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -28,6 +27,7 @@ import info.cemu.cemu.nativeinterface.NativeInput.getControllerType
 import info.cemu.cemu.nativeinterface.NativeInput.isControllerDisabled
 import info.cemu.cemu.nativeinterface.NativeInput.onOverlayAxis
 import info.cemu.cemu.nativeinterface.NativeInput.onOverlayButton
+import kotlin.math.roundToInt
 
 class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
     SurfaceView(context, attrs), OnTouchListener {
@@ -58,7 +58,7 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
     init {
         pixelDensity = context.resources.displayMetrics.densityDpi
         inputsMinWidthHeight =
-            Math.round(INPUTS_MIN_WIDTH_HEIGHT_DP * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+            (INPUTS_MIN_WIDTH_HEIGHT_DP * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
         vibrator = getVibrator(context)
         setOnTouchListener(this)
         settingsProvider = InputOverlaySettingsManager(context)
@@ -104,94 +104,90 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
     }
 
     private fun getVibrator(context: Context): Vibrator {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager =
-                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            return vibratorManager.defaultVibrator
-        }
-        @Suppress("DEPRECATION")
-        return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        val vibratorManager =
+            context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        return vibratorManager.defaultVibrator
     }
 
     private fun overlayButtonToVPADButton(button: OverlayInput): Int {
         return when (button) {
-            OverlayButton.A -> NativeInput.VPAD_BUTTON_A
-            OverlayButton.B -> NativeInput.VPAD_BUTTON_B
-            OverlayButton.X -> NativeInput.VPAD_BUTTON_X
-            OverlayButton.Y -> NativeInput.VPAD_BUTTON_Y
-            OverlayButton.PLUS -> NativeInput.VPAD_BUTTON_PLUS
-            OverlayButton.MINUS -> NativeInput.VPAD_BUTTON_MINUS
-            OverlayDpad.DPAD_UP -> NativeInput.VPAD_BUTTON_UP
-            OverlayDpad.DPAD_DOWN -> NativeInput.VPAD_BUTTON_DOWN
-            OverlayDpad.DPAD_LEFT -> NativeInput.VPAD_BUTTON_LEFT
-            OverlayDpad.DPAD_RIGHT -> NativeInput.VPAD_BUTTON_RIGHT
-            OverlayButton.L_STICK_CLICK -> NativeInput.VPAD_BUTTON_STICKL
-            OverlayButton.R_STICK_CLICK -> NativeInput.VPAD_BUTTON_STICKR
-            OverlayButton.L -> NativeInput.VPAD_BUTTON_L
-            OverlayButton.R -> NativeInput.VPAD_BUTTON_R
-            OverlayButton.ZR -> NativeInput.VPAD_BUTTON_ZR
-            OverlayButton.ZL -> NativeInput.VPAD_BUTTON_ZL
+            OverlayButton.A -> NativeInput.VPADButton.A
+            OverlayButton.B -> NativeInput.VPADButton.B
+            OverlayButton.X -> NativeInput.VPADButton.X
+            OverlayButton.Y -> NativeInput.VPADButton.Y
+            OverlayButton.PLUS -> NativeInput.VPADButton.PLUS
+            OverlayButton.MINUS -> NativeInput.VPADButton.MINUS
+            OverlayDpad.DPAD_UP -> NativeInput.VPADButton.UP
+            OverlayDpad.DPAD_DOWN -> NativeInput.VPADButton.DOWN
+            OverlayDpad.DPAD_LEFT -> NativeInput.VPADButton.LEFT
+            OverlayDpad.DPAD_RIGHT -> NativeInput.VPADButton.RIGHT
+            OverlayButton.L_STICK_CLICK -> NativeInput.VPADButton.STICKL
+            OverlayButton.R_STICK_CLICK -> NativeInput.VPADButton.STICKR
+            OverlayButton.L -> NativeInput.VPADButton.L
+            OverlayButton.R -> NativeInput.VPADButton.R
+            OverlayButton.ZR -> NativeInput.VPADButton.ZR
+            OverlayButton.ZL -> NativeInput.VPADButton.ZL
             else -> -1
         }
     }
 
     private fun overlayButtonToClassicButton(button: OverlayInput): Int {
         return when (button) {
-            OverlayButton.A -> NativeInput.CLASSIC_BUTTON_A
-            OverlayButton.B -> NativeInput.CLASSIC_BUTTON_B
-            OverlayButton.X -> NativeInput.CLASSIC_BUTTON_X
-            OverlayButton.Y -> NativeInput.CLASSIC_BUTTON_Y
-            OverlayButton.PLUS -> NativeInput.CLASSIC_BUTTON_PLUS
-            OverlayButton.MINUS -> NativeInput.CLASSIC_BUTTON_MINUS
-            OverlayDpad.DPAD_UP -> NativeInput.CLASSIC_BUTTON_UP
-            OverlayDpad.DPAD_DOWN -> NativeInput.CLASSIC_BUTTON_DOWN
-            OverlayDpad.DPAD_LEFT -> NativeInput.CLASSIC_BUTTON_LEFT
-            OverlayDpad.DPAD_RIGHT -> NativeInput.CLASSIC_BUTTON_RIGHT
-            OverlayButton.L -> NativeInput.CLASSIC_BUTTON_L
-            OverlayButton.R -> NativeInput.CLASSIC_BUTTON_R
-            OverlayButton.ZR -> NativeInput.CLASSIC_BUTTON_ZR
-            OverlayButton.ZL -> NativeInput.CLASSIC_BUTTON_ZL
+            OverlayButton.A -> NativeInput.ClassicButton.A
+            OverlayButton.B -> NativeInput.ClassicButton.B
+            OverlayButton.X -> NativeInput.ClassicButton.X
+            OverlayButton.Y -> NativeInput.ClassicButton.Y
+            OverlayButton.PLUS -> NativeInput.ClassicButton.PLUS
+            OverlayButton.MINUS -> NativeInput.ClassicButton.MINUS
+            OverlayDpad.DPAD_UP -> NativeInput.ClassicButton.UP
+            OverlayDpad.DPAD_DOWN -> NativeInput.ClassicButton.DOWN
+            OverlayDpad.DPAD_LEFT -> NativeInput.ClassicButton.LEFT
+            OverlayDpad.DPAD_RIGHT -> NativeInput.ClassicButton.RIGHT
+            OverlayButton.L -> NativeInput.ClassicButton.L
+            OverlayButton.R -> NativeInput.ClassicButton.R
+            OverlayButton.ZR -> NativeInput.ClassicButton.ZR
+            OverlayButton.ZL -> NativeInput.ClassicButton.ZL
             else -> -1
         }
     }
 
     private fun overlayButtonToProButton(button: OverlayInput): Int {
         return when (button) {
-            OverlayButton.A -> NativeInput.PRO_BUTTON_A
-            OverlayButton.B -> NativeInput.PRO_BUTTON_B
-            OverlayButton.X -> NativeInput.PRO_BUTTON_X
-            OverlayButton.Y -> NativeInput.PRO_BUTTON_Y
-            OverlayButton.PLUS -> NativeInput.PRO_BUTTON_PLUS
-            OverlayButton.MINUS -> NativeInput.PRO_BUTTON_MINUS
-            OverlayDpad.DPAD_UP -> NativeInput.PRO_BUTTON_UP
-            OverlayDpad.DPAD_DOWN -> NativeInput.PRO_BUTTON_DOWN
-            OverlayDpad.DPAD_LEFT -> NativeInput.PRO_BUTTON_LEFT
-            OverlayDpad.DPAD_RIGHT -> NativeInput.PRO_BUTTON_RIGHT
-            OverlayButton.L_STICK_CLICK -> NativeInput.PRO_BUTTON_STICKL
-            OverlayButton.R_STICK_CLICK -> NativeInput.PRO_BUTTON_STICKR
-            OverlayButton.L -> NativeInput.PRO_BUTTON_L
-            OverlayButton.R -> NativeInput.PRO_BUTTON_R
-            OverlayButton.ZR -> NativeInput.PRO_BUTTON_ZR
-            OverlayButton.ZL -> NativeInput.PRO_BUTTON_ZL
+            OverlayButton.A -> NativeInput.ProButton.A
+            OverlayButton.B -> NativeInput.ProButton.B
+            OverlayButton.X -> NativeInput.ProButton.X
+            OverlayButton.Y -> NativeInput.ProButton.Y
+            OverlayButton.PLUS -> NativeInput.ProButton.PLUS
+            OverlayButton.MINUS -> NativeInput.ProButton.MINUS
+            OverlayDpad.DPAD_UP -> NativeInput.ProButton.UP
+            OverlayDpad.DPAD_DOWN -> NativeInput.ProButton.DOWN
+            OverlayDpad.DPAD_LEFT -> NativeInput.ProButton.LEFT
+            OverlayDpad.DPAD_RIGHT -> NativeInput.ProButton.RIGHT
+            OverlayButton.L_STICK_CLICK -> NativeInput.ProButton.STICKL
+            OverlayButton.R_STICK_CLICK -> NativeInput.ProButton.STICKR
+            OverlayButton.L -> NativeInput.ProButton.L
+            OverlayButton.R -> NativeInput.ProButton.R
+            OverlayButton.ZR -> NativeInput.ProButton.ZR
+            OverlayButton.ZL -> NativeInput.ProButton.ZL
             else -> -1
         }
     }
 
     private fun overlayButtonToWiimoteButton(button: OverlayInput): Int {
         return when (button) {
-            OverlayButton.A -> NativeInput.WIIMOTE_BUTTON_A
-            OverlayButton.B -> NativeInput.WIIMOTE_BUTTON_B
-            OverlayButton.ONE -> NativeInput.WIIMOTE_BUTTON_1
-            OverlayButton.TWO -> NativeInput.WIIMOTE_BUTTON_2
-            OverlayButton.PLUS -> NativeInput.WIIMOTE_BUTTON_PLUS
-            OverlayButton.MINUS -> NativeInput.WIIMOTE_BUTTON_MINUS
-            OverlayButton.HOME -> NativeInput.WIIMOTE_BUTTON_HOME
-            OverlayDpad.DPAD_UP -> NativeInput.WIIMOTE_BUTTON_UP
-            OverlayDpad.DPAD_DOWN -> NativeInput.WIIMOTE_BUTTON_DOWN
-            OverlayDpad.DPAD_LEFT -> NativeInput.WIIMOTE_BUTTON_LEFT
-            OverlayDpad.DPAD_RIGHT -> NativeInput.WIIMOTE_BUTTON_RIGHT
-            OverlayButton.C -> NativeInput.WIIMOTE_BUTTON_NUNCHUCK_C
-            OverlayButton.Z -> NativeInput.WIIMOTE_BUTTON_NUNCHUCK_Z
+            OverlayButton.A -> NativeInput.WiimoteButton.A
+            OverlayButton.B -> NativeInput.WiimoteButton.B
+            OverlayButton.ONE -> NativeInput.WiimoteButton.ONE
+            OverlayButton.TWO -> NativeInput.WiimoteButton.TWO
+            OverlayButton.PLUS -> NativeInput.WiimoteButton.PLUS
+            OverlayButton.MINUS -> NativeInput.WiimoteButton.MINUS
+            OverlayButton.HOME -> NativeInput.WiimoteButton.HOME
+            OverlayDpad.DPAD_UP -> NativeInput.WiimoteButton.UP
+            OverlayDpad.DPAD_DOWN -> NativeInput.WiimoteButton.DOWN
+            OverlayDpad.DPAD_LEFT -> NativeInput.WiimoteButton.LEFT
+            OverlayDpad.DPAD_RIGHT -> NativeInput.WiimoteButton.RIGHT
+            OverlayButton.C -> NativeInput.WiimoteButton.NUNCHUCK_C
+            OverlayButton.Z -> NativeInput.WiimoteButton.NUNCHUCK_Z
             else -> -1
         }
     }
@@ -219,15 +215,15 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         right: Float,
     ) {
         if (joystick == OverlayJoystick.LEFT) {
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKL_UP, up)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKL_DOWN, down)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKL_LEFT, left)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKL_RIGHT, right)
+            onOverlayAxis(NativeInput.VPADButton.STICKL_UP, up)
+            onOverlayAxis(NativeInput.VPADButton.STICKL_DOWN, down)
+            onOverlayAxis(NativeInput.VPADButton.STICKL_LEFT, left)
+            onOverlayAxis(NativeInput.VPADButton.STICKL_RIGHT, right)
         } else if (joystick == OverlayJoystick.RIGHT) {
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKR_UP, up)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKR_DOWN, down)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKR_LEFT, left)
-            onOverlayAxis(NativeInput.VPAD_BUTTON_STICKR_RIGHT, right)
+            onOverlayAxis(NativeInput.VPADButton.STICKR_UP, up)
+            onOverlayAxis(NativeInput.VPADButton.STICKR_DOWN, down)
+            onOverlayAxis(NativeInput.VPADButton.STICKR_LEFT, left)
+            onOverlayAxis(NativeInput.VPADButton.STICKR_RIGHT, right)
         }
     }
 
@@ -239,15 +235,15 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         right: Float,
     ) {
         if (joystick == OverlayJoystick.LEFT) {
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKL_UP, up)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKL_DOWN, down)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKL_LEFT, left)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKL_RIGHT, right)
+            onOverlayAxis(NativeInput.ProButton.STICKL_UP, up)
+            onOverlayAxis(NativeInput.ProButton.STICKL_DOWN, down)
+            onOverlayAxis(NativeInput.ProButton.STICKL_LEFT, left)
+            onOverlayAxis(NativeInput.ProButton.STICKL_RIGHT, right)
         } else if (joystick == OverlayJoystick.RIGHT) {
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKR_UP, up)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKR_DOWN, down)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKR_LEFT, left)
-            onOverlayAxis(NativeInput.PRO_BUTTON_STICKR_RIGHT, right)
+            onOverlayAxis(NativeInput.ProButton.STICKR_UP, up)
+            onOverlayAxis(NativeInput.ProButton.STICKR_DOWN, down)
+            onOverlayAxis(NativeInput.ProButton.STICKR_LEFT, left)
+            onOverlayAxis(NativeInput.ProButton.STICKR_RIGHT, right)
         }
     }
 
@@ -259,15 +255,15 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         right: Float,
     ) {
         if (joystick == OverlayJoystick.LEFT) {
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKL_UP, up)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKL_DOWN, down)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKL_LEFT, left)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKL_RIGHT, right)
+            onOverlayAxis(NativeInput.ClassicButton.STICKL_UP, up)
+            onOverlayAxis(NativeInput.ClassicButton.STICKL_DOWN, down)
+            onOverlayAxis(NativeInput.ClassicButton.STICKL_LEFT, left)
+            onOverlayAxis(NativeInput.ClassicButton.STICKL_RIGHT, right)
         } else if (joystick == OverlayJoystick.RIGHT) {
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKR_UP, up)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKR_DOWN, down)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKR_LEFT, left)
-            onOverlayAxis(NativeInput.CLASSIC_BUTTON_STICKR_RIGHT, right)
+            onOverlayAxis(NativeInput.ClassicButton.STICKR_UP, up)
+            onOverlayAxis(NativeInput.ClassicButton.STICKR_DOWN, down)
+            onOverlayAxis(NativeInput.ClassicButton.STICKR_LEFT, left)
+            onOverlayAxis(NativeInput.ClassicButton.STICKR_RIGHT, right)
         }
     }
 
@@ -279,10 +275,10 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         right: Float,
     ) {
         if (joystick == OverlayJoystick.RIGHT) {
-            onOverlayAxis(NativeInput.WIIMOTE_BUTTON_NUNCHUCK_UP, up)
-            onOverlayAxis(NativeInput.WIIMOTE_BUTTON_NUNCHUCK_DOWN, down)
-            onOverlayAxis(NativeInput.WIIMOTE_BUTTON_NUNCHUCK_LEFT, left)
-            onOverlayAxis(NativeInput.WIIMOTE_BUTTON_NUNCHUCK_RIGHT, right)
+            onOverlayAxis(NativeInput.WiimoteButton.NUNCHUCK_UP, up)
+            onOverlayAxis(NativeInput.WiimoteButton.NUNCHUCK_DOWN, down)
+            onOverlayAxis(NativeInput.WiimoteButton.NUNCHUCK_LEFT, left)
+            onOverlayAxis(NativeInput.WiimoteButton.NUNCHUCK_RIGHT, right)
         }
     }
 
@@ -361,17 +357,17 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
 
         nativeControllerType = getControllerType(controllerIndex)
         overlyButtonToNativeButton = when (nativeControllerType) {
-            NativeInput.EMULATED_CONTROLLER_TYPE_VPAD -> ::overlayButtonToVPADButton
-            NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC -> ::overlayButtonToClassicButton
-            NativeInput.EMULATED_CONTROLLER_TYPE_PRO -> ::overlayButtonToProButton
-            NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE -> ::overlayButtonToWiimoteButton
+            NativeInput.EmulatedControllerType.VPAD -> ::overlayButtonToVPADButton
+            NativeInput.EmulatedControllerType.CLASSIC -> ::overlayButtonToClassicButton
+            NativeInput.EmulatedControllerType.PRO -> ::overlayButtonToProButton
+            NativeInput.EmulatedControllerType.WIIMOTE -> ::overlayButtonToWiimoteButton
             else -> { _ -> -1 }
         }
         onJoystickChange = when (nativeControllerType) {
-            NativeInput.EMULATED_CONTROLLER_TYPE_VPAD -> ::onVPADJoystickStateChange
-            NativeInput.EMULATED_CONTROLLER_TYPE_PRO -> ::onProJoystickStateChange
-            NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC -> ::onClassicJoystickStateChange
-            NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE -> ::onWiimoteJoystickStateChange
+            NativeInput.EmulatedControllerType.VPAD -> ::onVPADJoystickStateChange
+            NativeInput.EmulatedControllerType.PRO -> ::onProJoystickStateChange
+            NativeInput.EmulatedControllerType.CLASSIC -> ::onClassicJoystickStateChange
+            NativeInput.EmulatedControllerType.WIIMOTE -> ::onWiimoteJoystickStateChange
             else -> { _, _, _, _, _ -> }
         }
         inputs = mutableListOf<Pair<OverlayInput, Input>>().apply {
@@ -381,7 +377,7 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
             addRoundButton(OverlayButton.A)
             addRoundButton(OverlayButton.B)
             addJoystick(OverlayJoystick.RIGHT)
-            if (nativeControllerType != NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE) {
+            if (nativeControllerType != NativeInput.EmulatedControllerType.WIIMOTE) {
                 addRoundButton(OverlayButton.X)
                 addRoundButton(OverlayButton.Y)
                 addRectangleButton(OverlayButton.ZL)
@@ -390,15 +386,15 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
                 addRectangleButton(OverlayButton.R)
                 addJoystick(OverlayJoystick.LEFT)
             }
-            if (nativeControllerType == NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE) {
+            if (nativeControllerType == NativeInput.EmulatedControllerType.WIIMOTE) {
                 addRoundButton(OverlayButton.ONE, "1")
                 addRoundButton(OverlayButton.TWO, "2")
                 addRoundButton(OverlayButton.C)
                 addRectangleButton(OverlayButton.Z)
                 addRoundButton(OverlayButton.HOME, HomeButtonInnerDrawing())
             }
-            if (nativeControllerType != NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC
-                && nativeControllerType != NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE
+            if (nativeControllerType != NativeInput.EmulatedControllerType.CLASSIC
+                && nativeControllerType != NativeInput.EmulatedControllerType.WIIMOTE
             ) {
                 addRoundButton(OverlayButton.L_STICK_CLICK, StickClickInnerDrawing())
                 addRoundButton(OverlayButton.R_STICK_CLICK, StickClickInnerDrawing())

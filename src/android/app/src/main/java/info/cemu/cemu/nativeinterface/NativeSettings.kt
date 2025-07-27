@@ -19,9 +19,11 @@ object NativeSettings {
     @JvmStatic
     external fun setAsyncShaderCompile(value: Boolean)
 
-    const val VSYNC_MODE_OFF: Int = 0
-    const val VSYNC_MODE_DOUBLE_BUFFERING: Int = 1
-    const val VSYNC_MODE_TRIPLE_BUFFERING: Int = 2
+    object VSyncMode {
+        const val OFF: Int = 0
+        const val DOUBLE_BUFFERING: Int = 1
+        const val TRIPLE_BUFFERING: Int = 2
+    }
 
     @JvmStatic
     external fun getVsyncMode(): Int
@@ -29,8 +31,10 @@ object NativeSettings {
     @JvmStatic
     external fun setVsyncMode(value: Int)
 
-    const val FULLSCREEN_SCALING_KEEP_ASPECT_RATIO: Int = 0
-    const val FULLSCREEN_SCALING_STRETCH: Int = 1
+    object FullscreenScaling {
+        const val KEEP_ASPECT_RATIO: Int = 0
+        const val STRETCH: Int = 1
+    }
 
     @JvmStatic
     external fun getFullscreenScaling(): Int
@@ -38,10 +42,12 @@ object NativeSettings {
     @JvmStatic
     external fun setFullscreenScaling(value: Int)
 
-    const val SCALING_FILTER_BILINEAR_FILTER: Int = 0
-    const val SCALING_FILTER_BICUBIC_FILTER: Int = 1
-    const val SCALING_FILTER_BICUBIC_HERMITE_FILTER: Int = 2
-    const val SCALING_FILTER_NEAREST_NEIGHBOR_FILTER: Int = 3
+    object ScalingFilter {
+        const val BILINEAR_FILTER: Int = 0
+        const val BICUBIC_FILTER: Int = 1
+        const val BICUBIC_HERMITE_FILTER: Int = 2
+        const val NEAREST_NEIGHBOR_FILTER: Int = 3
+    }
 
     @JvmStatic
     external fun getUpscalingFilter(): Int
@@ -67,9 +73,11 @@ object NativeSettings {
     @JvmStatic
     external fun setAudioDeviceEnabled(enabled: Boolean, tv: Boolean)
 
-    const val AUDIO_CHANNELS_MONO: Int = 0
-    const val AUDIO_CHANNELS_STEREO: Int = 1
-    const val AUDIO_CHANNELS_SURROUND: Int = 2
+    object AudioChannels {
+        const val MONO: Int = 0
+        const val STEREO: Int = 1
+        const val SURROUND: Int = 2
+    }
 
     @JvmStatic
     external fun setAudioDeviceChannels(channels: Int, tv: Boolean)
@@ -94,13 +102,15 @@ object NativeSettings {
     @JvmStatic
     external fun setAudioLatency(value: Int)
 
-    const val OVERLAY_SCREEN_POSITION_DISABLED: Int = 0
-    const val OVERLAY_SCREEN_POSITION_TOP_LEFT: Int = 1
-    const val OVERLAY_SCREEN_POSITION_TOP_CENTER: Int = 2
-    const val OVERLAY_SCREEN_POSITION_TOP_RIGHT: Int = 3
-    const val OVERLAY_SCREEN_POSITION_BOTTOM_LEFT: Int = 4
-    const val OVERLAY_SCREEN_POSITION_BOTTOM_CENTER: Int = 5
-    const val OVERLAY_SCREEN_POSITION_BOTTOM_RIGHT: Int = 6
+    object OverlayScreenPosition {
+        const val DISABLED: Int = 0
+        const val TOP_LEFT: Int = 1
+        const val TOP_CENTER: Int = 2
+        const val TOP_RIGHT: Int = 3
+        const val BOTTOM_LEFT: Int = 4
+        const val BOTTOM_CENTER: Int = 5
+        const val BOTTOM_RIGHT: Int = 6
+    }
 
     @JvmStatic
     external fun getOverlayPosition(): Int
@@ -177,18 +187,20 @@ object NativeSettings {
     @JvmStatic
     external fun setNotificationFriendListEnabled(value: Boolean)
 
-    const val CONSOLE_LANGUAGE_JAPANESE: Int = 0
-    const val CONSOLE_LANGUAGE_ENGLISH: Int = 1
-    const val CONSOLE_LANGUAGE_FRENCH: Int = 2
-    const val CONSOLE_LANGUAGE_GERMAN: Int = 3
-    const val CONSOLE_LANGUAGE_ITALIAN: Int = 4
-    const val CONSOLE_LANGUAGE_SPANISH: Int = 5
-    const val CONSOLE_LANGUAGE_CHINESE: Int = 6
-    const val CONSOLE_LANGUAGE_KOREAN: Int = 7
-    const val CONSOLE_LANGUAGE_DUTCH: Int = 8
-    const val CONSOLE_LANGUAGE_PORTUGUESE: Int = 9
-    const val CONSOLE_LANGUAGE_RUSSIAN: Int = 10
-    const val CONSOLE_LANGUAGE_TAIWANESE: Int = 11
+    object ConsoleLanguage {
+        const val JAPANESE: Int = 0
+        const val ENGLISH: Int = 1
+        const val FRENCH: Int = 2
+        const val GERMAN: Int = 3
+        const val ITALIAN: Int = 4
+        const val SPANISH: Int = 5
+        const val CHINESE: Int = 6
+        const val KOREAN: Int = 7
+        const val DUTCH: Int = 8
+        const val PORTUGUESE: Int = 9
+        const val RUSSIAN: Int = 10
+        const val TAIWANESE: Int = 11
+    }
 
     @JvmStatic
     external fun getConsoleLanguage(): Int
@@ -207,4 +219,29 @@ object NativeSettings {
      */
     @JvmStatic
     external fun setCustomDriverPath(path: String?)
+
+    object NetworkService {
+        const val OFFLINE = 0
+        const val NINTENDO = 1
+        const val PRETENDO = 2
+        const val CUSTOM = 3
+    }
+
+    @JvmStatic
+    external fun getAccountNetworkService(persistentId: Int): Int
+
+
+    @JvmStatic
+    external fun setAccountNetworkService(persistentId: Int, networkService: Int)
+
+
+    @JvmStatic
+    external fun getAccountPersistentId(): Int
+
+
+    @JvmStatic
+    external fun setAccountPersistentId(persistentId: Int)
+
+    @JvmStatic
+    external fun hasCustomNetworkConfiguration(): Boolean
 }

@@ -2,7 +2,7 @@ package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
 import info.cemu.cemu.core.translation.tr
-import info.cemu.cemu.nativeinterface.NativeInput
+import info.cemu.cemu.nativeinterface.NativeInput.WiimoteButton
 
 @Composable
 fun WiimoteControllerInputs(
@@ -25,54 +25,54 @@ fun WiimoteControllerInputs(
     InputItemsGroup(
         groupName = tr("Buttons"),
         inputIds = listOf(
-            NativeInput.WIIMOTE_BUTTON_A,
-            NativeInput.WIIMOTE_BUTTON_B,
-            NativeInput.WIIMOTE_BUTTON_1,
-            NativeInput.WIIMOTE_BUTTON_2,
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_Z,
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_C,
-            NativeInput.WIIMOTE_BUTTON_PLUS,
-            NativeInput.WIIMOTE_BUTTON_MINUS,
-            NativeInput.WIIMOTE_BUTTON_HOME
+            WiimoteButton.A,
+            WiimoteButton.B,
+            WiimoteButton.ONE,
+            WiimoteButton.TWO,
+            WiimoteButton.NUNCHUCK_Z,
+            WiimoteButton.NUNCHUCK_C,
+            WiimoteButton.PLUS,
+            WiimoteButton.MINUS,
+            WiimoteButton.HOME
         )
     )
     InputItemsGroup(
         groupName = tr("Nunchuck"),
         inputIds = listOf(
-            NativeInput.WIIMOTE_BUTTON_UP,
-            NativeInput.WIIMOTE_BUTTON_DOWN,
-            NativeInput.WIIMOTE_BUTTON_LEFT,
-            NativeInput.WIIMOTE_BUTTON_RIGHT
+            WiimoteButton.UP,
+            WiimoteButton.DOWN,
+            WiimoteButton.LEFT,
+            WiimoteButton.RIGHT
         )
     )
     InputItemsGroup(
         groupName = tr("Right Axis"),
         inputIds = listOf(
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_UP,
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_DOWN,
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_LEFT,
-            NativeInput.WIIMOTE_BUTTON_NUNCHUCK_RIGHT
+            WiimoteButton.NUNCHUCK_UP,
+            WiimoteButton.NUNCHUCK_DOWN,
+            WiimoteButton.NUNCHUCK_LEFT,
+            WiimoteButton.NUNCHUCK_RIGHT
         )
     )
 }
 
-fun wiimoteButtonItToString(buttonId: Int) = when (buttonId) {
-    NativeInput.WIIMOTE_BUTTON_A -> "A"
-    NativeInput.WIIMOTE_BUTTON_B -> "B"
-    NativeInput.WIIMOTE_BUTTON_1 -> "1"
-    NativeInput.WIIMOTE_BUTTON_2 -> "2"
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_Z -> "Z"
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_C -> "C"
-    NativeInput.WIIMOTE_BUTTON_PLUS -> "+"
-    NativeInput.WIIMOTE_BUTTON_MINUS -> "-"
-    NativeInput.WIIMOTE_BUTTON_UP -> tr("up")
-    NativeInput.WIIMOTE_BUTTON_DOWN -> tr("down")
-    NativeInput.WIIMOTE_BUTTON_LEFT -> tr("left")
-    NativeInput.WIIMOTE_BUTTON_RIGHT -> tr("right")
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_UP -> tr("up")
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_DOWN -> tr("down")
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_LEFT -> tr("left")
-    NativeInput.WIIMOTE_BUTTON_NUNCHUCK_RIGHT -> tr("right")
-    NativeInput.WIIMOTE_BUTTON_HOME -> tr("home")
+private fun wiimoteButtonItToString(buttonId: Int) = when (buttonId) {
+    WiimoteButton.A -> "A"
+    WiimoteButton.B -> "B"
+    WiimoteButton.ONE -> "1"
+    WiimoteButton.TWO -> "2"
+    WiimoteButton.NUNCHUCK_Z -> "Z"
+    WiimoteButton.NUNCHUCK_C -> "C"
+    WiimoteButton.PLUS -> "+"
+    WiimoteButton.MINUS -> "-"
+    WiimoteButton.UP -> tr("up")
+    WiimoteButton.DOWN -> tr("down")
+    WiimoteButton.LEFT -> tr("left")
+    WiimoteButton.RIGHT -> tr("right")
+    WiimoteButton.NUNCHUCK_UP -> tr("up")
+    WiimoteButton.NUNCHUCK_DOWN -> tr("down")
+    WiimoteButton.NUNCHUCK_LEFT -> tr("left")
+    WiimoteButton.NUNCHUCK_RIGHT -> tr("right")
+    WiimoteButton.HOME -> tr("home")
     else -> throw IllegalArgumentException("Invalid buttonId $buttonId for Wiimote controller type")
 }

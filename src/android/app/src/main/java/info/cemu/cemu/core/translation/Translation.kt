@@ -60,6 +60,8 @@ fun setLanguage(languageCode: String, context: Context) {
     CurrentLanguage = translation.locale.language
 }
 
+fun getCurrentLocale() = I18n.locale
+
 fun setTranslations(context: Context) {
     val assetTranslations = context.assets.list(TRANSLATIONS_FOLDER)?.filter { language ->
         if (language == DEFAULT_LANGUAGE)

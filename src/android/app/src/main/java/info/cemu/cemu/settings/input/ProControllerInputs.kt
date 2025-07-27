@@ -2,7 +2,7 @@ package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
 import info.cemu.cemu.core.translation.tr
-import info.cemu.cemu.nativeinterface.NativeInput
+import info.cemu.cemu.nativeinterface.NativeInput.ProButton
 
 @Composable
 fun ProControllerInputs(
@@ -25,75 +25,75 @@ fun ProControllerInputs(
     InputItemsGroup(
         groupName = tr("Buttons"),
         inputIds = listOf(
-            NativeInput.PRO_BUTTON_A,
-            NativeInput.PRO_BUTTON_B,
-            NativeInput.PRO_BUTTON_X,
-            NativeInput.PRO_BUTTON_Y,
-            NativeInput.PRO_BUTTON_L,
-            NativeInput.PRO_BUTTON_R,
-            NativeInput.PRO_BUTTON_ZL,
-            NativeInput.PRO_BUTTON_ZR,
-            NativeInput.PRO_BUTTON_PLUS,
-            NativeInput.PRO_BUTTON_MINUS,
-            NativeInput.PRO_BUTTON_HOME
+            ProButton.A,
+            ProButton.B,
+            ProButton.X,
+            ProButton.Y,
+            ProButton.L,
+            ProButton.R,
+            ProButton.ZL,
+            ProButton.ZR,
+            ProButton.PLUS,
+            ProButton.MINUS,
+            ProButton.HOME
         )
     )
     InputItemsGroup(
         groupName = tr("D-pad"),
         inputIds = listOf(
-            NativeInput.PRO_BUTTON_UP,
-            NativeInput.PRO_BUTTON_DOWN,
-            NativeInput.PRO_BUTTON_LEFT,
-            NativeInput.PRO_BUTTON_RIGHT
+            ProButton.UP,
+            ProButton.DOWN,
+            ProButton.LEFT,
+            ProButton.RIGHT
         )
     )
     InputItemsGroup(
         groupName = tr("Left Axis"),
         inputIds = listOf(
-            NativeInput.PRO_BUTTON_STICKL,
-            NativeInput.PRO_BUTTON_STICKL_UP,
-            NativeInput.PRO_BUTTON_STICKL_DOWN,
-            NativeInput.PRO_BUTTON_STICKL_LEFT,
-            NativeInput.PRO_BUTTON_STICKL_RIGHT
+            ProButton.STICKL,
+            ProButton.STICKL_UP,
+            ProButton.STICKL_DOWN,
+            ProButton.STICKL_LEFT,
+            ProButton.STICKL_RIGHT
         )
     )
     InputItemsGroup(
         groupName = tr("Right Axis"),
         inputIds = listOf(
-            NativeInput.PRO_BUTTON_STICKR,
-            NativeInput.PRO_BUTTON_STICKR_UP,
-            NativeInput.PRO_BUTTON_STICKR_DOWN,
-            NativeInput.PRO_BUTTON_STICKR_LEFT,
-            NativeInput.PRO_BUTTON_STICKR_RIGHT
+            ProButton.STICKR,
+            ProButton.STICKR_UP,
+            ProButton.STICKR_DOWN,
+            ProButton.STICKR_LEFT,
+            ProButton.STICKR_RIGHT
         )
     )
 }
 
-fun proControllerButtonToString(buttonId: Int) = when (buttonId) {
-    NativeInput.PRO_BUTTON_A -> "A"
-    NativeInput.PRO_BUTTON_B -> "B"
-    NativeInput.PRO_BUTTON_X -> "X"
-    NativeInput.PRO_BUTTON_Y -> "Y"
-    NativeInput.PRO_BUTTON_L -> "L"
-    NativeInput.PRO_BUTTON_R -> "R"
-    NativeInput.PRO_BUTTON_ZL -> "ZL"
-    NativeInput.PRO_BUTTON_ZR -> "ZR"
-    NativeInput.PRO_BUTTON_PLUS -> "+"
-    NativeInput.PRO_BUTTON_MINUS -> "-"
-    NativeInput.PRO_BUTTON_HOME -> "home"
-    NativeInput.PRO_BUTTON_UP -> tr("up")
-    NativeInput.PRO_BUTTON_DOWN -> tr("down")
-    NativeInput.PRO_BUTTON_LEFT -> tr("left")
-    NativeInput.PRO_BUTTON_RIGHT -> tr("right")
-    NativeInput.PRO_BUTTON_STICKL -> tr("click")
-    NativeInput.PRO_BUTTON_STICKR -> tr("click")
-    NativeInput.PRO_BUTTON_STICKL_UP -> tr("up")
-    NativeInput.PRO_BUTTON_STICKL_DOWN -> tr("down")
-    NativeInput.PRO_BUTTON_STICKL_LEFT -> tr("left")
-    NativeInput.PRO_BUTTON_STICKL_RIGHT -> tr("right")
-    NativeInput.PRO_BUTTON_STICKR_UP -> tr("up")
-    NativeInput.PRO_BUTTON_STICKR_DOWN -> tr("down")
-    NativeInput.PRO_BUTTON_STICKR_LEFT -> tr("left")
-    NativeInput.PRO_BUTTON_STICKR_RIGHT -> tr("right")
+private fun proControllerButtonToString(buttonId: Int) = when (buttonId) {
+    ProButton.A -> "A"
+    ProButton.B -> "B"
+    ProButton.X -> "X"
+    ProButton.Y -> "Y"
+    ProButton.L -> "L"
+    ProButton.R -> "R"
+    ProButton.ZL -> "ZL"
+    ProButton.ZR -> "ZR"
+    ProButton.PLUS -> "+"
+    ProButton.MINUS -> "-"
+    ProButton.HOME -> tr("home")
+    ProButton.UP -> tr("up")
+    ProButton.DOWN -> tr("down")
+    ProButton.LEFT -> tr("left")
+    ProButton.RIGHT -> tr("right")
+    ProButton.STICKL -> tr("click")
+    ProButton.STICKR -> tr("click")
+    ProButton.STICKL_UP -> tr("up")
+    ProButton.STICKL_DOWN -> tr("down")
+    ProButton.STICKL_LEFT -> tr("left")
+    ProButton.STICKL_RIGHT -> tr("right")
+    ProButton.STICKR_UP -> tr("up")
+    ProButton.STICKR_DOWN -> tr("down")
+    ProButton.STICKR_LEFT -> tr("left")
+    ProButton.STICKR_RIGHT -> tr("right")
     else -> throw IllegalArgumentException("Invalid buttonId $buttonId for Pro controller type")
 }

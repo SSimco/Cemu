@@ -65,7 +65,7 @@ class EmulationActivity : AppCompatActivity() {
                 NativeEmulation.setSurface(surfaceHolder.surface, isMainCanvas)
                 surfaceSet = true
             } catch (exception: NativeException) {
-                onEmulationError(tr(">Failed creating surface: {0}", exception.message!!))
+                onEmulationError(tr("Failed creating surface: {0}", exception.message!!))
             }
         }
 
@@ -241,9 +241,8 @@ class EmulationActivity : AppCompatActivity() {
         setFullscreen()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        inputOverlaySurfaceView = binding.inputOverlay
 
-        inputOverlaySurfaceView.setVisible(overlaySettings.isOverlayEnabled)
+        initializeInputOverlay()
 
         binding.sideMenu.configureSideMenu()
 
@@ -294,16 +293,8 @@ class EmulationActivity : AppCompatActivity() {
 
         val mainCanvasHolder = mainCanvas.holder
         mainCanvasHolder.addCallback(CanvasSurfaceHolderCallback(isMainCanvas = true))
-        mainCanvasHolder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(holder: SurfaceHolder) {
-            }
-
-            override fun surfaceChanged(
-                holder: SurfaceHolder,
-                format: Int,
-                width: Int,
-                height: Int,
-            ) {
+        mainCanvasHolder.addCallback(object : SurfaceChangedListener() {
+            override fun surfaceChanged() {
                 if (hasEmulationError) {
                     return
                 }
@@ -312,11 +303,14 @@ class EmulationActivity : AppCompatActivity() {
                     startGame(launchPath)
                 }
             }
-
-            override fun surfaceDestroyed(holder: SurfaceHolder) {
-            }
         })
         mainCanvas.setOnTouchListener(CanvasOnTouchListener(isTV = true))
+    }
+
+    private fun initializeInputOverlay() {
+        inputOverlaySurfaceView = binding.inputOverlay
+
+        inputOverlaySurfaceView.setVisible(overlaySettings.isOverlayEnabled)
     }
 
     private fun toastMessage(text: String) {
@@ -327,15 +321,16 @@ class EmulationActivity : AppCompatActivity() {
 
     private fun startGame(launchPath: String) {
         val result = NativeEmulation.startGame(launchPath)
-        if (result == NativeEmulation.START_GAME_SUCCESSFUL) {
+        if (result == NativeEmulation.StartGameStatusCode.SUCCESSFUL) {
             return
         }
         val errorMessage = when (result) {
-            NativeEmulation.START_GAME_ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
-            NativeEmulation.START_GAME_ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
-            NativeEmulation.START_GAME_ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
+            NativeEmulation.StartGameStatusCode.ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
+            NativeEmulation.StartGameStatusCode.ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
+            NativeEmulation.StartGameStatusCode.ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
             else -> tr("Unable to launch game\nPath: {0}", launchPath)
         }
+
         onEmulationError(errorMessage)
     }
 

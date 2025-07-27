@@ -45,5 +45,5 @@ fun InputSettingsScreen(navigateBack: () -> Unit, actions: InputSettingsScreenAc
 
 fun getControllerType(index: Int): Int =
     if (NativeInput.isControllerDisabled(index))
-        NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED
+        NativeInput.EmulatedControllerType.DISABLED
     else NativeInput.getControllerType(index)

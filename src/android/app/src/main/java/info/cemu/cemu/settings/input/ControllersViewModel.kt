@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import info.cemu.cemu.input.InputManager
+import info.cemu.cemu.input.getNativeButtonsForControllerType
 import info.cemu.cemu.nativeinterface.NativeInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
     private val inputManager = InputManager()
     private var _controllerType = MutableStateFlow(
-        if (NativeInput.isControllerDisabled(controllerIndex)) NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED
+        if (NativeInput.isControllerDisabled(controllerIndex)) NativeInput.EmulatedControllerType.DISABLED
         else NativeInput.getControllerType(controllerIndex)
     )
     val controllerType = _controllerType.asStateFlow()
@@ -66,7 +67,7 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
 
         inputManager.mapAllInputs(deviceId, controllerIndex)
 
-        val buttons = NativeInput.getNativeButtonsForControllerType (controllerType.value)
+        val buttons = getNativeButtonsForControllerType (controllerType.value)
         buttons.forEach { _controls.value += getControllerMapping(it.nativeKeyCode) }
     }
 
@@ -91,14 +92,14 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
 
     fun isControllerTypeAllowed(controllerType: Int): Boolean {
         val currentControllerType = this.controllerType.value
-        if (controllerType == NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED) {
+        if (controllerType == NativeInput.EmulatedControllerType.DISABLED) {
             return true
         }
-        if (controllerType == NativeInput.EMULATED_CONTROLLER_TYPE_VPAD) {
-            return currentControllerType == NativeInput.EMULATED_CONTROLLER_TYPE_VPAD || vpadCount < NativeInput.MAX_VPAD_CONTROLLERS
+        if (controllerType == NativeInput.EmulatedControllerType.VPAD) {
+            return currentControllerType == NativeInput.EmulatedControllerType.VPAD || vpadCount < NativeInput.MAX_VPAD_CONTROLLERS
         }
-        val isWPAD = currentControllerType != NativeInput.EMULATED_CONTROLLER_TYPE_VPAD
-                && currentControllerType != NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED
+        val isWPAD = currentControllerType != NativeInput.EmulatedControllerType.VPAD
+                && currentControllerType != NativeInput.EmulatedControllerType.DISABLED
         return isWPAD || wpadCount < NativeInput.MAX_WPAD_CONTROLLERS
     }
 

@@ -39,9 +39,9 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             onChoiceChanged = { NativeSettings.setAudioDeviceChannels(it, true) },
             choiceToString = { channelsToString(it) },
             choices = listOf(
-                NativeSettings.AUDIO_CHANNELS_MONO,
-                NativeSettings.AUDIO_CHANNELS_STEREO,
-                NativeSettings.AUDIO_CHANNELS_SURROUND,
+                NativeSettings.AudioChannels.MONO,
+                NativeSettings.AudioChannels.STEREO,
+                NativeSettings.AudioChannels.SURROUND,
             ),
         )
         Slider(
@@ -64,7 +64,7 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             onChoiceChanged = { NativeSettings.setAudioDeviceChannels(it, false) },
             choiceToString = { channelsToString(it) },
             choices = listOf(
-                NativeSettings.AUDIO_CHANNELS_STEREO,
+                NativeSettings.AudioChannels.STEREO,
             ),
         )
         Slider(
@@ -79,8 +79,8 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
 }
 
 fun channelsToString(channels: Int) = when (channels) {
-    NativeSettings.AUDIO_CHANNELS_MONO -> tr("Mono")
-    NativeSettings.AUDIO_CHANNELS_STEREO -> tr("Stereo")
-    NativeSettings.AUDIO_CHANNELS_SURROUND -> tr("Surround")
+    NativeSettings.AudioChannels.MONO -> tr("Mono")
+    NativeSettings.AudioChannels.STEREO -> tr("Stereo")
+    NativeSettings.AudioChannels.SURROUND -> tr("Surround")
     else -> throw IllegalArgumentException("Invalid channels type: $channels")
 }

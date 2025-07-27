@@ -34,3 +34,9 @@ Java_info_cemu_cemu_nativeinterface_NativeActiveSettings_setInternalDir(JNIEnv* 
 {
 	ActiveSettings::SetInternalDir(JNIUtils::toString(env, internal_dir));
 }
+
+extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeActiveSettings_hasRequiredOnlineFiles(JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	return ActiveSettings::HasRequiredOnlineFiles();
+}

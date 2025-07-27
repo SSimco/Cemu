@@ -22,6 +22,16 @@ namespace JNIUtils
 		return env->NewStringUTF(str.c_str());
 	}
 
+	inline jstring toJString(JNIEnv* env, std::string_view str)
+	{
+		return toJString(env, std::string(str));
+	}
+
+	inline jstring toJString(JNIEnv* env, std::wstring_view str)
+	{
+		return toJString(env, boost::nowide::narrow(str));
+	}
+
 	jobject createJavaStringArrayList(JNIEnv* env, const std::vector<std::string>& stringList);
 
 	jobject createJavaStringArrayList(JNIEnv* env, const std::vector<std::wstring>& stringList);

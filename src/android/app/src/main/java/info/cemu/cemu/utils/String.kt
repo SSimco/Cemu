@@ -7,3 +7,12 @@ fun String.urlDecode(enc: String = "UTF-8"): String = URLDecoder.decode(this, en
 fun String.toIntOrZero() = toIntOrNull() ?: 0
 
 fun String.isContentUri() = startsWith("content://")
+
+
+fun String.parseHexOrNull(): UInt? {
+    return try {
+        toUInt(16)
+    } catch (_: NumberFormatException) {
+        null
+    }
+}

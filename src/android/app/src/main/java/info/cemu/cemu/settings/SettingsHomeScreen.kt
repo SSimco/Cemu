@@ -11,6 +11,7 @@ data class SettingsHomeScreenActions(
     val goToInputSettings: () -> Unit,
     val goToGraphicsSettings: () -> Unit,
     val goToAudioSettings: () -> Unit,
+    val goToAccountSettings: () -> Unit,
     val goToOverlaySettings: () -> Unit,
 )
 
@@ -39,6 +40,10 @@ fun SettingsHomeScreen(navigateBack: () -> Unit, actions: SettingsHomeScreenActi
         Button(
             label = tr("Overlay settings"),
             onClick = dropUnlessResumed(block = actions.goToOverlaySettings)
+        )
+        Button(
+            label = tr("Account settings"),
+            onClick = dropUnlessResumed(block = actions.goToAccountSettings)
         )
     }
 }

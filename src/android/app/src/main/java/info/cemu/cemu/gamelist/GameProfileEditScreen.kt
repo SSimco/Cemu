@@ -59,10 +59,10 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             label = tr("CPU mode"),
             initialChoice = { NativeGameTitles.getCpuModeForTitle(titleId) },
             choices = listOf(
-                NativeGameTitles.CPU_MODE_SINGLECOREINTERPRETER,
-                NativeGameTitles.CPU_MODE_SINGLECORERECOMPILER,
-                NativeGameTitles.CPU_MODE_MULTICORERECOMPILER,
-                NativeGameTitles.CPU_MODE_AUTO
+                NativeGameTitles.CPUMode.SINGLECOREINTERPRETER,
+                NativeGameTitles.CPUMode.SINGLECORERECOMPILER,
+                NativeGameTitles.CPUMode.MULTICORERECOMPILER,
+                NativeGameTitles.CPUMode.AUTO
             ),
             choiceToString = { cpuMode -> cpuModeToString(cpuMode) },
             onChoiceChanged = { cpuMode -> NativeGameTitles.setCpuModeForTitle(titleId, cpuMode) }
@@ -80,8 +80,8 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
 }
 
 private fun cpuModeToString(cpuMode: Int): String = when (cpuMode) {
-    NativeGameTitles.CPU_MODE_SINGLECOREINTERPRETER -> tr("Single-core interpreter")
-    NativeGameTitles.CPU_MODE_SINGLECORERECOMPILER -> tr("Single-core recompiler")
-    NativeGameTitles.CPU_MODE_MULTICORERECOMPILER -> tr("Multi-core recompiler")
+    NativeGameTitles.CPUMode.SINGLECOREINTERPRETER -> tr("Single-core interpreter")
+    NativeGameTitles.CPUMode.SINGLECORERECOMPILER -> tr("Single-core recompiler")
+    NativeGameTitles.CPUMode.MULTICORERECOMPILER -> tr("Multi-core recompiler")
     else -> tr("Auto (recommended)")
 }

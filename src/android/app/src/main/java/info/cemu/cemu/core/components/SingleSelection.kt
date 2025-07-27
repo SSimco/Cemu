@@ -19,27 +19,27 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import info.cemu.cemu.R
 import info.cemu.cemu.core.translation.tr
 
 @Composable
 fun SingleSelection(
     label: String,
     choice: String,
-    choices: List<String>,
+    choices: Collection<String>,
     isChoiceEnabled: (String) -> Boolean = { true },
-    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier.fillMaxWidth(),
     onChoiceChanged: (String) -> Unit,
 ) {
     SingleSelection(
@@ -48,6 +48,7 @@ fun SingleSelection(
         choices = choices,
         modifier = modifier,
         choiceToString = { it },
+        enabled = enabled,
         isChoiceEnabled = isChoiceEnabled,
         onChoiceChanged = onChoiceChanged,
     )
@@ -58,10 +59,11 @@ fun SingleSelection(
 fun <T> SingleSelection(
     label: String,
     initialChoice: () -> T,
-    choices: List<T>,
+    choices: Collection<T>,
+    modifier: Modifier = Modifier.fillMaxWidth(),
     choiceToString: @Composable (T) -> String,
     isChoiceEnabled: (T) -> Boolean = { true },
-    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onChoiceChanged: (T) -> Unit,
 ) {
     var choice by rememberSaveable { mutableStateOf(initialChoice()) }
@@ -71,6 +73,7 @@ fun <T> SingleSelection(
         choices = choices,
         modifier = modifier,
         isChoiceEnabled = isChoiceEnabled,
+        enabled = enabled,
         choiceToString = choiceToString,
         onChoiceChanged = { newChoice ->
             choice = newChoice
@@ -83,32 +86,45 @@ fun <T> SingleSelection(
 fun <T> SingleSelection(
     label: String,
     choice: T,
-    choices: List<T>,
+    choices: Collection<T>,
     choiceToString: @Composable (T) -> String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    enabled: Boolean = true,
     isChoiceEnabled: (T) -> Boolean = { true },
     onChoiceChanged: (T) -> Unit,
 ) {
     var showSelectDialog by rememberSaveable { mutableStateOf(false) }
-    Column(
-        modifier = modifier
-            .clickable { showSelectDialog = true; }
-            .fillMaxWidth()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(vertical = 8.dp),
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp,
-        )
-        Text(
-            text = choiceToString(choice),
-            modifier = Modifier.padding(vertical = 8.dp),
-            fontSize = 16.sp,
-        )
+
+    val clickableModifier = if (enabled) {
+        Modifier.clickable { showSelectDialog = true }
+    } else {
+        Modifier
     }
+    CompositionLocalProvider(
+        LocalContentColor provides
+                MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)
+    )
+    {
+        Column(
+            modifier = modifier
+                .then(clickableModifier)
+                .padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier.padding(vertical = 8.dp),
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+            )
+            Text(
+                text = choiceToString(choice),
+                modifier = Modifier.padding(vertical = 8.dp),
+                fontSize = 16.sp,
+            )
+        }
+    }
+
     if (showSelectDialog) {
         SelectDialog(
             label = label,
@@ -126,7 +142,7 @@ fun <T> SingleSelection(
 private fun <T> SelectDialog(
     label: String,
     currentChoice: T,
-    choices: List<T>,
+    choices: Collection<T>,
     isChoiceEnabled: (T) -> Boolean,
     choiceToString: @Composable (T) -> String,
     onDismissRequest: () -> Unit,

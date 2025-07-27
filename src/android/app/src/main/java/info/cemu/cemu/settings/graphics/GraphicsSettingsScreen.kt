@@ -10,11 +10,11 @@ import info.cemu.cemu.core.translation.tr
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeSettings
 
-private val SCALING_FILTER_CHOICES = listOf(
-    NativeSettings.SCALING_FILTER_BILINEAR_FILTER,
-    NativeSettings.SCALING_FILTER_BICUBIC_FILTER,
-    NativeSettings.SCALING_FILTER_BICUBIC_HERMITE_FILTER,
-    NativeSettings.SCALING_FILTER_NEAREST_NEIGHBOR_FILTER
+private val ScalingFilterChoices = listOf(
+    NativeSettings.ScalingFilter.BILINEAR_FILTER,
+    NativeSettings.ScalingFilter.BICUBIC_FILTER,
+    NativeSettings.ScalingFilter.BICUBIC_HERMITE_FILTER,
+    NativeSettings.ScalingFilter.NEAREST_NEIGHBOR_FILTER
 )
 
 @Composable
@@ -44,9 +44,9 @@ fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: 
             onChoiceChanged = NativeSettings::setVsyncMode,
             choiceToString = { vsyncModeToString(it) },
             choices = listOf(
-                NativeSettings.VSYNC_MODE_OFF,
-                NativeSettings.VSYNC_MODE_DOUBLE_BUFFERING,
-                NativeSettings.VSYNC_MODE_TRIPLE_BUFFERING
+                NativeSettings.VSyncMode.OFF,
+                NativeSettings.VSyncMode.DOUBLE_BUFFERING,
+                NativeSettings.VSyncMode.TRIPLE_BUFFERING
             ),
         )
         Toggle(
@@ -61,8 +61,8 @@ fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: 
             onChoiceChanged = NativeSettings::setFullscreenScaling,
             choiceToString = { fullscreenScalingModeToString(it) },
             choices = listOf(
-                NativeSettings.FULLSCREEN_SCALING_KEEP_ASPECT_RATIO,
-                NativeSettings.FULLSCREEN_SCALING_STRETCH
+                NativeSettings.FullscreenScaling.KEEP_ASPECT_RATIO,
+                NativeSettings.FullscreenScaling.STRETCH
             ),
         )
         SingleSelection(
@@ -70,35 +70,35 @@ fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: 
             initialChoice = NativeSettings::getUpscalingFilter,
             onChoiceChanged = NativeSettings::setUpscalingFilter,
             choiceToString = { scalingFilterToString(it) },
-            choices = SCALING_FILTER_CHOICES,
+            choices = ScalingFilterChoices,
         )
         SingleSelection(
             label = tr("Downscale filter"),
             initialChoice = NativeSettings::getDownscalingFilter,
             onChoiceChanged = NativeSettings::setDownscalingFilter,
             choiceToString = { scalingFilterToString(it) },
-            choices = SCALING_FILTER_CHOICES,
+            choices = ScalingFilterChoices,
         )
     }
 }
 
 private fun scalingFilterToString(scalingFilter: Int) = when (scalingFilter) {
-    NativeSettings.SCALING_FILTER_BILINEAR_FILTER -> tr("Bilinear")
-    NativeSettings.SCALING_FILTER_BICUBIC_FILTER -> tr("Bicubic")
-    NativeSettings.SCALING_FILTER_BICUBIC_HERMITE_FILTER -> tr("Hermite")
-    NativeSettings.SCALING_FILTER_NEAREST_NEIGHBOR_FILTER -> tr("Nearest neighbor")
+    NativeSettings.ScalingFilter.BILINEAR_FILTER -> tr("Bilinear")
+    NativeSettings.ScalingFilter.BICUBIC_FILTER -> tr("Bicubic")
+    NativeSettings.ScalingFilter.BICUBIC_HERMITE_FILTER -> tr("Hermite")
+    NativeSettings.ScalingFilter.NEAREST_NEIGHBOR_FILTER -> tr("Nearest neighbor")
     else -> throw IllegalArgumentException("Invalid scaling filter:  $scalingFilter")
 }
 
 private fun vsyncModeToString(vsyncMode: Int) = when (vsyncMode) {
-    NativeSettings.VSYNC_MODE_OFF -> tr("Off")
-    NativeSettings.VSYNC_MODE_DOUBLE_BUFFERING -> tr("Double buffering")
-    NativeSettings.VSYNC_MODE_TRIPLE_BUFFERING -> tr("Triple buffering")
+    NativeSettings.VSyncMode.OFF -> tr("Off")
+    NativeSettings.VSyncMode.DOUBLE_BUFFERING -> tr("Double buffering")
+    NativeSettings.VSyncMode.TRIPLE_BUFFERING -> tr("Triple buffering")
     else -> throw IllegalArgumentException("Invalid vsync mode: $vsyncMode")
 }
 
 private fun fullscreenScalingModeToString(fullscreenScaling: Int) = when (fullscreenScaling) {
-    NativeSettings.FULLSCREEN_SCALING_KEEP_ASPECT_RATIO -> tr("Keep aspect ratio")
-    NativeSettings.FULLSCREEN_SCALING_STRETCH -> tr("Stretch")
+    NativeSettings.FullscreenScaling.KEEP_ASPECT_RATIO -> tr("Keep aspect ratio")
+    NativeSettings.FullscreenScaling.STRETCH -> tr("Stretch")
     else -> throw IllegalArgumentException("Invalid fullscreen scaling mode:  $fullscreenScaling")
 }

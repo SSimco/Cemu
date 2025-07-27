@@ -81,17 +81,17 @@ fun ControllerInputSettingsScreen(
             label = tr("Emulated controller"),
             initialChoice = { controllerType },
             choices = listOf(
-                NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED,
-                NativeInput.EMULATED_CONTROLLER_TYPE_VPAD,
-                NativeInput.EMULATED_CONTROLLER_TYPE_PRO,
-                NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC,
-                NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE
+                NativeInput.EmulatedControllerType.DISABLED,
+                NativeInput.EmulatedControllerType.VPAD,
+                NativeInput.EmulatedControllerType.PRO,
+                NativeInput.EmulatedControllerType.CLASSIC,
+                NativeInput.EmulatedControllerType.WIIMOTE
             ),
             choiceToString = { controllerTypeToString(it) },
             onChoiceChanged = controllersViewModel::setControllerType
         )
 
-        if (controllerType != NativeInput.EMULATED_CONTROLLER_TYPE_DISABLED) {
+        if (controllerType != NativeInput.EmulatedControllerType.DISABLED) {
             MaterialButton(
                 modifier = Modifier.padding(8.dp),
                 onClick = {
@@ -119,23 +119,23 @@ fun ControllerInputSettingsScreen(
         }
 
         when (controllerType) {
-            NativeInput.EMULATED_CONTROLLER_TYPE_VPAD -> VPADInputs(
+            NativeInput.EmulatedControllerType.VPAD -> VPADInputs(
                 controllerIndex = controllerIndex,
                 onInputClick = ::onInputClick,
                 controlsMapping = controls,
             )
 
-            NativeInput.EMULATED_CONTROLLER_TYPE_PRO -> ProControllerInputs(
+            NativeInput.EmulatedControllerType.PRO -> ProControllerInputs(
                 onInputClick = ::onInputClick,
                 controlsMapping = controls,
             )
 
-            NativeInput.EMULATED_CONTROLLER_TYPE_CLASSIC -> ClassicControllerInputs(
+            NativeInput.EmulatedControllerType.CLASSIC -> ClassicControllerInputs(
                 onInputClick = ::onInputClick,
                 controlsMapping = controls,
             )
 
-            NativeInput.EMULATED_CONTROLLER_TYPE_WIIMOTE -> WiimoteControllerInputs(
+            NativeInput.EmulatedControllerType.WIIMOTE -> WiimoteControllerInputs(
                 onInputClick = ::onInputClick,
                 controlsMapping = controls,
             )

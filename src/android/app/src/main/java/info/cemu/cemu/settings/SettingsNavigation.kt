@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import info.cemu.cemu.settings.account.AccountSettingsScreen
 import info.cemu.cemu.settings.audio.AudioSettingsScreen
 import info.cemu.cemu.settings.customdrivers.CustomDriversScreen
 import info.cemu.cemu.settings.gamespath.GamePathsScreen
@@ -56,6 +57,9 @@ private object SettingsRoutes {
 
     @Serializable
     object InputOverlaySettingsScreenRoute
+
+    @Serializable
+    object AccountSettingsScreenRoute
 }
 
 fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
@@ -69,6 +73,7 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
                     goToGraphicsSettings = { navController.navigate(SettingsRoutes.GraphicsSettingsScreenRoute) },
                     goToAudioSettings = { navController.navigate(SettingsRoutes.AudioSettingsScreenRoute) },
                     goToOverlaySettings = { navController.navigate(SettingsRoutes.OverlaySettingsScreenRoute) },
+                    goToAccountSettings = { navController.navigate(SettingsRoutes.AccountSettingsScreenRoute) }
                 )
             )
         }
@@ -139,6 +144,12 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
                     navigateBack = { navController.popBackStack() },
                 )
             }
+        }
+
+        composable<SettingsRoutes.AccountSettingsScreenRoute> {
+            AccountSettingsScreen(
+                navigateBack = { navController.popBackStack() },
+            )
         }
     }
 }
