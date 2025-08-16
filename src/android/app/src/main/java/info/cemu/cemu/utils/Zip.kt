@@ -9,11 +9,13 @@ import java.util.zip.ZipInputStream
 
 fun unzip(stream: InputStream, targetDir: String) {
     ZipInputStream(stream).use { zipInputStream ->
-        var zipEntry: ZipEntry
         val buffer = ByteArray(8192)
-        while ((zipInputStream.nextEntry.also { zipEntry = it }) != null) {
+
+        var zipEntry: ZipEntry? = zipInputStream.nextEntry
+
+        while (zipEntry != null) {
             extractZipEntry(zipInputStream, zipEntry, buffer, targetDir)
-            zipInputStream.closeEntry()
+            zipEntry = zipInputStream.nextEntry
         }
     }
 }

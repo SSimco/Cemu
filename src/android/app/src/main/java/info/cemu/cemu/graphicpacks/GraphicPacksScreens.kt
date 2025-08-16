@@ -158,16 +158,17 @@ fun GraphicPacksRootSectionScreen(
 
 private fun downloadStatusToDialogTextString(downloadStatus: GraphicPacksDownloadStatus?): String? =
     when (downloadStatus) {
-        GraphicPacksDownloadStatus.CheckingForUpdates -> tr("Checking version")
-        GraphicPacksDownloadStatus.Downloading -> tr("Downloading graphic packs")
+        GraphicPacksDownloadStatus.CHECKING_VERSION -> tr("Checking version...")
+        GraphicPacksDownloadStatus.DOWNLOADING -> tr("Downloading graphic packs...")
+        GraphicPacksDownloadStatus.EXTRACTING -> tr("Extracting...")
         else -> null
     }
 
 private fun downloadStatusToNotificationString(downloadStatus: GraphicPacksDownloadStatus?): String? =
     when (downloadStatus) {
-        GraphicPacksDownloadStatus.Error -> tr("Failed to download graphic packs")
-        GraphicPacksDownloadStatus.FinishedDownloading -> tr("Downloaded latest graphic packs")
-        GraphicPacksDownloadStatus.NoUpdatesAvailable -> tr("No updates available")
+        GraphicPacksDownloadStatus.ERROR -> tr("Failed to download graphic packs")
+        GraphicPacksDownloadStatus.FINISHED_DOWNLOADING -> tr("Downloaded latest graphic packs")
+        GraphicPacksDownloadStatus.NO_UPDATES_AVAILABLE -> tr("No updates available.")
         else -> null
     }
 

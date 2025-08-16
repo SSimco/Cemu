@@ -22,7 +22,7 @@ class GraphicPacksListViewModel : ViewModel() {
     private val installedTitleIds = NativeGameTitles.getInstalledGamesTitleIds()
     private var rootNode = GraphicPackSectionNode()
 
-    private val _installedOnly = MutableStateFlow(true)
+    private val _installedOnly = MutableStateFlow(installedTitleIds.size > 1)
     val installedOnly = _installedOnly.asStateFlow()
     fun setInstalledOnly(installedOnly: Boolean) {
         _installedOnly.value = installedOnly
@@ -45,7 +45,7 @@ class GraphicPacksListViewModel : ViewModel() {
                 GraphicPacksDownloader.download(context) { updateDownloadStatus(it) }
                 refreshGraphicPacks()
             } catch (exception: Exception) {
-                updateDownloadStatus(GraphicPacksDownloadStatus.Error)
+                updateDownloadStatus(GraphicPacksDownloadStatus.ERROR)
             }
         }
     }
@@ -58,7 +58,7 @@ class GraphicPacksListViewModel : ViewModel() {
         downloadJob?.cancel(CancellationException("Canceled by user"))
         downloadJob = null
         viewModelScope.launch {
-            updateDownloadStatus(GraphicPacksDownloadStatus.Canceled)
+            updateDownloadStatus(GraphicPacksDownloadStatus.CANCELED)
         }
     }
 
