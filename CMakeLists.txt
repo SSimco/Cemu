@@ -254,6 +254,7 @@ if(ANDROID)
 		add_subdirectory("dependencies/libadrenotools" EXCLUDE_FROM_ALL)
 	endif()
 	add_subdirectory("dependencies/libucontext" EXCLUDE_FROM_ALL)
+	add_subdirectory("dependencies/stb" EXCLUDE_FROM_ALL)
 endif()
 
 add_subdirectory(src)

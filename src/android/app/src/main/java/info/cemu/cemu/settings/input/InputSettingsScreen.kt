@@ -3,10 +3,10 @@ package info.cemu.cemu.settings.input
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.dropUnlessResumed
-import info.cemu.cemu.core.components.Button
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.nativeenummapper.controllerTypeToString
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Button
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.nativeenummapper.controllerTypeToString
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
 data class InputSettingsScreenActions(

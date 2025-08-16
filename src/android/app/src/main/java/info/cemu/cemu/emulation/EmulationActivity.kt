@@ -1,10 +1,8 @@
 package info.cemu.cemu.emulation
 
 import android.annotation.SuppressLint
-import android.content.DialogInterface
 import android.graphics.SurfaceTexture
 import android.os.Bundle
-import android.text.InputFilter.LengthFilter
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.Surface
@@ -23,24 +21,18 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputLayout
 import info.cemu.cemu.BuildConfig
-import info.cemu.cemu.R
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.databinding.ActivityEmulationBinding
 import info.cemu.cemu.databinding.LayoutSideMenuCheckboxItemBinding
 import info.cemu.cemu.databinding.LayoutSideMenuEmulationBinding
 import info.cemu.cemu.databinding.LayoutSideMenuTextItemBinding
-import info.cemu.cemu.input.InputManager
-import info.cemu.cemu.input.SensorManager
-import info.cemu.cemu.inputoverlay.InputOverlaySettingsManager
-import info.cemu.cemu.inputoverlay.InputOverlaySurfaceView
-import info.cemu.cemu.inputoverlay.OverlaySettings
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeException
-import info.cemu.cemu.nativeinterface.NativeSwkbd.setCurrentInputText
-import info.cemu.cemu.settings.EmulationScreenSettings
-import info.cemu.cemu.settings.SettingsManager
+import info.cemu.cemu.common.settings.EmulationScreenSettings
+import info.cemu.cemu.common.settings.InputOverlaySettings
+import info.cemu.cemu.common.settings.SettingsManager
+import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
@@ -75,28 +67,27 @@ class EmulationActivity : AppCompatActivity() {
         }
     }
 
-    private val inputManager = InputManager()
     private var emulationTextInputDialog: AlertDialog? = null
     private var isGameRunning = false
     private var padCanvas: SurfaceView? = null
     private var toast: Toast? = null
     private lateinit var binding: ActivityEmulationBinding
     private var isMotionEnabled = false
-    private lateinit var overlaySettings: OverlaySettings
+    private lateinit var inputOverlaySettings: InputOverlaySettings
     private lateinit var emulationScreenSettings: EmulationScreenSettings
     private lateinit var inputOverlaySurfaceView: InputOverlaySurfaceView
     private lateinit var sensorManager: SensorManager
     private var hasEmulationError = false
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-        if (inputManager.onMotionEvent(event)) {
+        if (InputHandler.onMotionEvent(event)) {
             return true
         }
         return super.onGenericMotionEvent(event)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (inputManager.onKeyEvent(event)) {
+        if (InputHandler.onKeyEvent(event)) {
             return true
         }
         return super.dispatchKeyEvent(event)
@@ -125,8 +116,8 @@ class EmulationActivity : AppCompatActivity() {
 
         emulationActivityInstance = WeakReference(this)
 
-        overlaySettings = InputOverlaySettingsManager(this).overlaySettings
-        emulationScreenSettings = SettingsManager(this).emulationScreenSettings
+        inputOverlaySettings = SettingsManager.inputOverlaySettings
+        emulationScreenSettings = SettingsManager.emulationScreenSettings
         sensorManager = SensorManager(this)
         sensorManager.setDeviceRotationProvider(deviceRotationProvider = { display.rotation })
 
@@ -198,7 +189,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun LayoutSideMenuEmulationBinding.configureSideMenu() {
-        val isInputOverlayEnabled = overlaySettings.isOverlayEnabled
+        val isInputOverlayEnabled = inputOverlaySettings.isOverlayEnabled
         enableMotionCheckbox.configure(
             label = tr("Enable motion"),
             onCheckChanged = ::setMotionEnabled
@@ -310,7 +301,7 @@ class EmulationActivity : AppCompatActivity() {
     private fun initializeInputOverlay() {
         inputOverlaySurfaceView = binding.inputOverlay
 
-        inputOverlaySurfaceView.setVisible(overlaySettings.isOverlayEnabled)
+        inputOverlaySurfaceView.setVisible(inputOverlaySettings.isOverlayEnabled)
     }
 
     private fun toastMessage(text: String) {
@@ -368,8 +359,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun showExitConfirmationDialog() {
-        val builder = MaterialAlertDialogBuilder(this)
-        builder.setTitle(tr("Exit confirmation"))
+        MaterialAlertDialogBuilder(this)
+            .setTitle(tr("Exit confirmation"))
             .setMessage(tr("Are you sure you want to exit?"))
             .setPositiveButton(tr("Yes")) { _, _ -> quit() }
             .setNegativeButton(tr("No")) { _, _ -> }
@@ -377,8 +368,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun onEmulationError(emulationError: String?) {
-        val builder = MaterialAlertDialogBuilder(this)
-        builder.setTitle(tr("Error"))
+        MaterialAlertDialogBuilder(this)
+            .setTitle(tr("Error"))
             .setMessage(emulationError)
             .setNeutralButton(tr("Quit")) { _, _ -> }
             .setOnDismissListener { _ -> quit() }
@@ -413,38 +404,14 @@ class EmulationActivity : AppCompatActivity() {
             if (emulationActivity.emulationTextInputDialog != null) {
                 return
             }
-            setCurrentInputText(initialText)
+
             emulationActivity.runOnUiThread {
-                val inputEditTextLayout =
-                    emulationActivity.layoutInflater.inflate(
-                        R.layout.layout_emulation_input,
-                        null
-                    )
-                val inputEditText =
-                    inputEditTextLayout.requireViewById<EmulationTextInputEditText>(R.id.emulation_input_text)
-                inputEditText.updateText(initialText)
-                val dialog = MaterialAlertDialogBuilder(emulationActivity)
-                    .setView(inputEditTextLayout)
-                    .setCancelable(false)
-                    .setPositiveButton(tr("Done")) { _, _ -> }.show()
-                val doneButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)!!
-                doneButton.isEnabled = false
-                doneButton.setOnClickListener { _ -> inputEditText.onFinishedEdit() }
-                inputEditText.setOnTextChangedListener {
-                    doneButton.isEnabled = it.isNotEmpty()
-                }
-                val parentTextInputLayout =
-                    inputEditTextLayout.requireViewById<TextInputLayout>(R.id.emulation_input_layout)
-
-                if (maxLength > 0) {
-                    parentTextInputLayout.isCounterEnabled = true
-                    parentTextInputLayout.counterMaxLength = maxLength
-                    inputEditText.appendFilter(LengthFilter(maxLength))
-                } else {
-                    parentTextInputLayout.isCounterEnabled = false
-                }
-
-                emulationActivity.emulationTextInputDialog = dialog
+                emulationActivity.emulationTextInputDialog = showEmulationTextInputDialog(
+                    initialText,
+                    maxLength,
+                    emulationActivity,
+                    emulationActivity.layoutInflater
+                )
             }
         }
 

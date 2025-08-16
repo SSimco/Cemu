@@ -1,21 +1,19 @@
 package info.cemu.cemu
 
 import android.app.Application
-import android.content.res.Resources
-import android.util.Log
-import info.cemu.cemu.core.translation.setLanguage
-import info.cemu.cemu.core.translation.setTranslations
+import info.cemu.cemu.common.context.internalFolder
+import info.cemu.cemu.common.translation.setLanguage
+import info.cemu.cemu.common.translation.setTranslations
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.initializeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setInternalDir
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setNativeLibDir
 import info.cemu.cemu.nativeinterface.NativeEmulation.initializeEmulation
 import info.cemu.cemu.nativeinterface.NativeEmulation.setDPI
 import info.cemu.cemu.nativeinterface.NativeGraphicPacks.refreshGraphicPacks
-import info.cemu.cemu.nativeinterface.NativeLocalization
 import info.cemu.cemu.nativeinterface.NativeLogging.crashLog
 import info.cemu.cemu.nativeinterface.NativeSwkbd.initializeSwkbd
-import info.cemu.cemu.settings.SettingsManager
-import info.cemu.cemu.utils.parsePoFile
+import info.cemu.cemu.common.settings.SettingsManager
+import info.cemu.cemu.nativeinterface.NativeFiles
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
@@ -23,30 +21,25 @@ import java.io.StringWriter
 import java.util.regex.Pattern
 
 class CemuApplication : Application() {
-    init {
-        Application = this
-    }
-
-    val internalFolder: File
-        get() {
-            val externalFilesDir = getExternalFilesDir(null)
-            if (externalFilesDir != null) {
-                return externalFilesDir
-            }
-            return filesDir
-        }
-
     override fun onCreate() {
         super.onCreate()
+
         configureExceptionHandler()
+
+        SettingsManager.initialize(this)
+
+        NativeFiles.initialize(contentResolver)
+
         initializeTranslations()
+
         initializeCemu()
+
         saveDataFiles()
     }
 
     private fun initializeTranslations() {
         setTranslations(this)
-        setLanguage(SettingsManager(this).guiSettings.language, this)
+        setLanguage(SettingsManager.guiSettings.language, this)
     }
 
     private fun saveDataFiles() {
@@ -143,10 +136,10 @@ class CemuApplication : Application() {
     }
 
     private val internalCemuDataFolder: String
-        get() = internalFolder.resolve("data").toString()
+        get() = internalFolder().resolve("data").toString()
 
     private val internalCemuUserFolder: String
-        get() = internalFolder.toString()
+        get() = internalFolder().toString()
 
     companion object {
         init {
@@ -154,9 +147,5 @@ class CemuApplication : Application() {
         }
 
         private var DefaultUncaughtExceptionHandler: Thread.UncaughtExceptionHandler? = null
-
-        @JvmStatic
-        lateinit var Application: CemuApplication
-            private set
     }
 }

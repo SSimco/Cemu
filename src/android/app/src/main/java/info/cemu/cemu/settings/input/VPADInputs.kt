@@ -1,8 +1,8 @@
 package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
-import info.cemu.cemu.core.components.Toggle
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Toggle
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.VPADButton
 

@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import info.cemu.cemu.core.components.Header
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.components.SingleSelection
-import info.cemu.cemu.core.components.Toggle
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Header
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.components.SingleSelection
+import info.cemu.cemu.common.components.Toggle
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 
 @Composable

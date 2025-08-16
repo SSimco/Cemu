@@ -47,11 +47,11 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.core.components.Header
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.components.SingleSelection
-import info.cemu.cemu.core.translation.getCurrentLocale
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Header
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.components.SingleSelection
+import info.cemu.cemu.common.translation.getCurrentLocale
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeAccount
 import info.cemu.cemu.nativeinterface.NativeAccount.AccountGender
 import info.cemu.cemu.nativeinterface.NativeAccount.DEFAULT_MII_NAME
@@ -59,7 +59,7 @@ import info.cemu.cemu.nativeinterface.NativeAccount.MAX_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeAccount.MIN_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeSettings
 import info.cemu.cemu.nativeinterface.NativeSettings.NetworkService
-import info.cemu.cemu.utils.parseHexOrNull
+import info.cemu.cemu.common.string.parseHexOrNull
 import java.text.SimpleDateFormat
 import java.util.Date
 

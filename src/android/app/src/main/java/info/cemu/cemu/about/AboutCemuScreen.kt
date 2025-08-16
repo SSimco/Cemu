@@ -39,8 +39,8 @@ import com.mikepenz.aboutlibraries.ui.compose.m3.libraryColors
 import com.mikepenz.aboutlibraries.ui.compose.util.author
 import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.R
-import info.cemu.cemu.core.components.ScreenContentLazy
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.ScreenContentLazy
+import info.cemu.cemu.common.translation.tr
 import kotlinx.collections.immutable.persistentListOf
 
 typealias AboutLibrary = com.mikepenz.aboutlibraries.entity.Library

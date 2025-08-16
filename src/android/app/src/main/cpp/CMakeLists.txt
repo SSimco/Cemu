@@ -29,4 +29,5 @@ target_link_libraries(CemuAndroid PRIVATE
         CemuBin
         CemuGui
         ZArchive::zarchive
+        stb
 )

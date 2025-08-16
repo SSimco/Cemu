@@ -153,4 +153,12 @@
         <padding-horizontal>8</padding-horizontal>
         <padding-vertical>8</padding-vertical>
     </input-overlay-config>
+    <input-overlay-config>
+        <name>BUTTON_BLOW_MIC</name>
+        <align-bottom>true</align-bottom>
+        <align-end>true</align-end>
+        <padding-horizontal>8</padding-horizontal>
+        <padding-vertical>8</padding-vertical>
+        <size>40</size>
+    </input-overlay-config>
 </input-overlay-default-configs>

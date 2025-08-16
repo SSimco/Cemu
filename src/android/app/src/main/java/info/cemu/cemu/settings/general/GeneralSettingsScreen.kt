@@ -4,18 +4,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.core.components.Button
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.components.SingleSelection
-import info.cemu.cemu.core.components.Toggle
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Button
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.components.SingleSelection
+import info.cemu.cemu.common.components.Toggle
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 @Composable
 fun GeneralSettingsScreen(
     navigateBack: () -> Unit,
     goToGamePathsSettings: () -> Unit,
-    generalSettingsViewModel: GeneralSettingsViewModel = viewModel(factory = GeneralSettingsViewModel.Factory),
+    generalSettingsViewModel: GeneralSettingsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
 

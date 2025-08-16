@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import info.cemu.cemu.core.components.Header
+import info.cemu.cemu.common.components.Header
 
 @Composable
 fun InputItemsGroup(

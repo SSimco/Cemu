@@ -1,13 +1,11 @@
 package info.cemu.cemu.settings.audio
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import info.cemu.cemu.R
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.components.SingleSelection
-import info.cemu.cemu.core.components.Slider
-import info.cemu.cemu.core.components.Toggle
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.components.SingleSelection
+import info.cemu.cemu.common.components.Slider
+import info.cemu.cemu.common.components.Toggle
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 private const val AUDIO_LATENCY_STEPS = 22

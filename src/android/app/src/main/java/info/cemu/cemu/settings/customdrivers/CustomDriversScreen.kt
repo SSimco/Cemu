@@ -36,15 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.R
-import info.cemu.cemu.core.components.ScreenContentLazy
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.ScreenContentLazy
+import info.cemu.cemu.common.translation.tr
 import kotlinx.coroutines.launch
 
 @Composable

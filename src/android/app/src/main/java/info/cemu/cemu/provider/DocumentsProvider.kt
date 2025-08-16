@@ -12,8 +12,8 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.webkit.MimeTypeMap
 import info.cemu.cemu.BuildConfig
-import info.cemu.cemu.CemuApplication
 import info.cemu.cemu.R
+import info.cemu.cemu.common.context.internalFolder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -22,22 +22,14 @@ import java.io.IOException
 import java.util.Objects
 
 class DocumentsProvider : DocumentsProvider() {
-    private var _baseDirectory: File? = null
-    private val baseDirectory: File
-        get() {
-            if (_baseDirectory == null) {
-                try {
-                    _baseDirectory = CemuApplication.Application.internalFolder.canonicalFile
-                } catch (e: IOException) {
-                    throw RuntimeException(e)
-                }
-            }
-            return _baseDirectory!!
-        }
+    private val baseDirectory: File by lazy {
+        requireContext().internalFolder()
+    }
 
-    private val applicationName =
-        CemuApplication.Application.applicationInfo.loadLabel(CemuApplication.Application.packageManager)
-            .toString()
+    private val applicationName: String by lazy {
+        var context = requireContext().applicationContext
+        context.applicationInfo.loadLabel(context.packageManager).toString()
+    }
 
     override fun onCreate(): Boolean {
         return true

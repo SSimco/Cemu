@@ -28,8 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.core.components.ScreenContentLazy
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.ScreenContentLazy
+import info.cemu.cemu.common.translation.tr
 import kotlinx.coroutines.launch
 
 @Composable

@@ -2,9 +2,9 @@ package info.cemu.cemu.settings
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.dropUnlessResumed
-import info.cemu.cemu.core.components.Button
-import info.cemu.cemu.core.components.ScreenContent
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.Button
+import info.cemu.cemu.common.components.ScreenContent
+import info.cemu.cemu.common.translation.tr
 
 data class SettingsHomeScreenActions(
     val goToGeneralSettings: () -> Unit,

@@ -4,11 +4,7 @@
 
 package info.cemu.cemu.gamelist
 
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -51,8 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,14 +56,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.core.components.FilledSearchToolbar
-import info.cemu.cemu.core.translation.tr
-import info.cemu.cemu.emulation.EmulationActivity
+import info.cemu.cemu.common.components.FilledSearchToolbar
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import android.graphics.drawable.Icon as ShortcutIcon
 
 @Composable
 fun GamesListScreen(
@@ -77,9 +69,9 @@ fun GamesListScreen(
     goToGameDetails: (Game) -> Unit,
     goToGameEditProfile: (Game) -> Unit,
     startGame: (Game) -> Unit,
+    createShortcut: (Game) -> Unit,
     toolbarActions: @Composable RowScope.() -> Unit,
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -138,15 +130,7 @@ fun GamesListScreen(
                 startGame = startGame,
                 goToGameDetails = goToGameDetails,
                 goToGameEditProfile = goToGameEditProfile,
-                createShortcut = { game ->
-                    createShortcutForGame(
-                        context,
-                        game,
-                        onFailedToCreateShortCut = {
-                            coroutineScope.launch { snackbarHostState.showSnackbar(tr("Device doesn't support creating shortcuts")) }
-                        }
-                    )
-                },
+                createShortcut = createShortcut,
             )
             PullToRefreshDefaults.Indicator(
                 modifier = Modifier.align(Alignment.TopCenter),
@@ -371,45 +355,3 @@ fun GameContextMenu(
     }
 }
 
-
-private fun createShortcutForGame(
-    context: Context,
-    game: Game,
-    onFailedToCreateShortCut: () -> Unit,
-) {
-    try {
-        val shortcutManager = context.getSystemService(
-            ShortcutManager::class.java
-        )
-        if (!shortcutManager.isRequestPinShortcutSupported) {
-            onFailedToCreateShortCut()
-            return
-        }
-        val icon = game.icon?.asAndroidBitmap().let {
-            if (it != null) ShortcutIcon.createWithBitmap(it)
-            else ShortcutIcon.createWithResource(context, R.mipmap.ic_launcher)
-        }
-        val intent = Intent(
-            context,
-            EmulationActivity::class.java
-        )
-        intent.setAction(Intent.ACTION_VIEW)
-        intent.putExtra(EmulationActivity.EXTRA_LAUNCH_PATH, game.path)
-        val pinShortcutInfo = ShortcutInfo.Builder(context, game.titleId.toString())
-            .setShortLabel(game.name!!)
-            .setIntent(intent)
-            .setIcon(icon)
-            .build()
-        val pinnedShortcutCallbackIntent =
-            shortcutManager.createShortcutResultIntent(pinShortcutInfo)
-        val successCallback = PendingIntent.getBroadcast(
-            context,
-            0,
-            pinnedShortcutCallbackIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        shortcutManager.requestPinShortcut(pinShortcutInfo, successCallback.intentSender)
-    } catch (_: Exception) {
-        onFailedToCreateShortCut()
-    }
-}

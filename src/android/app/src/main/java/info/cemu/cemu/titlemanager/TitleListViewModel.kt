@@ -12,9 +12,9 @@ import info.cemu.cemu.nativeinterface.NativeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.TitleIdToTitlesCallback.Title
 import info.cemu.cemu.nativeinterface.fromNativePath
-import info.cemu.cemu.utils.copyInputStreamToFile
-import info.cemu.cemu.utils.isContentUri
-import info.cemu.cemu.utils.urlDecode
+import info.cemu.cemu.common.io.copyInputStreamToFile
+import info.cemu.cemu.common.string.isContentUri
+import info.cemu.cemu.common.string.urlDecode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin

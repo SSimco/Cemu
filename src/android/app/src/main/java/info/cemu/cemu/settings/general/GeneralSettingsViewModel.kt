@@ -2,47 +2,25 @@ package info.cemu.cemu.settings.general
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import info.cemu.cemu.CemuApplication
-import info.cemu.cemu.core.translation.getAvailableLanguages
-import info.cemu.cemu.settings.EmulationScreenSettings
-import info.cemu.cemu.settings.GuiSettings
-import info.cemu.cemu.settings.SettingsManager
+import info.cemu.cemu.common.settings.EmulationScreenSettings
+import info.cemu.cemu.common.settings.GuiSettings
+import info.cemu.cemu.common.settings.SettingsManager
+import info.cemu.cemu.common.translation.getAvailableLanguages
 
-class GeneralSettingsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
+class GeneralSettingsViewModel : ViewModel() {
     val languages: List<String>
     val languageToDisplayNameMap: Map<String, String>
-    val emulationScreenSettings: EmulationScreenSettings
-    val guiSettings: GuiSettings
+    val emulationScreenSettings: EmulationScreenSettings = SettingsManager.emulationScreenSettings
+    val guiSettings: GuiSettings = SettingsManager.guiSettings
 
     init {
-        this.emulationScreenSettings = settingsManager.emulationScreenSettings
-        this.guiSettings = settingsManager.guiSettings
         val availableLanguages = getAvailableLanguages()
         languages = availableLanguages.map { it.code }
         languageToDisplayNameMap = availableLanguages.associateBy({ it.code }, { it.displayName })
     }
 
     fun setLanguage(language: String, context: Context) {
-        info.cemu.cemu.core.translation.setLanguage(language, context)
+        info.cemu.cemu.common.translation.setLanguage(language, context)
         guiSettings.language = language
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        settingsManager.emulationScreenSettings = emulationScreenSettings
-        settingsManager.guiSettings = guiSettings
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                GeneralSettingsViewModel(
-                    SettingsManager(CemuApplication.Application)
-                )
-            }
-        }
     }
 }

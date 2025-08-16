@@ -46,7 +46,7 @@ val cemuDataFilesFolder = "../../../bin"
 
 android {
     namespace = "info.cemu.cemu"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "26.3.11579264"
     defaultConfig {
         applicationId = "info.cemu.cemu"
@@ -231,6 +231,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
+    testImplementation(libs.archunit.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

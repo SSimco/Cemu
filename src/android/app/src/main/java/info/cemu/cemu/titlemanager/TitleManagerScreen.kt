@@ -65,10 +65,10 @@ import androidx.compose.ui.unit.sp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.core.components.ScreenContentLazy
-import info.cemu.cemu.core.format.formatBytes
-import info.cemu.cemu.core.nativeenummapper.regionToString
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.ScreenContentLazy
+import info.cemu.cemu.common.format.formatBytes
+import info.cemu.cemu.common.nativeenummapper.regionToString
+import info.cemu.cemu.common.translation.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import kotlinx.coroutines.launch
 import java.text.MessageFormat
@@ -360,7 +360,7 @@ private fun TitleInstallProgressDialog(
                     LinearProgressIndicator(modifier = progressModifiers)
                     Text(
                         modifier = Modifier.padding(8.dp),
-                        text = tr("Parsing title content…")
+                        text = tr("Parsing title content...")
                     )
                 } else {
                     val (bytesWritten, maxBytes) = progress

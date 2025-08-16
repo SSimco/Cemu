@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_TGA
 
-#include "stb_image.h"
+#include <stb_image.h>
 
 Image::Image(Image&& image)
 {
@@ -21,14 +21,8 @@ Image::Image(const std::vector<uint8>& imageBytes)
 		return;
 	for (size_t i = 0; i < m_width * m_height * 4; i += 4)
 	{
-		uint8 r = stbImage[i];
-		uint8 g = stbImage[i + 1];
-		uint8 b = stbImage[i + 2];
-		uint8 a = stbImage[i + 3];
-		stbImage[i] = b;
-		stbImage[i + 1] = g;
-		stbImage[i + 2] = r;
-		stbImage[i + 3] = a;
+        // RGBA -> BGRA
+        std::swap(stbImage[i + 0], stbImage[i + 2]);
 	}
 	m_colors = reinterpret_cast<sint32*>(stbImage);
 }

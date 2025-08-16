@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import info.cemu.cemu.nativeinterface.NativeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeSettings
-import info.cemu.cemu.utils.decodeJsonFromFile
-import info.cemu.cemu.utils.unzip
+import info.cemu.cemu.common.io.decodeJsonFromFile
+import info.cemu.cemu.common.io.unzip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

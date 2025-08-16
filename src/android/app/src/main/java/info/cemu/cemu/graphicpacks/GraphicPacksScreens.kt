@@ -55,11 +55,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.core.components.DefaultAppBarTitle
-import info.cemu.cemu.core.components.ScreenContentLazy
-import info.cemu.cemu.core.components.SearchToolbarInput
-import info.cemu.cemu.core.components.SingleSelection
-import info.cemu.cemu.core.translation.tr
+import info.cemu.cemu.common.components.DefaultAppBarTitle
+import info.cemu.cemu.common.components.ScreenContentLazy
+import info.cemu.cemu.common.components.SearchToolbarInput
+import info.cemu.cemu.common.components.SingleSelection
+import info.cemu.cemu.common.translation.tr
 import kotlinx.coroutines.launch
 
 
