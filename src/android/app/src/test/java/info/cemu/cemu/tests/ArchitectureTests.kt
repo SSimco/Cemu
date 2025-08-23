@@ -49,7 +49,10 @@ class ArchitectureTests {
 
     private val isFromTests = resideInAPackage("info.cemu.cemu.tests..")
 
-    private fun JavaClasses.thatAreFromMainSources() = that(not(or(isFromGeneratedCode, isFromTests)))
+    private val isFromNativeInterface = resideInAPackage("info.cemu.cemu.nativeinterface..")
+
+    private fun JavaClasses.thatAreFromMainSources() =
+        that(not(or(isFromGeneratedCode, isFromTests)))
 
     @ArchTest
     fun `feature packages should not depend on each other`(javaClasses: JavaClasses) {
@@ -70,6 +73,16 @@ class ArchitectureTests {
     fun `no packages should depend on entry point code`(javaClasses: JavaClasses) {
         noClasses().that(not(isFromEntryPointCode))
             .should().dependOnClassesThat(isFromEntryPointCode)
+            .check(javaClasses.thatAreFromMainSources())
+    }
+
+    @ArchTest
+    fun `native interface should not depend on any other app packages`(javaClasses: JavaClasses) {
+        noClasses().that(isFromNativeInterface)
+            .should().dependOnClassesThat(
+                resideInAPackage("info.cemu.cemu..")
+                    .and(not(isFromNativeInterface))
+            )
             .check(javaClasses.thatAreFromMainSources())
     }
 }

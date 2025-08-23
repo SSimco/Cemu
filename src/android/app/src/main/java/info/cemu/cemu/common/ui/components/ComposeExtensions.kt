@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.format
+package info.cemu.cemu.common.ui.components
 
 import android.text.format.Formatter
 import androidx.compose.runtime.Composable

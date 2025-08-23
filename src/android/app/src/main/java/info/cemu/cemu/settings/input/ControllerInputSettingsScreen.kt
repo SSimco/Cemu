@@ -34,10 +34,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import info.cemu.cemu.common.components.ScreenContent
-import info.cemu.cemu.common.components.SingleSelection
-import info.cemu.cemu.common.nativeenummapper.controllerTypeToString
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.ScreenContent
+import info.cemu.cemu.common.ui.components.SingleSelection
+import info.cemu.cemu.common.ui.localization.controllerTypeToString
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Button as MaterialButton

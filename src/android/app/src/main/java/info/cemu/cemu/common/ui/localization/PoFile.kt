@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.translation
+package info.cemu.cemu.common.ui.localization
 
 import java.io.InputStream
 

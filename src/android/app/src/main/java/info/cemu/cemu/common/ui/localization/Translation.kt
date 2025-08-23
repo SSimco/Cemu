@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.translation
+package info.cemu.cemu.common.ui.localization
 
 import android.content.Context
 import android.util.Log
@@ -63,8 +63,7 @@ fun getCurrentLocale() = I18n.locale
 
 fun setTranslations(context: Context) {
     val assetTranslations = context.assets.list(TRANSLATIONS_FOLDER)?.filter { language ->
-        if (language == DEFAULT_LANGUAGE)
-            return@filter false
+        if (language == DEFAULT_LANGUAGE) return@filter false
 
         context.assets.list("$TRANSLATIONS_FOLDER/$language")
             ?.contains(TRANSLATIONS_FILE_NAME)

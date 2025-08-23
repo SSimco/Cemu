@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "8.12.1"
 aboutlibraries = "13.0.0-a01"
 appcompat = "1.7.1"
 archunit-junit4 = "1.4.1"

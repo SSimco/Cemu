@@ -7,6 +7,7 @@ import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGraphicPacks
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,6 @@ class GraphicPacksListViewModel : ViewModel() {
 
     val downloadStatus = _downloadStatus.asStateFlow()
 
-    @Volatile
     private var downloadJob: Job? = null
     fun downloadNewUpdate(context: Context) {
         if (_downloadStatus.value != null) return
@@ -44,7 +44,7 @@ class GraphicPacksListViewModel : ViewModel() {
             try {
                 GraphicPacksDownloader.download(context) { updateDownloadStatus(it) }
                 refreshGraphicPacks()
-            } catch (exception: Exception) {
+            } catch (_: Exception) {
                 updateDownloadStatus(GraphicPacksDownloadStatus.ERROR)
             }
         }
@@ -55,9 +55,10 @@ class GraphicPacksListViewModel : ViewModel() {
     }
 
     fun cancelDownload() {
-        downloadJob?.cancel(CancellationException("Canceled by user"))
+        val oldDownloadJob = downloadJob ?: return
         downloadJob = null
         viewModelScope.launch {
+            oldDownloadJob.cancelAndJoin()
             updateDownloadStatus(GraphicPacksDownloadStatus.CANCELED)
         }
     }

@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.components
+package info.cemu.cemu.common.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.localization.tr
 
 @Composable
 fun SingleSelection(

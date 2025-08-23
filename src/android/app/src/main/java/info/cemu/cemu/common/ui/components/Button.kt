@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.components
+package info.cemu.cemu.common.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth

@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.components
+package info.cemu.cemu.common.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text

@@ -2,11 +2,11 @@ package info.cemu.cemu.settings.graphics
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveable
-import info.cemu.cemu.common.components.Button
-import info.cemu.cemu.common.components.ScreenContent
-import info.cemu.cemu.common.components.SingleSelection
-import info.cemu.cemu.common.components.Toggle
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.Button
+import info.cemu.cemu.common.ui.components.ScreenContent
+import info.cemu.cemu.common.ui.components.SingleSelection
+import info.cemu.cemu.common.ui.components.Toggle
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeSettings
 

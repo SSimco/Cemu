@@ -5,12 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import info.cemu.cemu.common.components.Header
-import info.cemu.cemu.common.components.ScreenContent
-import info.cemu.cemu.common.components.SingleSelection
-import info.cemu.cemu.common.components.Slider
-import info.cemu.cemu.common.components.Toggle
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.Header
+import info.cemu.cemu.common.ui.components.ScreenContent
+import info.cemu.cemu.common.ui.components.SingleSelection
+import info.cemu.cemu.common.ui.components.Slider
+import info.cemu.cemu.common.ui.components.Toggle
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 private val OverlayPositionChoices = listOf(

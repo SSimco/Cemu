@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.components
+package info.cemu.cemu.common.ui.components
 
 import androidx.annotation.IntRange
 import androidx.compose.foundation.layout.Column

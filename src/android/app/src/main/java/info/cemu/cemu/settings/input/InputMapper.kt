@@ -3,16 +3,13 @@ package info.cemu.cemu.settings.input
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
-import info.cemu.cemu.common.inputdevice.isGameController
-import info.cemu.cemu.common.motionevent.isMotionEventFromJoystickOrGamepad
+import info.cemu.cemu.common.android.inputdevice.isGameController
+import info.cemu.cemu.common.android.motionevent.isMotionEventFromJoystickOrGamepad
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.setControllerMapping
 import kotlin.math.abs
 
-private class InvalidAxisException(axis: Int) : Exception("Invalid axis $axis")
-
-@Throws(InvalidAxisException::class)
-private fun getNativeAxisKey(axis: Int, isPositive: Boolean): Int {
+private fun getNativeAxisKey(axis: Int, isPositive: Boolean): Int? {
     return if (isPositive) {
         when (axis) {
             MotionEvent.AXIS_X -> NativeInput.Axis.X_POS
@@ -23,7 +20,7 @@ private fun getNativeAxisKey(axis: Int, isPositive: Boolean): Int {
             MotionEvent.AXIS_RTRIGGER -> NativeInput.Axis.TRIGGER_Y_POS
             MotionEvent.AXIS_HAT_X -> NativeInput.Axis.DPAD_RIGHT
             MotionEvent.AXIS_HAT_Y -> NativeInput.Axis.DPAD_DOWN
-            else -> throw InvalidAxisException(axis)
+            else -> null
         }
     } else {
         when (axis) {
@@ -33,7 +30,7 @@ private fun getNativeAxisKey(axis: Int, isPositive: Boolean): Int {
             MotionEvent.AXIS_RY, MotionEvent.AXIS_RZ -> NativeInput.Axis.ROTATION_Y_NEG
             MotionEvent.AXIS_HAT_X -> NativeInput.Axis.DPAD_LEFT
             MotionEvent.AXIS_HAT_Y -> NativeInput.Axis.DPAD_UP
-            else -> throw InvalidAxisException(axis)
+            else -> null
         }
     }
 }
@@ -55,12 +52,7 @@ object InputMapper {
         val actionPointerIndex = event.actionIndex
         for (motionRange in device.motionRanges) {
             val axisValue = event.getAxisValue(motionRange.axis, actionPointerIndex)
-            var axis: Int
-            try {
-                axis = getNativeAxisKey(motionRange.axis, axisValue > 0)
-            } catch (_: InvalidAxisException) {
-                continue
-            }
+            val axis = getNativeAxisKey(motionRange.axis, axisValue > 0) ?: continue
             if (abs(axisValue.toDouble()) > maxAbsAxisValue) {
                 maxAxis = axis
                 maxAbsAxisValue = abs(axisValue.toDouble()).toFloat()
@@ -99,12 +91,13 @@ object InputMapper {
         axisCode: Int,
         isPositive: Boolean,
     ) {
+        val axis = getNativeAxisKey(axisCode, isPositive) ?: return
         setControllerMapping(
             deviceDescriptor,
             deviceName,
             controllerIndex,
             mappingId,
-            getNativeAxisKey(axisCode, isPositive)
+            axis
         )
     }
 

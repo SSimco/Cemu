@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.canvas
+package info.cemu.cemu.emulation.inputoverlay
 
 import android.graphics.Canvas
 import android.graphics.Paint

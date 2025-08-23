@@ -2,7 +2,7 @@ package info.cemu.cemu.common.settings
 
 import android.content.Context
 import android.content.SharedPreferences
-import info.cemu.cemu.common.translation.DEFAULT_LANGUAGE
+import info.cemu.cemu.common.ui.localization.DEFAULT_LANGUAGE
 import kotlin.getValue
 
 class EmulationScreenSettings(sharedPreferences: SharedPreferences) {

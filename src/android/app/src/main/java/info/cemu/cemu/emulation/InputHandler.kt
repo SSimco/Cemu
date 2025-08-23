@@ -2,8 +2,8 @@ package info.cemu.cemu.emulation
 
 import android.view.KeyEvent
 import android.view.MotionEvent
-import info.cemu.cemu.common.inputdevice.isGameController
-import info.cemu.cemu.common.motionevent.isMotionEventFromJoystickOrGamepad
+import info.cemu.cemu.common.android.inputdevice.isGameController
+import info.cemu.cemu.common.android.motionevent.isMotionEventFromJoystickOrGamepad
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeAxis
 import info.cemu.cemu.nativeinterface.NativeInput.onNativeKey
 

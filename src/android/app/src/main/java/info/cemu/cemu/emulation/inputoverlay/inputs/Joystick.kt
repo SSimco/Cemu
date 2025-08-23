@@ -5,7 +5,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.view.MotionEvent
 import info.cemu.cemu.emulation.inputoverlay.Colors
-import info.cemu.cemu.common.canvas.fillCircleWithStroke
+import info.cemu.cemu.emulation.inputoverlay.fillCircleWithStroke
 import kotlin.math.min
 import kotlin.math.sqrt
 

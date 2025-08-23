@@ -51,7 +51,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,11 +64,14 @@ import androidx.compose.ui.unit.sp
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.common.components.ScreenContentLazy
-import info.cemu.cemu.common.format.formatBytes
-import info.cemu.cemu.common.nativeenummapper.regionToString
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.ScreenContentLazy
+import info.cemu.cemu.common.ui.components.formatBytes
+import info.cemu.cemu.common.ui.localization.regionToString
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
+import info.cemu.cemu.titlemanager.usecases.CompressResult
+import info.cemu.cemu.titlemanager.usecases.DeleteResult
+import info.cemu.cemu.titlemanager.usecases.InstallResult
 import kotlinx.coroutines.launch
 import java.text.MessageFormat
 
@@ -101,15 +103,12 @@ fun TitleManagerScreen(
     fun installQueuedTitle() {
         titleListViewModel.installQueuedTitle(
             context = context,
-            titleInstallCallbacks = object : TitleInstallCallbacks {
-                override fun onInstallFinished() {
-                    showNotificationMessage(tr("Finished installing"))
+            callback = {
+                when (it) {
+                    InstallResult.ERROR -> showNotificationMessage(tr("Error installing"))
+                    InstallResult.FINISHED -> showNotificationMessage(tr("Finished installing"))
                 }
-
-                override fun onError() {
-                    showNotificationMessage(tr("Error installing"))
-                }
-            }
+            },
         )
     }
 
@@ -135,11 +134,13 @@ fun TitleManagerScreen(
             titleListViewModel.compressQueuedTitle(
                 context = context,
                 uri = uri,
-                onFinished = {
-                    showNotificationMessage(tr("Finished converting"))
-                },
-                onError = {
-                    showNotificationMessage(tr("Error while converting"))
+                onResult = { result ->
+                    {
+                        when (result) {
+                            CompressResult.FINISHED -> showNotificationMessage(tr("Finished converting"))
+                            CompressResult.ERROR -> showNotificationMessage(tr("Error while converting"))
+                        }
+                    }
                 }
             )
         }
@@ -179,13 +180,10 @@ fun TitleManagerScreen(
                     titleListViewModel.deleteTitleEntry(
                         titleEntry = it,
                         context = context,
-                        deleteCallbacks = object : TitleDeleteCallbacks {
-                            override fun onDeleteFinished() {
-                                showNotificationMessage(tr("Deleted title entry"))
-                            }
-
-                            override fun onError() {
-                                showNotificationMessage(tr("Failed to delete title entry"))
+                        callback = { result ->
+                            when (result) {
+                                DeleteResult.FINISHED -> showNotificationMessage(tr("Deleted title entry"))
+                                DeleteResult.ERROR -> showNotificationMessage(tr("Failed to delete title entry"))
                             }
                         })
                 },
@@ -481,34 +479,30 @@ private fun TitleFilterBottomSheet(
                 filterRowLabel = tr("Types"),
                 filterValues = EntryType.entries.map { (it to (it in filter.types)) },
                 valueToLabel = { entryTypeToString(it) },
-                onFilterAdded = titleListViewModel.typesFilter::add,
-                onFilterRemoved = titleListViewModel.typesFilter::remove,
+                onToggle = titleListViewModel::toggleType,
             )
             FilterRow(
                 filterRowLabel = tr("Formats"),
                 filterValues = EntryFormat.entries.map { (it to (it in filter.formats)) },
                 valueToLabel = { formatToString(it) },
-                onFilterAdded = titleListViewModel.formatsFilter::add,
-                onFilterRemoved = titleListViewModel.formatsFilter::remove,
+                onToggle = titleListViewModel::toggleFormat,
             )
             FilterRow(
                 filterRowLabel = tr("Locations"),
                 filterValues = EntryPath.entries.map { (it to (it in filter.paths)) },
                 valueToLabel = { pathToString(it) },
-                onFilterAdded = titleListViewModel.pathsFilter::add,
-                onFilterRemoved = titleListViewModel.pathsFilter::remove,
+                onToggle = titleListViewModel::togglePath,
             )
         }
     }
 }
 
 @Composable
-private fun <T> FilterRow(
+private fun <T : Enum<T>> FilterRow(
     filterRowLabel: String,
     filterValues: List<Pair<T, Boolean>>,
     valueToLabel: @Composable (T) -> String,
-    onFilterAdded: (T) -> Unit,
-    onFilterRemoved: (T) -> Unit,
+    onToggle: (T) -> Unit
 ) {
     var showOptions by remember { mutableStateOf(false) }
     Column(
@@ -536,8 +530,7 @@ private fun <T> FilterRow(
                     FilterChip(
                         label = valueToLabel(value),
                         selected = selected,
-                        onAdd = { onFilterAdded(value) },
-                        onRemove = { onFilterRemoved(value) },
+                        onToggle = { onToggle(value) },
                     )
                 }
             }
@@ -545,7 +538,7 @@ private fun <T> FilterRow(
 }
 
 @Composable
-fun FilterChip(label: String, selected: Boolean, onAdd: () -> Unit, onRemove: () -> Unit) {
+fun FilterChip(label: String, selected: Boolean, onToggle: () -> Unit) {
     FilterChip(
         leadingIcon = {
             if (selected)
@@ -556,8 +549,7 @@ fun FilterChip(label: String, selected: Boolean, onAdd: () -> Unit, onRemove: ()
         },
         selected = selected,
         onClick = {
-            if (selected) onRemove()
-            else onAdd()
+            onToggle()
         },
         label = { Text(label) }
     )
@@ -569,7 +561,7 @@ private fun TitleEntryListItem(
     onDeleteRequest: () -> Unit,
     onCompressRequested: () -> Unit,
 ) {
-    var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(

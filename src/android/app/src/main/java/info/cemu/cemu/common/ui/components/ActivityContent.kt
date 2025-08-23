@@ -1,11 +1,11 @@
-package info.cemu.cemu.common.components
+package info.cemu.cemu.common.ui.components
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import info.cemu.cemu.common.theme.CemuTheme
+import info.cemu.cemu.common.ui.theme.CemuTheme
 
 @Composable
 fun ActivityContent(content: @Composable () -> Unit) {

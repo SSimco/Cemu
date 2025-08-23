@@ -22,7 +22,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import info.cemu.cemu.BuildConfig
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.databinding.ActivityEmulationBinding
 import info.cemu.cemu.databinding.LayoutSideMenuCheckboxItemBinding
 import info.cemu.cemu.databinding.LayoutSideMenuEmulationBinding

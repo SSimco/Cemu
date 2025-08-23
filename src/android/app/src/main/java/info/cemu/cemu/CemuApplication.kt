@@ -1,9 +1,9 @@
 package info.cemu.cemu
 
 import android.app.Application
-import info.cemu.cemu.common.context.internalFolder
-import info.cemu.cemu.common.translation.setLanguage
-import info.cemu.cemu.common.translation.setTranslations
+import info.cemu.cemu.common.android.context.internalFolder
+import info.cemu.cemu.common.ui.localization.setLanguage
+import info.cemu.cemu.common.ui.localization.setTranslations
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.initializeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setInternalDir
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setNativeLibDir

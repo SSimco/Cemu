@@ -31,16 +31,16 @@ class GraphicPackSectionNode : GraphicPackNode {
         graphicPackBasicInfo: NativeGraphicPacks.GraphicPackBasicInfo,
         titleIdInstalled: Boolean
     ) {
-        var node = this;
+        var node = this
         val tokens = graphicPackBasicInfo.virtualPath.split("/")
         if (tokens.isEmpty()) {
-            return;
+            return
         }
         for (token in tokens.subList(0, tokens.size - 1)) {
-            node = getOrAddSectionByToken(node, token, node.children, titleIdInstalled);
+            node = getOrAddSectionByToken(node, token, node.children, titleIdInstalled)
         }
         if (graphicPackBasicInfo.enabled) {
-            node.updateEnabledCount(true);
+            node.updateEnabledCount(true)
         }
         node.children.add(
             GraphicPackDataNode(
@@ -63,11 +63,11 @@ class GraphicPackSectionNode : GraphicPackNode {
         val existingSectionNode =
             graphicPackNodes.firstOrNull { it is GraphicPackSectionNode && it.name == token }
         if (existingSectionNode != null) {
-            return existingSectionNode as GraphicPackSectionNode;
+            return existingSectionNode as GraphicPackSectionNode
         }
-        val sectionNode = GraphicPackSectionNode(token, titleIdInstalled, parent);
-        graphicPackNodes.add(sectionNode);
-        return sectionNode;
+        val sectionNode = GraphicPackSectionNode(token, titleIdInstalled, parent)
+        graphicPackNodes.add(sectionNode)
+        return sectionNode
     }
 
     fun sort() {

@@ -34,9 +34,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
-import info.cemu.cemu.common.components.ActivityContent
-import info.cemu.cemu.common.translation.TranslatableContent
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.ActivityContent
+import info.cemu.cemu.common.ui.localization.TranslatableContent
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.emulation.EmulationActivity
 import info.cemu.cemu.gamelist.GameListRoute
 import info.cemu.cemu.gamelist.gameListNavigation

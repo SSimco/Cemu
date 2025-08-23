@@ -232,6 +232,17 @@ object NativeGameTitles {
     @JvmStatic
     external fun compressQueuedTitle(fd: Int, compressCallbacks: TitleCompressCallbacks)
 
+    enum class CompressResult {
+        FINISHED,
+        ERROR,
+    }
+
+    fun compressQueuedTitle(fd: Int, callback: (CompressResult) -> Unit) =
+        compressQueuedTitle(fd, object : TitleCompressCallbacks {
+            override fun onFinished() = callback(CompressResult.FINISHED)
+            override fun onError() = callback(CompressResult.ERROR)
+        })
+
     @JvmStatic
     external fun getCurrentProgressForCompression(): Long
 

@@ -8,7 +8,6 @@ fun String.toIntOrZero() = toIntOrNull() ?: 0
 
 fun String.isContentUri() = startsWith("content://")
 
-
 fun String.parseHexOrNull(): UInt? {
     return try {
         toUInt(16)

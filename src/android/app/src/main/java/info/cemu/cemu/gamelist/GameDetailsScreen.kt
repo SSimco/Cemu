@@ -10,9 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import info.cemu.cemu.common.components.ScreenContent
-import info.cemu.cemu.common.nativeenummapper.regionToString
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.ScreenContent
+import info.cemu.cemu.common.ui.localization.regionToString
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

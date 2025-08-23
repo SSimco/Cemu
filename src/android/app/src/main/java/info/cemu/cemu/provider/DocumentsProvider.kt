@@ -13,7 +13,7 @@ import android.provider.DocumentsProvider
 import android.webkit.MimeTypeMap
 import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.R
-import info.cemu.cemu.common.context.internalFolder
+import info.cemu.cemu.common.android.context.internalFolder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException

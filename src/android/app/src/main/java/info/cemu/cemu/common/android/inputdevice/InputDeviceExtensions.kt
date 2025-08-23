@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.inputdevice
+package info.cemu.cemu.common.android.inputdevice
 
 import android.view.InputDevice
 

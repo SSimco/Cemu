@@ -41,8 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.common.components.ScreenContentLazy
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.components.ScreenContentLazy
+import info.cemu.cemu.common.ui.localization.tr
 import kotlinx.coroutines.launch
 
 @Composable

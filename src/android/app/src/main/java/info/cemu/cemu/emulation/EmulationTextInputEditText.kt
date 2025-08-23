@@ -14,7 +14,7 @@ import com.google.android.material.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeSwkbd
 import java.util.regex.Pattern
 

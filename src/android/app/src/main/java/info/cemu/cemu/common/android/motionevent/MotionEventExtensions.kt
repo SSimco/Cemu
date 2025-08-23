@@ -1,4 +1,4 @@
-package info.cemu.cemu.common.motionevent
+package info.cemu.cemu.common.android.motionevent
 
 import android.view.InputDevice
 import android.view.MotionEvent

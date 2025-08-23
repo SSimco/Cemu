@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import info.cemu.cemu.common.settings.EmulationScreenSettings
 import info.cemu.cemu.common.settings.GuiSettings
 import info.cemu.cemu.common.settings.SettingsManager
-import info.cemu.cemu.common.translation.getAvailableLanguages
+import info.cemu.cemu.common.ui.localization.getAvailableLanguages
 
 class GeneralSettingsViewModel : ViewModel() {
     val languages: List<String>
@@ -20,7 +20,7 @@ class GeneralSettingsViewModel : ViewModel() {
     }
 
     fun setLanguage(language: String, context: Context) {
-        info.cemu.cemu.common.translation.setLanguage(language, context)
+        info.cemu.cemu.common.ui.localization.setLanguage(language, context)
         guiSettings.language = language
     }
 }

@@ -3,7 +3,7 @@ package info.cemu.cemu.emulation.inputoverlay.inputs
 import android.graphics.Canvas
 import android.graphics.Rect
 import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.ButtonInnerDrawing
-import info.cemu.cemu.common.canvas.fillRoundRectangleWithStroke
+import info.cemu.cemu.emulation.inputoverlay.fillRoundRectangleWithStroke
 
 class RectangleButton(
     private val innerDrawing: ButtonInnerDrawing,

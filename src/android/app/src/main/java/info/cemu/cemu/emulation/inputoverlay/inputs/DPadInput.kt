@@ -4,8 +4,8 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.RectF
 import android.view.MotionEvent
-import info.cemu.cemu.common.canvas.fillCircleWithStroke
-import info.cemu.cemu.common.canvas.fillRoundRectangleWithStroke
+import info.cemu.cemu.emulation.inputoverlay.fillCircleWithStroke
+import info.cemu.cemu.emulation.inputoverlay.fillRoundRectangleWithStroke
 import info.cemu.cemu.emulation.inputoverlay.Colors
 import info.cemu.cemu.emulation.inputoverlay.OverlayDpad
 import kotlin.math.atan2

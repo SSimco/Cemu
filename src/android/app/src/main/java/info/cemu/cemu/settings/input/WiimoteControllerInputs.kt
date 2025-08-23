@@ -1,7 +1,7 @@
 package info.cemu.cemu.settings.input
 
 import androidx.compose.runtime.Composable
-import info.cemu.cemu.common.translation.tr
+import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeInput.WiimoteButton
 
 @Composable
