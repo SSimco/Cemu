@@ -29,6 +29,8 @@ class CompressTitleUseCase(private val scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             progressJob?.cancelAndJoin()
             NativeGameTitles.cancelTitleCompression()
+            _inProgress.value = false
+            _progress.value = null
         }
     }
 

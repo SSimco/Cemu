@@ -29,6 +29,7 @@ import kotlin.random.nextUInt
 enum class InstallResult{
     ERROR,
     FINISHED,
+    NOT_ENOUGH_SPACE,
 }
 
 private sealed class DirEntry {
@@ -87,7 +88,7 @@ class InstallTitleUseCase(
                 )
 
                 if (totalSize > mlcPath.toFile().freeSpace) {
-                    callback(InstallResult.ERROR)
+                    callback(InstallResult.NOT_ENOUGH_SPACE)
                     return@launch
                 }
 

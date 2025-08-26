@@ -3,21 +3,27 @@ package info.cemu.cemu.graphicpacks
 import info.cemu.cemu.nativeinterface.NativeGraphicPacks
 import kotlin.math.max
 
+sealed class GraphicPackNode(
+    val name: String?,
+    val parent: GraphicPackSectionNode?
+) {
+    var titleIdInstalled: Boolean = false
+        protected set
+
+    fun isRoot() = parent == null
+}
+
 class GraphicPackSectionNode : GraphicPackNode {
-    constructor() : super(null) {
-        this.parent = null
-    }
+    constructor() : super(null, null)
 
     constructor(
         name: String,
         titleIdInstalled: Boolean,
-        parent: GraphicPackSectionNode?
-    ) : super(name) {
+        parent: GraphicPackSectionNode
+    ) : super(name, parent) {
         this.titleIdInstalled = titleIdInstalled
-        this.parent = parent
     }
 
-    val parent: GraphicPackSectionNode?
     var enabledGraphicPacksCount: Int = 0
         private set
     var children: ArrayList<GraphicPackNode> = ArrayList()
@@ -79,4 +85,32 @@ class GraphicPackSectionNode : GraphicPackNode {
         enabledGraphicPacksCount = max(0, enabledGraphicPacksCount + if (enabled) 1 else -1)
         parent?.updateEnabledCount(enabled)
     }
+}
+
+class GraphicPackDataNode(
+    val id: Long,
+    name: String,
+    val path: String,
+    enabled: Boolean,
+    parent: GraphicPackSectionNode,
+) : GraphicPackNode(name, parent) {
+    constructor(
+        id: Long,
+        name: String,
+        path: String,
+        enabled: Boolean,
+        titleIdInstalled: Boolean,
+        parentNode: GraphicPackSectionNode,
+    ) : this(id, name, path, enabled, parentNode) {
+        this.titleIdInstalled = titleIdInstalled
+    }
+
+    var enabled: Boolean = enabled
+        set(value) {
+            if (field == value) {
+                return
+            }
+            field = value
+            parent?.updateEnabledCount(value)
+        }
 }

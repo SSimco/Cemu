@@ -2,6 +2,7 @@
 
 package info.cemu.cemu.graphicpacks
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -62,28 +63,29 @@ import info.cemu.cemu.common.ui.components.SingleSelection
 import info.cemu.cemu.common.ui.localization.tr
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun GraphicPacksRootSectionScreen(
+fun GraphicPacksScreen(
     navigateBack: () -> Unit,
-    graphicPackNodeNavigate: (GraphicPackNode) -> Unit,
-    graphicPacksListViewModel: GraphicPacksListViewModel = viewModel(),
+    graphicPacksViewModel: GraphicPacksViewModel = viewModel(),
 ) {
-    val graphicPackNodes by graphicPacksListViewModel.graphicPackNodes.collectAsState()
-    val graphicPackDataNodes by graphicPacksListViewModel.graphicPackDataNodes.collectAsState()
-    val query by graphicPacksListViewModel.filterText.collectAsState()
-    val installedOnly by graphicPacksListViewModel.installedOnly.collectAsState()
+    val graphicPackDataNodes by graphicPacksViewModel.graphicPackDataNodes.collectAsState()
+    val query by graphicPacksViewModel.filterText.collectAsState()
+    val installedOnly by graphicPacksViewModel.installedOnly.collectAsState()
     var showGraphicPackSearch by rememberSaveable { mutableStateOf(false) }
-    val downloadStatus by graphicPacksListViewModel.downloadStatus.collectAsState()
+    val downloadStatus by graphicPacksViewModel.downloadStatus.collectAsState()
     val snackbarScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var downloadDialogText by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val currentNodeState = graphicPacksViewModel.currentNode.collectAsState()
+    val currentNode = currentNodeState.value
+    val graphicPackDataState = graphicPacksViewModel.currentDataGraphicPack.collectAsState()
+    val graphicPackData = graphicPackDataState.value
 
     downloadStatus?.let { status ->
         downloadDialogText = downloadStatusToDialogTextString(status)
         LaunchedEffect(status) {
-            graphicPacksListViewModel.downloadStatusRead()
+            graphicPacksViewModel.downloadStatusRead()
 
             val downloadNotificationText =
                 downloadStatusToNotificationString(status) ?: return@LaunchedEffect
@@ -94,26 +96,39 @@ fun GraphicPacksRootSectionScreen(
             }
         }
     }
-    fun onNavigateBack() {
+
+    fun handleBack() {
         if (showGraphicPackSearch) {
             showGraphicPackSearch = false
-        } else {
-            navigateBack()
+            return
         }
+
+        if (!currentNodeState.value.isRoot()) {
+            graphicPacksViewModel.navigateBack()
+            return
+        }
+
+        navigateBack()
+    }
+
+    BackHandler(enabled = showGraphicPackSearch || !currentNodeState.value.isRoot()) {
+        handleBack()
     }
 
     ScreenContentLazy(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         actions = {
-            GraphicPacksRootSectionActions(
-                showMainActions = !showGraphicPackSearch,
-                onSearchClicked = {
-                    showGraphicPackSearch = true
-                },
-                onDownloadClicked = { graphicPacksListViewModel.downloadNewUpdate(context) },
-                installedOnlyChecked = installedOnly,
-                installedOnlyValueChange = graphicPacksListViewModel::setInstalledOnly,
-            )
+            if (currentNode.isRoot()) {
+                GraphicPacksRootSectionActions(
+                    showMainActions = !showGraphicPackSearch,
+                    onSearchClicked = {
+                        showGraphicPackSearch = true
+                    },
+                    onDownloadClicked = { graphicPacksViewModel.downloadNewUpdate(context) },
+                    installedOnlyChecked = installedOnly,
+                    installedOnlyValueChange = graphicPacksViewModel::setInstalledOnly,
+                )
+            }
         },
         appBarTitle = {
             Box(
@@ -121,35 +136,47 @@ fun GraphicPacksRootSectionScreen(
                     .height(IntrinsicSize.Min)
                     .padding(8.dp),
             ) {
-                if (showGraphicPackSearch) {
+                if (showGraphicPackSearch && currentNode.isRoot()) {
                     SearchToolbarInput(
                         value = query,
-                        onValueChange = graphicPacksListViewModel::setFilterText,
+                        onValueChange = graphicPacksViewModel::setFilterText,
                         hint = tr("Search graphic packs"),
                     )
                 } else {
-                    DefaultAppBarTitle(tr("Graphic packs"))
+                    DefaultAppBarTitle(currentNode.name ?: tr("Graphic packs"))
                 }
             }
         },
-        navigateBack = ::onNavigateBack,
+        navigateBack = ::handleBack,
     ) {
-        if (showGraphicPackSearch) {
+        if (showGraphicPackSearch && currentNode.isRoot()) {
             graphicPackDataSearchItems(
                 nodes = graphicPackDataNodes,
-                onClick = graphicPackNodeNavigate,
+                onClick = { graphicPacksViewModel.navigateTo(it) },
             )
-        } else {
+            return@ScreenContentLazy
+        }
+
+        if (currentNode is GraphicPackSectionNode) {
             graphicPackSectionItems(
-                nodes = graphicPackNodes,
-                onClick = graphicPackNodeNavigate,
+                installedOnly = installedOnly,
+                nodes = currentNode.children,
+                onClick = { graphicPacksViewModel.navigateTo(it) },
             )
         }
+
+        if (graphicPackData != null) {
+            graphicPackDataNodeItem(
+                graphicPacksViewModel = graphicPacksViewModel,
+                graphicPackData = graphicPackData
+            )
+        }
+
     }
     if (downloadDialogText != null) {
         GraphicPacksDownloadDialog(
             onCancelRequest = {
-                graphicPacksListViewModel.cancelDownload()
+                graphicPacksViewModel.cancelDownload()
             },
             text = downloadDialogText!!,
         )
@@ -173,7 +200,7 @@ private fun downloadStatusToNotificationString(downloadStatus: GraphicPacksDownl
     }
 
 @Composable
-fun GraphicPacksDownloadDialog(
+private fun GraphicPacksDownloadDialog(
     onCancelRequest: () -> Unit,
     text: String,
 ) {
@@ -206,7 +233,7 @@ fun GraphicPacksDownloadDialog(
 }
 
 @Composable
-fun GraphicPacksRootSectionActions(
+private fun GraphicPacksRootSectionActions(
     showMainActions: Boolean,
     onSearchClicked: () -> Unit,
     onDownloadClicked: () -> Unit,
@@ -261,7 +288,7 @@ fun GraphicPacksRootSectionActions(
     }
 }
 
-fun LazyListScope.graphicPackDataSearchItems(
+private fun LazyListScope.graphicPackDataSearchItems(
     nodes: List<GraphicPackDataNode>,
     onClick: (GraphicPackDataNode) -> Unit,
 ) {
@@ -291,80 +318,52 @@ fun LazyListScope.graphicPackDataSearchItems(
     }
 }
 
-@Composable
-fun GraphicPacksSectionScreen(
-    navigateBack: () -> Unit,
-    graphicPackNodeNavigate: (GraphicPackNode) -> Unit,
-    graphicPackSectionNode: GraphicPackSectionNode,
+private fun LazyListScope.graphicPackDataNodeItem(
+    graphicPacksViewModel: GraphicPacksViewModel,
+    graphicPackData: GraphicPackData
 ) {
-    val appBarText = graphicPackSectionNode.name ?: tr("Graphic packs")
-    ScreenContentLazy(
-        appBarText = appBarText,
-        navigateBack = navigateBack,
-    ) {
-        graphicPackSectionItems(
-            nodes = graphicPackSectionNode.children,
-            onClick = graphicPackNodeNavigate,
+    item {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = tr("Enabled"))
+            Switch(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                checked = graphicPackData.active,
+                onCheckedChange = graphicPacksViewModel::setCurrentGraphicPackActive,
+            )
+        }
+    }
+    item {
+        Text(
+            modifier = Modifier.padding(8.dp),
+            text = graphicPackData.description
+        )
+    }
+    items(items = graphicPackData.presets) {
+        SingleSelection(
+            modifier = Modifier.animateItem(),
+            label = it.category ?: tr("Active preset"),
+            choices = it.choices,
+            choice = it.activeChoice,
+            onChoiceChanged = { activePreset ->
+                graphicPacksViewModel.setCurrentGraphicPackActivePreset(
+                    it.index,
+                    activePreset
+                )
+            }
         )
     }
 }
 
-@Composable
-fun GraphicPackDataScreen(
-    navigateBack: () -> Unit,
-    graphicPackDataViewModel: GraphicPackDataViewModel,
-) {
-    val appBarText = graphicPackDataViewModel.name ?: tr("Graphic packs")
-    val enabled by graphicPackDataViewModel.enabled.collectAsState()
-    val presets by graphicPackDataViewModel.presets.collectAsState()
-
-    ScreenContentLazy(
-        appBarText = appBarText,
-        navigateBack = navigateBack,
-    ) {
-        item {
-            Row(
-                modifier = Modifier.padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = tr("Enabled"))
-                Switch(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    checked = enabled,
-                    onCheckedChange = graphicPackDataViewModel::setEnabled,
-                )
-            }
-        }
-        item {
-            Text(
-                modifier = Modifier.padding(8.dp),
-                text = graphicPackDataViewModel.description
-            )
-        }
-        items(items = presets) {
-            SingleSelection(
-                modifier = Modifier.animateItem(),
-                label = it.category ?: tr("Active preset"),
-                choices = it.presets,
-                choice = it.activePreset,
-                onChoiceChanged = { activePreset ->
-                    graphicPackDataViewModel.setActivePreset(
-                        it.index,
-                        activePreset
-                    )
-                }
-            )
-        }
-    }
-}
-
-
 private fun LazyListScope.graphicPackSectionItems(
     nodes: List<GraphicPackNode>,
+    installedOnly: Boolean,
     onClick: (GraphicPackNode) -> Unit,
 ) {
     items(
-        items = nodes,
+        items = if (installedOnly) nodes.filter { it.titleIdInstalled } else nodes,
     ) {
         GraphicPackListItem(
             label = it.name,
@@ -380,7 +379,7 @@ private fun LazyListScope.graphicPackSectionItems(
 }
 
 @Composable
-fun GraphicPackDataListItemIcon(isEnabled: Boolean) {
+private fun GraphicPackDataListItemIcon(isEnabled: Boolean) {
     GraphicPackListItemIcon(
         painter = painterResource(R.drawable.ic_package_2),
         showExtraInfo = isEnabled,
@@ -397,7 +396,7 @@ fun GraphicPackDataListItemIcon(isEnabled: Boolean) {
 }
 
 @Composable
-fun GraphicPackSectionListItemIcon(numberOfEnabledPacks: Int) {
+private fun GraphicPackSectionListItemIcon(numberOfEnabledPacks: Int) {
     GraphicPackListItemIcon(
         painter = painterResource(R.drawable.ic_lists),
         showExtraInfo = numberOfEnabledPacks > 0,
@@ -414,7 +413,7 @@ fun GraphicPackSectionListItemIcon(numberOfEnabledPacks: Int) {
 }
 
 @Composable
-fun GraphicPackListItemIcon(
+private fun GraphicPackListItemIcon(
     painter: Painter,
     showExtraInfo: Boolean,
     extraInfoContent: @Composable () -> Unit,
@@ -434,7 +433,7 @@ fun GraphicPackListItemIcon(
 }
 
 @Composable
-fun GraphicPackListItem(
+private fun GraphicPackListItem(
     label: String?,
     onClick: () -> Unit,
     modifier: Modifier,

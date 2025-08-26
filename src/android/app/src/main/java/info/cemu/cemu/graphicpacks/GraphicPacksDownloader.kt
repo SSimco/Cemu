@@ -124,7 +124,7 @@ class GraphicPacksDownloader {
                 graphicPacksTempDir.deleteRecursively()
                 unzip(
                     response.body.byteStream(),
-                    graphicPacksTempDir.path.toString()
+                    graphicPacksTempDir.path
                 )
                 graphicPacksTempDir.resolve("version.txt").writeText(version)
                 val downloadedGraphicPacksDir =

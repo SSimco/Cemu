@@ -51,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,6 +108,7 @@ fun TitleManagerScreen(
                 when (it) {
                     InstallResult.ERROR -> showNotificationMessage(tr("Error installing"))
                     InstallResult.FINISHED -> showNotificationMessage(tr("Finished installing"))
+                    InstallResult.NOT_ENOUGH_SPACE -> showNotificationMessage(tr("Not enough space"))
                 }
             },
         )
@@ -240,7 +242,7 @@ fun TitleManagerScreen(
 
 @Composable
 private fun TitleCompressProgressDialog(bytesWritten: Long?, onCancel: () -> Unit) {
-    var showCancelConfirmDialog by remember { mutableStateOf(false) }
+    var showCancelConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
     AlertDialog(
         title = { Text(tr("Compressing title")) },
@@ -345,7 +347,7 @@ private fun TitleInstallProgressDialog(
     progress: Pair<Long, Long>?,
     onCancel: () -> Unit,
 ) {
-    var showCancelConfirmDialog by remember { mutableStateOf(false) }
+    var showCancelConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
     AlertDialog(
         title = { Text(tr("Installing title")) },
@@ -504,7 +506,7 @@ private fun <T : Enum<T>> FilterRow(
     valueToLabel: @Composable (T) -> String,
     onToggle: (T) -> Unit
 ) {
-    var showOptions by remember { mutableStateOf(false) }
+    var showOptions by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .padding(8.dp)
@@ -561,7 +563,7 @@ private fun TitleEntryListItem(
     onDeleteRequest: () -> Unit,
     onCompressRequested: () -> Unit,
 ) {
-    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(
@@ -572,7 +574,7 @@ private fun TitleEntryListItem(
             .animateContentSize()
             .padding(8.dp),
     ) {
-        var showTitleInfo by remember { mutableStateOf(false) }
+        var showTitleInfo by rememberSaveable { mutableStateOf(false) }
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -622,7 +624,7 @@ private fun TitleDropDownMenu(
     onDeleteClicked: () -> Unit,
     onCompressClicked: () -> Unit,
 ) {
-    var expandMenu by remember { mutableStateOf(false) }
+    var expandMenu by rememberSaveable { mutableStateOf(false) }
 
     @Composable
     fun DropdownMenuItem(text: String, onClick: () -> Unit) {

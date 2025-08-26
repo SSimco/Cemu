@@ -4,7 +4,7 @@
 
 package info.cemu.cemu.gamelist
 
-
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -92,6 +92,7 @@ fun GamesListScreen(
             gameListViewModel.setFilterText("")
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
@@ -196,7 +197,7 @@ private fun GameList(
 }
 
 @Composable
-fun ShaderCachesConfirmationDialog(
+private fun ShaderCachesConfirmationDialog(
     gameName: String,
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
@@ -227,7 +228,7 @@ fun ShaderCachesConfirmationDialog(
 }
 
 @Composable
-fun GameListItem(
+private fun GameListItem(
     onStartGame: (Game) -> Unit,
     onIsFavoriteChanged: (Boolean) -> Unit,
     onEditGameProfile: () -> Unit,
@@ -290,7 +291,7 @@ fun GameListItem(
 }
 
 @Composable
-fun GameContextMenu(
+private fun GameContextMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     onIsFavoriteChanged: (Boolean) -> Unit,
@@ -354,4 +355,3 @@ fun GameContextMenu(
         )
     }
 }
-

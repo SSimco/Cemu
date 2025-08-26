@@ -5,7 +5,7 @@ import androidx.annotation.Keep
 object NativeAccount {
     const val MAX_ACCOUNT_COUNT = 12
     const val MIN_ACCOUNT_COUNT = 1
-    const val MIN_PERSISTENT_ID: UInt = 2147483649u
+    const val MIN_PERSISTENT_ID: UInt = 0x80000001u
     const val DEFAULT_MII_NAME = "default"
 
     object AccountGender {
@@ -54,16 +54,22 @@ object NativeAccount {
 
     @Keep
     sealed interface OnlineValidationError
+
     @Keep
     class MissingOTP : OnlineValidationError
+
     @Keep
     class CorruptedOTP : OnlineValidationError
+
     @Keep
     class MissingSEEPROM : OnlineValidationError
+
     @Keep
     class CorruptedSEEPROM : OnlineValidationError
+
     @Keep
     data class MissingFile(val file: String) : OnlineValidationError
+
     @Keep
     data class AccountError(val accountError: Int) : OnlineValidationError
 

@@ -201,13 +201,13 @@ class TitleListViewModel : ViewModel() {
     val titleInstallProgress = installUseCase.progress
 
     fun installQueuedTitle(context: Context, callback: (InstallResult) -> Unit) {
-        val queued = _queuedTitleToInstall.value ?: return
+        val (titleUri, titleExistsStatus) = _queuedTitleToInstall.value ?: return
         _queuedTitleToInstall.value = null
 
         installUseCase.install(
             context = context,
-            titleUri = queued.first,
-            targetLocation = queued.second.targetLocation,
+            titleUri = titleUri,
+            targetLocation = titleExistsStatus.targetLocation,
             callback = callback,
         )
     }
@@ -246,6 +246,7 @@ class TitleListViewModel : ViewModel() {
         uri: Uri,
         onResult: (CompressResult) -> Unit
     ) {
+        _queuedTitleToCompress.value = null
         compressUseCase.compress(context, uri, onResult)
     }
 

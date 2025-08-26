@@ -1,5 +1,6 @@
 package info.cemu.cemu.common.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -53,6 +54,9 @@ fun FilledSearchToolbar(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     var searchBarActive by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = searchBarActive) { searchBarActive = false }
+
     TopAppBar(
         actions = actions,
         title = {
