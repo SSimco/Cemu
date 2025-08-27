@@ -4,7 +4,6 @@ import java.security.MessageDigest
 import java.util.regex.Pattern
 import javax.xml.bind.DatatypeConverter
 
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -75,7 +74,7 @@ android {
 
     signingConfigs {
         if (keystoreFilePath != null) {
-            create("releaseSigningConfig") {
+            create("release") {
                 storeFile = file(keystoreFilePath)
                 storePassword = System.getenv("ANDROID_KEY_STORE_PASSWORD")
                 keyAlias = System.getenv("ANDROID_KEY_ALIAS")
@@ -83,46 +82,37 @@ android {
             }
         }
     }
-    androidComponents {
-        beforeVariants { variantBuilder ->
-            if (variantBuilder.name == "release") {
-                variantBuilder.enable = false
-            }
-        }
-    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
         }
-        create("github") {
-            if (keystoreFilePath != null) {
-                initWith(getByName("release"))
-                isMinifyEnabled = true
-                proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
-                )
-                signingConfig = signingConfigs.getByName("releaseSigningConfig")
+        release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = if (keystoreFilePath != null) {
+                signingConfigs.getByName("release")
             } else {
-                initWith(getByName("debug"))
-                externalNativeBuild {
-                    cmake {
-                        arguments.add("-DCMAKE_BUILD_TYPE=DEBUG")
-                    }
-                }
+                signingConfigs.getByName("debug")
             }
         }
     }
+
     compileOptions {
         sourceCompatibility(JavaVersion.VERSION_17)
         targetCompatibility(JavaVersion.VERSION_17)
     }
+
     externalNativeBuild {
         cmake {
             version = "3.25.0+"
             path = file("../../../CMakeLists.txt")
         }
     }
+
     defaultConfig {
         externalNativeBuild {
             cmake {
@@ -152,12 +142,14 @@ android {
             }
         }
     }
+
     buildFeatures {
         buildConfig = true
         dataBinding = true
         viewBinding = true
         compose = true
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }

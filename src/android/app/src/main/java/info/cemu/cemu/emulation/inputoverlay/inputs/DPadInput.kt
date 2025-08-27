@@ -98,11 +98,16 @@ class DPadInput(
     }
 
     private fun getStateByPosition(x: Float, y: Float): Int {
-        val norm2 = (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY)
+        val dx = x - centerX
+        val dy = y - centerY
+        val norm2 = dx * dx + dy * dy
+
         if (norm2 <= radius2 * 0.1f) {
             return NONE
         }
-        val angle = atan2((y - centerY).toDouble(), (x - centerX).toDouble())
+
+        val angle = atan2(dy, dx)
+
         return when (angle) {
             in -0.875 * Math.PI..<-0.625 * Math.PI -> UP or LEFT
             in -0.625 * Math.PI..<-0.375 * Math.PI -> UP
@@ -164,7 +169,9 @@ class DPadInput(
     }
 
     override fun isInside(x: Float, y: Float): Boolean {
-        return (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY) <= radius2
+        val dx = x - centerX
+        val dy = y - centerY
+        return dx * dx + dy * dy <= radius2
     }
 
     override fun drawInput(canvas: Canvas) {

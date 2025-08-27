@@ -19,6 +19,7 @@ jobs:
   deploy:
     name: Deploy experimental release
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -26,11 +27,21 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: "17"
-          distribution: "temurin"
+      - name: Install system dependencies
+        run: |
+          sudo apt update -qq
+          sudo apt install -y gettext
+
+      - name: Uncompile message catalogs
+        run: |
+          for mo_file in bin/resources/*/cemu.mo
+          do
+            echo $mo_file
+            language_code=$(basename $(dirname $mo_file))
+            po_file=src/android/app/src/main/assets/translations/$language_code/cemu.po
+            mkdir -p $(dirname $po_file)
+            msgunfmt $mo_file -o $po_file || echo "Failed to uncompile message catalog from $mo_file"
+          done
 
       - name: Build Cemu
         env:
@@ -39,13 +50,17 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           EMULATOR_VERSION_MAJOR: ${{ inputs.version_major }}
           EMULATOR_VERSION_MINOR: ${{ inputs.version_minor }}
-          BUILD_TYPE: ${{ inputs.build_type }}
         run: |
-          cd ./src/android
-          base64 --decode <<< "${ANDROID_STORE_FILE_BASE64}" > store.jks
-          export ANDROID_KEYSTORE_FILE=$(pwd)/store.jks
-          ./gradlew assemble$BUILD_TYPE
+          export JAVA_HOME=$JAVA_HOME_17_X64
 
+          cd ./src/android
+
+          if [[ -n "$ANDROID_STORE_FILE_BASE64" ]]; then
+            base64 --decode <<< "${ANDROID_STORE_FILE_BASE64}" > store.jks
+            export ANDROID_STORE_FILE=$(pwd)/store.jks
+          fi
+
+          ./gradlew assembleRelease
 
       - name: Set version dependent vars
         env:
