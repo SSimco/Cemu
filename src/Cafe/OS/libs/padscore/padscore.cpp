@@ -134,7 +134,7 @@ void padscoreExport_WPADGetInfoAsync(PPCInterpreter_t* hCPU)
 	ppcDefineParamU32(channel, 0);
 	ppcDefineParamStructPtr(wpadInfo, WPADInfo_t, 1);
 	ppcDefineParamMPTR(callbackFunc, 2);
-	cemuLog_log(LogType::InputAPI, "WPADGetInfoAsync({}, 0x{:08x}, 0x{:08x})", channel, fmt::ptr(wpadInfo), callbackFunc);
+	cemuLog_log(LogType::InputAPI, "WPADGetInfoAsync({}, {}, 0x{:08x})", channel, fmt::ptr(wpadInfo), callbackFunc);
 
 	if (channel < InputManager::kMaxWPADControllers)
 	{
@@ -170,7 +170,7 @@ void padscoreExport_WPADRead(PPCInterpreter_t* hCPU)
 {
 	ppcDefineParamU32(channel, 0);
 	ppcDefineParamPtr(wpadStatus, WPADStatus_t, 1);
-	cemuLog_log(LogType::InputAPI, "WPADRead({}, {:x})", channel, fmt::ptr(wpadStatus));
+	cemuLog_log(LogType::InputAPI, "WPADRead({}, {})", channel, fmt::ptr(wpadStatus));
 
 	if (channel < InputManager::kMaxWPADControllers)
 	{
@@ -224,7 +224,7 @@ void padscoreExport_WPADGetInfo(PPCInterpreter_t* hCPU)
 {
 	ppcDefineParamU32(channel, 0);
 	ppcDefineParamStructPtr(wpadInfo, WPADInfo_t, 1);
-	cemuLog_log(LogType::InputAPI, "WPADGetInfo({}, 0x{:08x})", channel, fmt::ptr(wpadInfo));
+	cemuLog_log(LogType::InputAPI, "WPADGetInfo({}, {})", channel, fmt::ptr(wpadInfo));
 
 	if (channel < InputManager::kMaxWPADControllers)
 	{
