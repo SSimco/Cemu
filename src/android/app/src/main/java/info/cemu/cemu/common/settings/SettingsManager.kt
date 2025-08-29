@@ -5,8 +5,18 @@ import android.content.SharedPreferences
 import info.cemu.cemu.common.ui.localization.DEFAULT_LANGUAGE
 import kotlin.getValue
 
-class EmulationScreenSettings(sharedPreferences: SharedPreferences) {
-    var isDrawerButtonVisible by sharedPreferences.booleanPref(false)
+enum class GamePadPosition {
+    ABOVE,
+    BELOW,
+    LEFT,
+    RIGHT;
+
+    fun isVertical() = this == ABOVE || this == BELOW
+    fun appearsAfterTV() = this == BELOW || this == RIGHT
+}
+
+class EmulationSettings(sharedPreferences: SharedPreferences) {
+    var gamePadPosition by sharedPreferences.enumPref(GamePadPosition.RIGHT)
 }
 
 class GuiSettings(sharedPreferences: SharedPreferences) {
@@ -28,7 +38,7 @@ object SettingsManager {
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    val emulationScreenSettings by lazy { EmulationScreenSettings(sharedPreferences) }
+    val emulationSettings by lazy { EmulationSettings(sharedPreferences) }
 
     val guiSettings by lazy { GuiSettings(sharedPreferences) }
 

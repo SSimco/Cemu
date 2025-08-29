@@ -2,7 +2,7 @@ package info.cemu.cemu.settings.general
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import info.cemu.cemu.common.settings.EmulationScreenSettings
+import info.cemu.cemu.common.settings.EmulationSettings
 import info.cemu.cemu.common.settings.GuiSettings
 import info.cemu.cemu.common.settings.SettingsManager
 import info.cemu.cemu.common.ui.localization.getAvailableLanguages
@@ -10,7 +10,7 @@ import info.cemu.cemu.common.ui.localization.getAvailableLanguages
 class GeneralSettingsViewModel : ViewModel() {
     val languages: List<String>
     val languageToDisplayNameMap: Map<String, String>
-    val emulationScreenSettings: EmulationScreenSettings = SettingsManager.emulationScreenSettings
+    val emulationSettings: EmulationSettings = SettingsManager.emulationSettings
     val guiSettings: GuiSettings = SettingsManager.guiSettings
 
     init {

@@ -61,13 +61,6 @@
                 android:layout_height="wrap_content"
                 app:icon="@drawable/ic_resize" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/emulation_settings_button"
-            style="?attr/materialIconButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_settings" />
     </RelativeLayout>
 
     <include

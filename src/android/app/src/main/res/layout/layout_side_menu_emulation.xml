@@ -26,6 +26,10 @@
                     layout="@layout/layout_side_menu_checkbox_item" />
 
                 <include
+                    android:id="@+id/lock_drawer_checkbox"
+                    layout="@layout/layout_side_menu_checkbox_item" />
+
+                <include
                     android:id="@+id/replace_tv_with_pad_checkbox"
                     layout="@layout/layout_side_menu_checkbox_item" />
 

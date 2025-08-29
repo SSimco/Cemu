@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
+import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.ui.components.Button
 import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.components.SingleSelection
-import info.cemu.cemu.common.ui.components.Toggle
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
@@ -55,15 +55,22 @@ fun GeneralSettingsScreen(
                 NativeSettings.ConsoleLanguage.TAIWANESE,
             ),
         )
-        Toggle(
-            label = tr("Side menu button"),
-            description = tr("Show the emulation side menu button"),
-            initialCheckedState = { generalSettingsViewModel.emulationScreenSettings.isDrawerButtonVisible },
-            onCheckedChanged = {
-                generalSettingsViewModel.emulationScreenSettings.isDrawerButtonVisible = it
-            }
+
+        SingleSelection(
+            label = tr("GamePad position"),
+            initialChoice = { generalSettingsViewModel.emulationSettings.gamePadPosition },
+            onChoiceChanged = { generalSettingsViewModel.emulationSettings.gamePadPosition = it },
+            choiceToString = { gamePadPositionToString(it) },
+            choices = GamePadPosition.entries,
         )
     }
+}
+
+private fun gamePadPositionToString(position: GamePadPosition) = when (position) {
+    GamePadPosition.ABOVE -> tr("Above")
+    GamePadPosition.BELOW -> tr("Below")
+    GamePadPosition.LEFT -> tr("Left")
+    GamePadPosition.RIGHT -> tr("Right")
 }
 
 private fun consoleLanguageToString(channels: Int): String = when (channels) {

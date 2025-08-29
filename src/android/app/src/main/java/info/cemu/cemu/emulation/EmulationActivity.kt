@@ -29,13 +29,15 @@ import info.cemu.cemu.databinding.LayoutSideMenuEmulationBinding
 import info.cemu.cemu.databinding.LayoutSideMenuTextItemBinding
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeException
-import info.cemu.cemu.common.settings.EmulationScreenSettings
+import info.cemu.cemu.common.settings.EmulationSettings
+import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.settings.InputOverlaySettings
 import info.cemu.cemu.common.settings.SettingsManager
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
 import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
+@SuppressLint("ClickableViewAccessibility")
 class EmulationActivity : AppCompatActivity() {
     private inner class CanvasSurfaceHolderCallback(val isMainCanvas: Boolean) :
         SurfaceHolder.Callback {
@@ -68,21 +70,25 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private var emulationTextInputDialog: AlertDialog? = null
-    private var isGameRunning = false
     private var padCanvas: SurfaceView? = null
-    private var toast: Toast? = null
     private lateinit var binding: ActivityEmulationBinding
-    private var isMotionEnabled = false
     private lateinit var inputOverlaySettings: InputOverlaySettings
-    private lateinit var emulationScreenSettings: EmulationScreenSettings
+    private lateinit var emulationSettings: EmulationSettings
     private lateinit var inputOverlaySurfaceView: InputOverlaySurfaceView
     private lateinit var sensorManager: SensorManager
+    private var toast: Toast? = null
+
+    private var isGameRunning = false
+    private var isMotionEnabled = false
+    private var isDrawerLocked = false
+
     private var hasEmulationError = false
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (InputHandler.onMotionEvent(event)) {
             return true
         }
+
         return super.onGenericMotionEvent(event)
     }
 
@@ -90,6 +96,7 @@ class EmulationActivity : AppCompatActivity() {
         if (InputHandler.onKeyEvent(event)) {
             return true
         }
+
         return super.dispatchKeyEvent(event)
     }
 
@@ -97,15 +104,19 @@ class EmulationActivity : AppCompatActivity() {
         val extras = intent.extras
         val data = intent.data
         var launchPath: String? = null
+
         if (extras != null) {
             launchPath = extras.getString(EXTRA_LAUNCH_PATH)
         }
+
         if (launchPath == null && data != null) {
             launchPath = data.toString()
         }
+
         if (launchPath == null) {
             throw RuntimeException("launchPath is null")
         }
+
         return launchPath
     }
 
@@ -117,18 +128,25 @@ class EmulationActivity : AppCompatActivity() {
         emulationActivityInstance = WeakReference(this)
 
         inputOverlaySettings = SettingsManager.inputOverlaySettings
-        emulationScreenSettings = SettingsManager.emulationScreenSettings
+        emulationSettings = SettingsManager.emulationSettings
         sensorManager = SensorManager(this)
         sensorManager.setDeviceRotationProvider(deviceRotationProvider = { display.rotation })
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                showExitConfirmationDialog()
-            }
+            override fun handleOnBackPressed() = toggleDrawer()
         })
 
         initializeView(getLaunchPath())
+
         setContentView(binding.root)
+    }
+
+    private fun toggleDrawer() {
+        if (binding.drawerLayout.isOpen) {
+            binding.drawerLayout.close()
+        } else {
+            binding.drawerLayout.open()
+        }
     }
 
     private fun destroyPadCanvas() {
@@ -190,18 +208,30 @@ class EmulationActivity : AppCompatActivity() {
 
     private fun LayoutSideMenuEmulationBinding.configureSideMenu() {
         val isInputOverlayEnabled = inputOverlaySettings.isOverlayEnabled
+
         enableMotionCheckbox.configure(
             label = tr("Enable motion"),
             onCheckChanged = ::setMotionEnabled
         )
+
+        lockDrawerCheckbox.configure(
+            tr("Lock drawer"),
+            onCheckChanged = {
+                isDrawerLocked = !isDrawerLocked
+                binding.drawerLayout.setLockedMode(isDrawerLocked)
+            }
+        )
+
         replaceTvWithPadCheckbox.configure(
             label = tr("Replace TV with PAD"),
             onCheckChanged = NativeEmulation::setReplaceTVWithPadView
         )
+
         showPadCheckbox.configure(
             label = tr(text = "Show PAD"),
             onCheckChanged = ::setPadViewVisibility
         )
+
         showInputOverlayCheckbox.configure(
             tr(text = "Show input overlay"),
             initialCheckedStatus = isInputOverlayEnabled,
@@ -211,6 +241,7 @@ class EmulationActivity : AppCompatActivity() {
                 inputOverlaySurfaceView.setVisible(showInputOverlay)
             }
         )
+
         editInputsMenuItem.configure(
             label = tr("Edit inputs"),
             isEnabled = isInputOverlayEnabled,
@@ -219,15 +250,16 @@ class EmulationActivity : AppCompatActivity() {
                 binding.finishEditInputsButton.visibility = View.VISIBLE
                 binding.moveInputsButton.performClick()
             })
+
         resetInputOverlayMenuItem.configure(
             tr(text = "Reset input overlay"),
             isEnabled = isInputOverlayEnabled,
             onClick = inputOverlaySurfaceView::resetInputs
         )
-        exitMenuItem.configure(tr("Exit"), onClick = onBackPressedDispatcher::onBackPressed)
+
+        exitMenuItem.configure(tr("Exit"), onClick = ::showExitConfirmationDialog)
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun initializeView(launchPath: String) {
         setFullscreen()
 
@@ -263,14 +295,6 @@ class EmulationActivity : AppCompatActivity() {
             toastMessage(tr("Exited input edit mode"))
         }
 
-        if (emulationScreenSettings.isDrawerButtonVisible) {
-            binding.emulationSettingsButton.setOnClickListener { binding.drawerLayout.open() }
-            binding.drawerLayout.setLockedMode(true)
-        } else {
-            binding.emulationSettingsButton.visibility = View.GONE
-        }
-
-        val mainCanvas = binding.mainCanvas
         try {
             val testSurfaceTexture = SurfaceTexture(0)
             val testSurface = Surface(testSurfaceTexture)
@@ -282,6 +306,7 @@ class EmulationActivity : AppCompatActivity() {
             return
         }
 
+        val mainCanvas = binding.mainCanvas
         val mainCanvasHolder = mainCanvas.holder
         mainCanvasHolder.addCallback(CanvasSurfaceHolderCallback(isMainCanvas = true))
         mainCanvasHolder.addCallback(object : SurfaceChangedListener() {
@@ -312,9 +337,11 @@ class EmulationActivity : AppCompatActivity() {
 
     private fun startGame(launchPath: String) {
         val result = NativeEmulation.startGame(launchPath)
+
         if (result == NativeEmulation.StartGameStatusCode.SUCCESSFUL) {
             return
         }
+
         val errorMessage = when (result) {
             NativeEmulation.StartGameStatusCode.ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
             NativeEmulation.StartGameStatusCode.ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
@@ -343,15 +370,36 @@ class EmulationActivity : AppCompatActivity() {
         sensorManager.pauseListening()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun createPadCanvas() {
         if (padCanvas != null) {
             return
         }
         val padCanvas = SurfaceView(this)
+
+        val padCanvasViewIndex: Int
+        val canvasLayoutParams: ViewGroup.LayoutParams
+        val orientation: Int
+
+        val position = emulationSettings.gamePadPosition
+
+        if (position.isVertical()) {
+            orientation = LinearLayout.VERTICAL
+            canvasLayoutParams =
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0f)
+        } else {
+            orientation = LinearLayout.HORIZONTAL
+            canvasLayoutParams =
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f)
+        }
+
+        padCanvasViewIndex = if (position.appearsAfterTV()) 1 else 0
+
+        binding.mainCanvas.layoutParams = canvasLayoutParams
+        binding.canvasesLayout.orientation = orientation
         binding.canvasesLayout.addView(
             padCanvas,
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f)
+            padCanvasViewIndex,
+            canvasLayoutParams
         )
         padCanvas.holder.addCallback(CanvasSurfaceHolderCallback(false))
         padCanvas.setOnTouchListener(CanvasOnTouchListener(false))
