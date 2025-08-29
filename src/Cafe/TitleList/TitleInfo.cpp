@@ -5,15 +5,12 @@
 #include "pugixml.hpp"
 #include "Common/FileStream.h"
 
-#if __ANDROID__
-#include "Common/unix/ContentUriStream.h"
-#endif // __ANDROID__
-
 #include <zarchive/zarchivereader.h>
 #include "util/IniParser/IniParser.h"
 #include "util/crypto/crc32.h"
 #include "config/ActiveSettings.h"
 #include "util/helpers/helpers.h"
+#include "util/helpers/ZArchiveHelpers.h"
 
 // detect format by reading file header/footer
 CafeTitleFileType DetermineCafeSystemFileType(fs::path filePath)
@@ -225,13 +222,8 @@ bool TitleInfo::DetectFormat(const fs::path& path, fs::path& pathOut, TitleDataF
 			pathOut = path;
 			// a Wii U archive file can contain multiple titles but TitleInfo only maps to one
 			// we use the first base title that we find. This is the most intuitive behavior when someone launches "game.wua"
-			ZArchiveReader* zar = nullptr;
-#if __ANDROID__
-			if(FilesystemAndroid::isContentUri(path))
-				zar = ZArchiveReader::OpenFromStream(std::make_unique<ContentUriStream>(path));
-			else
-#endif // __ANDROID__
-				zar = ZArchiveReader::OpenFromFile(path);
+			ZArchiveReader* zar = ZArchiveHelpers::OpenReader(path);
+
 			if (!zar)
 				return false;
 			ZArchiveNodeHandle rootDir = zar->LookUp("", false, true);
@@ -366,13 +358,8 @@ ZArchiveReader* _ZArchivePool_AcquireInstance(const fs::path& path)
 	}
 	_lock.unlock();
 	// opening wua files can be expensive, so we do it outside of the lock
-	ZArchiveReader* zar = nullptr;
-#if __ANDROID__
-	if(FilesystemAndroid::isContentUri(path))
-		zar = ZArchiveReader::OpenFromStream(std::make_unique<ContentUriStream>(path));
-	else
-#endif // __ANDROID__
-		zar = ZArchiveReader::OpenFromFile(path);
+	ZArchiveReader* zar = ZArchiveHelpers::OpenReader(path);
+
 	if (!zar)
 		return nullptr;
 	_lock.lock();

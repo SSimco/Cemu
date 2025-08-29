@@ -56,11 +56,11 @@ endif()
 
 if(ANDROID)
   target_sources(CemuCommon PRIVATE
-    unix/ContentUriStream.h
-    unix/FilesystemAndroid.cpp
-    unix/FilesystemAndroid.h
-    unix/FileStream_contentUri.cpp
-    unix/FileStream_contentUri.h
+    android/FdStream.h
+    android/FileStream_saf.cpp
+    android/FileStream_saf.h
+    android/FilesystemAndroid.cpp
+    android/FilesystemAndroid.h
   )
 endif()
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "JNIUtils.h"
-#include "Common/unix/FilesystemAndroid.h"
+#include "Common/android/FilesystemAndroid.h"
 
 class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks {
 	jmethodID m_openContentUriMid;
@@ -11,7 +11,7 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 	jmethodID m_existsMid;
 	JNIUtils::Scopedjclass m_fileUtilClass;
 
-	bool callBooleanFunction(const std::filesystem::path& uri, jmethodID methodId)
+	bool CallBooleanFunction(const std::filesystem::path& uri, jmethodID methodId)
 	{
 		bool result = false;
 		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
@@ -34,7 +34,7 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 		m_existsMid = env->GetStaticMethodID(*m_fileUtilClass, "exists", "(Ljava/lang/String;)Z");
 	}
 
-	int openContentUri(const std::filesystem::path& uri) override
+	int OpenContentUri(const std::filesystem::path& uri) override
 	{
 		int fd = -1;
 		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
@@ -45,7 +45,7 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 		return fd;
 	}
 
-	std::vector<std::filesystem::path> listFiles(const std::filesystem::path& uri) override
+	std::vector<std::filesystem::path> ListFiles(const std::filesystem::path& uri) override
 	{
 		std::vector<std::filesystem::path> paths;
 		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
@@ -65,18 +65,18 @@ class AndroidFilesystemCallbacks : public FilesystemAndroid::FilesystemCallbacks
 		return paths;
 	}
 
-	bool isDirectory(const std::filesystem::path& uri) override
+	bool IsDirectory(const std::filesystem::path& uri) override
 	{
-		return callBooleanFunction(uri, m_isDirectoryMid);
+		return CallBooleanFunction(uri, m_isDirectoryMid);
 	}
 
-	bool isFile(const std::filesystem::path& uri) override
+	bool IsFile(const std::filesystem::path& uri) override
 	{
-		return callBooleanFunction(uri, m_isFileMid);
+		return CallBooleanFunction(uri, m_isFileMid);
 	}
 
-	bool exists(const std::filesystem::path& uri) override
+	bool Exists(const std::filesystem::path& uri) override
 	{
-		return callBooleanFunction(uri, m_existsMid);
+		return CallBooleanFunction(uri, m_existsMid);
 	}
 };

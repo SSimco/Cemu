@@ -85,7 +85,7 @@
 
 namespace fs = std::filesystem;
 #if __ANDROID__
-#include "Common/unix/FilesystemAndroid.h"
+#include "Common/android/FilesystemAndroid.h"
 #endif // __ANDROID
 
 namespace cemu
@@ -95,48 +95,48 @@ namespace fs
 inline bool is_directory(const std::filesystem::path& p)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::isDirectory(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::IsDirectory(p);
 #endif  // __ANDROID__
     return std::filesystem::is_directory(p);
 }
 inline bool is_directory(const std::filesystem::path& p, std::error_code& ec)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::isDirectory(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::IsDirectory(p);
 #endif  // __ANDROID__
     return std::filesystem::is_directory(p, ec);
 }
 inline bool is_file(const std::filesystem::path& p)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::isFile(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::IsFile(p);
 #endif  // __ANDROID__
     return std::filesystem::is_regular_file(p);
 }
 inline bool is_file(const std::filesystem::path& p, std::error_code& ec)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::isFile(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::IsFile(p);
 #endif  // __ANDROID__
     return std::filesystem::is_regular_file(p, ec);
 }
 inline bool exists(const std::filesystem::path& p)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::exists(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::Exists(p);
 #endif  // __ANDROID__
     return std::filesystem::exists(p);
 }
 inline bool exists(const std::filesystem::path& p, std::error_code& ec)
 {
 #if __ANDROID__
-    if (FilesystemAndroid::isContentUri(p))
-        return FilesystemAndroid::exists(p);
+    if (FilesystemAndroid::IsContentUri(p))
+        return FilesystemAndroid::Exists(p);
 #endif  // __ANDROID__
     return std::filesystem::exists(p, ec);
 }
