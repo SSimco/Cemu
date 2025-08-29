@@ -46,23 +46,10 @@ jobs:
         with:
           cmake-version: "3.29.0"
 
-      - name: "Bootstrap vcpkg"
-        run: |
-          bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
-
-      - name: "Setup NuGet Credentials for vcpkg"
-        shell: "bash"
-        run: |
-          mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
-          sources add \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-          -storepasswordincleartext \
-          -name "GitHub" \
-          -username "${{ github.repository_owner }}" \
-          -password "${{ secrets.GITHUB_TOKEN }}"
-          mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GITHUB_TOKEN }}" \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+      - name: Setup vcpkg binary cache
+        uses: ./.github/actions/set-up-vcpkg-binary-cache-action
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "cmake"
         run: |
@@ -135,23 +122,10 @@ jobs:
         with:
           cmake-version: "3.29.0"
 
-      - name: "Bootstrap vcpkg"
-        run: |
-          ./dependencies/vcpkg/bootstrap-vcpkg.bat
-
-      - name: "Setup NuGet Credentials for vcpkg"
-        shell: "bash"
-        run: |
-          `./dependencies/vcpkg/vcpkg.exe fetch nuget | tail -n 1` \
-          sources add \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-          -storepasswordincleartext \
-          -name "GitHub" \
-          -username "${{ github.repository_owner }}" \
-          -password "${{ secrets.GITHUB_TOKEN }}"
-          `./dependencies/vcpkg/vcpkg.exe fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GITHUB_TOKEN }}" \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+      - name: Setup vcpkg binary cache
+        uses: ./.github/actions/set-up-vcpkg-binary-cache-action
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "cmake"
         run: |
@@ -215,23 +189,10 @@ jobs:
         with:
           cmake-version: "3.29.0"
 
-      - name: "Bootstrap vcpkg"
-        run: |
-          bash ./dependencies/vcpkg/bootstrap-vcpkg.sh
-
-      - name: "Setup NuGet Credentials for vcpkg"
-        shell: "bash"
-        run: |
-          mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
-          sources add \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-          -storepasswordincleartext \
-          -name "GitHub" \
-          -username "${{ github.repository_owner }}" \
-          -password "${{ secrets.GITHUB_TOKEN }}"
-          mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GITHUB_TOKEN }}" \
-          -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+      - name: Setup vcpkg binary cache
+        uses: ./.github/actions/set-up-vcpkg-binary-cache-action
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "cmake"
         run: |
@@ -290,6 +251,11 @@ jobs:
             mkdir -p $(dirname $po_file)
             msgunfmt $mo_file -o $po_file || echo "Failed to uncompile message catalog from $mo_file"
           done
+
+      - name: Setup vcpkg binary cache
+        uses: ./.github/actions/set-up-vcpkg-binary-cache-action
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build Cemu
         env:
