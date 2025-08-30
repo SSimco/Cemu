@@ -22,20 +22,22 @@ runs:
     - name: Setup NuGet Credentials for vcpkg
       shell: bash
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          alias vcpkg_nuget=`./dependencies/vcpkg/vcpkg.exe fetch nuget | tail -n 1`
-        else
-          alias vcpkg_nuget="mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1`"
-        fi
+        function vcpkg_nuget() {
+            if [ "$RUNNER_OS" == "Windows" ]; then
+            `./dependencies/vcpkg/vcpkg.exe fetch nuget | tail -n 1` "$@"
+            else
+            mono `./dependencies/vcpkg/vcpkg fetch nuget | tail -n 1` "$@"
+            fi
+        }
 
         vcpkg_nuget \
-        sources add \
-        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-        -storepasswordincleartext \
-        -name "GitHub" \
-        -username "${{ github.repository_owner }}" \
-        -password "${{ inputs.github-token }}"
+            sources add \
+            -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            -storepasswordincleartext \
+            -name "GitHub" \
+            -username "${{ github.repository_owner }}" \
+            -password "${{ inputs.github-token }}"
 
         vcpkg_nuget \
-        setapikey "${{ inputs.github-token }}" \
-        -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+            setapikey "${{ inputs.github-token }}" \
+            -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
