@@ -16,15 +16,15 @@ add_library(libucontext)
 target_sources(
     libucontext
     PRIVATE
-        libucontext/arch/${ARCH}/getcontext.S
-        libucontext/arch/${ARCH}/setcontext.S
-        libucontext/arch/${ARCH}/swapcontext.S
+        src/arch/${ARCH}/getcontext.S
+        src/arch/${ARCH}/setcontext.S
+        src/arch/${ARCH}/swapcontext.S
 )
 
 if(${ARCH} STREQUAL "mips" OR ${ARCH} STREQUAL "mips64")
-    target_sources(libucontext PRIVATE libucontext/arch/${ARCH}/makecontext.S)
+    target_sources(libucontext PRIVATE src/arch/${ARCH}/makecontext.S)
 else()
-    target_sources(libucontext PRIVATE libucontext/arch/${ARCH}/makecontext.c)
+    target_sources(libucontext PRIVATE src/arch/${ARCH}/makecontext.c)
 endif()
 
 set(ARCH_WITH_STARTCONTEXT
@@ -36,9 +36,9 @@ set(ARCH_WITH_STARTCONTEXT
 )
 
 if(${ARCH} IN_LIST ARCH_WITH_STARTCONTEXT)
-    target_sources(libucontext PRIVATE libucontext/arch/${ARCH}/startcontext.S)
+    target_sources(libucontext PRIVATE src/arch/${ARCH}/startcontext.S)
 else()
-    target_sources(libucontext PRIVATE libucontext/arch/${ARCH}/trampoline.c)
+    target_sources(libucontext PRIVATE src/arch/${ARCH}/trampoline.c)
 endif()
 
 set(ARCH_WITH_RETFROMSYSCALL "ppc" "ppc64")
@@ -46,7 +46,7 @@ set(ARCH_WITH_RETFROMSYSCALL "ppc" "ppc64")
 if(${ARCH} IN_LIST ARCH_WITH_RETFROMSYSCALL)
     target_sources(
         libucontext
-        PRIVATE libucontext/arch/${ARCH}/retfromsyscall.c
+        PRIVATE src/arch/${ARCH}/retfromsyscall.c
     )
 endif()
 
@@ -55,12 +55,12 @@ if(FREESTANDING)
     target_compile_definitions(libucontext PRIVATE FREESTANDING)
     target_include_directories(
         libucontext
-        PUBLIC libucontext/arch/${ARCH}/include
+        PUBLIC src/arch/${ARCH}/include
     )
 else()
     target_include_directories(
         libucontext
-        PUBLIC libucontext/arch/common/include
+        PUBLIC src/arch/common/include
     )
 endif()
 
@@ -70,6 +70,6 @@ endif()
 
 target_compile_definitions(libucontext PRIVATE _DEFAULT_SOURCE)
 
-target_include_directories(libucontext PRIVATE libucontext/arch/common)
+target_include_directories(libucontext PRIVATE src/arch/common)
 
-target_include_directories(libucontext PUBLIC libucontext/include)
+target_include_directories(libucontext PUBLIC src/include)

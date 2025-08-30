@@ -1,6 +1,6 @@
 [submodule "dependencies/ZArchive"]
 	path = dependencies/ZArchive
-	url = https://github.com/SSimco/ZArchive
+	url = https://github.com/Exzap/ZArchive
 	shallow = true
 [submodule "dependencies/cubeb"]
 	path = dependencies/cubeb
@@ -21,12 +21,11 @@
 [submodule "dependencies/xbyak_aarch64"]
 	path = dependencies/xbyak_aarch64
 	url = https://github.com/fujitsu/xbyak_aarch64
-[submodule "dependencies/cpuid"]
-	path = dependencies/cpuid
-	url = https://github.com/SSimco/cpuid
 [submodule "dependencies/libadrenotools"]
 	path = dependencies/libadrenotools
 	url = https://github.com/bylaws/libadrenotools
+	shallow = true
 [submodule "dependencies/libucontext/libucontext"]
-	path = dependencies/libucontext/libucontext
+	path = dependencies/libucontext/src
 	url = https://github.com/kaniini/libucontext
+	shallow = true
