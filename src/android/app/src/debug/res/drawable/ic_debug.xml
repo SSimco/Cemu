@@ -1,0 +1,15 @@
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="25%"
+    android:insetTop="25%"
+    android:insetRight="25%"
+    android:insetBottom="25%">
+    <vector
+        android:width="14dp"
+        android:height="14dp"
+        android:viewportWidth="960"
+        android:viewportHeight="960">
+        <path
+            android:fillColor="#ffffff"
+            android:pathData="m480,840q-65,0 -120.5,-32Q304,776 272,720L160,720v-80h84q-3,-20 -3.5,-40 -0.5,-20 -0.5,-40h-80v-80h80q0,-20 0.5,-40 0.5,-20 3.5,-40h-84v-80h112q14,-23 31.5,-43 17.5,-20 40.5,-35l-64,-66 56,-56 86,86q28,-9 57,-9 29,0 57,9l88,-86 56,56 -66,66q23,15 41.5,34.5 18.5,19.5 32.5,43.5h112v80h-84q3,20 3.5,40 0.5,20 0.5,40h80v80h-80q0,20 -0.5,40 -0.5,20 -3.5,40h84v80L688,720q-32,56 -87.5,88 -55.5,32 -120.5,32zM400,640h160v-80L400,560ZM400,480h160v-80L400,400Z" />
+    </vector>
+</inset>
