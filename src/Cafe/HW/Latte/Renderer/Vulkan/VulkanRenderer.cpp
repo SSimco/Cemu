@@ -1493,9 +1493,8 @@ VkSurfaceKHR VulkanRenderer::CreateWaylandSurface(VkInstance instance, wl_displa
 
     return result;
 }
-#endif 
-#endif 
-#endif 
+#endif
+#endif
 
 VkSurfaceKHR VulkanRenderer::CreateFramebufferSurface(VkInstance instance, WindowSystem::WindowHandleInfo& windowInfo)
 {

@@ -30,9 +30,9 @@ fun String.runCommand(workingDir: File = File(".")): String? {
 
 fun getGitHash(): String? = "git log --format=%h -1".runCommand()?.trim()
 
-val versionMajor: String? = System.getenv("EMULATOR_VERSION_MAJOR")
-val versionMinor: String? = System.getenv("EMULATOR_VERSION_MINOR")
-
+val versionMajor: Int? = System.getenv("EMULATOR_VERSION_MAJOR")?.toIntOrNull()
+val versionMinor: Int? = System.getenv("EMULATOR_VERSION_MINOR")?.toIntOrNull()
+versionMajor
 fun getVersionName(): String {
     if (versionMajor != null && versionMinor != null)
         return "$versionMajor.$versionMinor"

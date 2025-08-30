@@ -144,7 +144,6 @@ VKFUNC_INSTANCE(vkCreateXcbSurfaceKHR);
 VKFUNC_INSTANCE(vkCreateWaylandSurfaceKHR);
 #endif // HAS_WAYLAND
 #endif // BOOST_OS_LINUX || BOOST_OS_BSD
-#endif // __ANDROID__
 
 #if BOOST_OS_WINDOWS
 VKFUNC_INSTANCE(vkCreateWin32SurfaceKHR);

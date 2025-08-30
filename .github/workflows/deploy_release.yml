@@ -50,6 +50,7 @@ jobs:
   call-release-build:
     uses: ./.github/workflows/build.yml
     needs: calculate-version
+    secrets: inherit
     with:
       next_version_major: ${{ needs.calculate-version.outputs.next_version_major }}
       next_version_minor: ${{ needs.calculate-version.outputs.next_version_minor }}

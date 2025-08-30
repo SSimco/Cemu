@@ -17,7 +17,7 @@
 #include <boost/stacktrace.hpp>
 #endif  // __ANDROID__
 
-#if BOOST_OS_LINUX
+#if BOOST_OS_LINUX && !__ANDROID__
 void DemangleAndPrintBacktrace(char** backtrace, size_t size)
 {
 	ELFSymbolTable symTable;
