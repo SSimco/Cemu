@@ -221,7 +221,7 @@ public:
 	{
 		auto* element = m_document->NewElement(name);
 
-		if constexpr (std::is_enum<T>::value)
+		if constexpr (std::is_enum_v<T>)
 			element->SetText(fmt::format("{}", static_cast<typename std::underlying_type<T>::type>(value)).c_str());
 		else
 			element->SetText(fmt::format("{}", value).c_str());
@@ -480,8 +480,8 @@ class XMLChildConfig
 	{
 		m_parentConfig = {
 			.lock = [getParentConfig]() { return getParentConfig().Lock(); },
-			.save = [getParentConfig]() { return getParentConfig().Load(); },
-			.load = [getParentConfig]() { return getParentConfig().Save(); },
+			.save = [getParentConfig]() { return getParentConfig().Save(); },
+			.load = [getParentConfig]() { return getParentConfig().Load(); },
 		};
 
 		auto configParser = std::make_pair(

@@ -135,17 +135,16 @@ VKFUNC_DEVICE(vkDestroyPipeline);
 VKFUNC_DEVICE(vkCmdBindPipeline);
 
 // swapchain
-#if BOOST_OS_LINUX
 #if __ANDROID__
 VKFUNC_INSTANCE(vkCreateAndroidSurfaceKHR);
-#else
+#elif BOOST_OS_LINUX || BOOST_OS_BSD
 VKFUNC_INSTANCE(vkCreateXlibSurfaceKHR);
 VKFUNC_INSTANCE(vkCreateXcbSurfaceKHR);
 #ifdef HAS_WAYLAND
 VKFUNC_INSTANCE(vkCreateWaylandSurfaceKHR);
 #endif // HAS_WAYLAND
+#endif // BOOST_OS_LINUX || BOOST_OS_BSD
 #endif // __ANDROID__
-#endif // BOOST_OS_LINUX
 
 #if BOOST_OS_WINDOWS
 VKFUNC_INSTANCE(vkCreateWin32SurfaceKHR);

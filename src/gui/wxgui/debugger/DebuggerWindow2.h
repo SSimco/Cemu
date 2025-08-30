@@ -8,6 +8,7 @@
 
 #include <wx/bitmap.h>
 #include <wx/frame.h>
+#include <wx/mstream.h>
 
 class BreakpointWindow;
 class RegisterWindow;
@@ -23,6 +24,7 @@ wxDECLARE_EVENT(wxEVT_BREAKPOINT_CHANGE, wxCommandEvent);
 wxDECLARE_EVENT(wxEVT_MOVE_IP, wxCommandEvent);
 wxDECLARE_EVENT(wxEVT_NOTIFY_MODULE_LOADED, wxCommandEvent);
 wxDECLARE_EVENT(wxEVT_NOTIFY_MODULE_UNLOADED, wxCommandEvent);
+wxDECLARE_EVENT(wxEVT_NOTIFY_GRAPHIC_PACKS_MODIFIED, wxCommandEvent);
 
 struct DebuggerConfig
 {
@@ -56,6 +58,14 @@ struct DebuggerModuleStorage
 };
 typedef XMLDataConfig<DebuggerModuleStorage> XMLDebuggerModuleConfig;
 
+static wxBitmap LoadThemedBitmapFromPNG(const uint8* data, size_t size, const wxColour& tint)
+{
+	wxMemoryInputStream strm(data, size);
+	wxImage img(strm, wxBITMAP_TYPE_PNG);
+	img.Replace(0x00, 0x00, 0x00, tint.Red(), tint.Green(), tint.Blue());
+	return wxBitmap(img);
+}
+
 class DebuggerWindow2 : public wxFrame, public DebuggerCallbacks
 {
 public:
@@ -86,6 +96,7 @@ private:
 	void OnMoveIP(wxCommandEvent& event);
 	void OnNotifyModuleLoaded(wxCommandEvent& event);
 	void OnNotifyModuleUnloaded(wxCommandEvent& event);
+	void OnNotifyGraphicPacksModified(wxCommandEvent& event);
 	// events from DisasmCtrl
 	void OnDisasmCtrlGotoAddress(wxCommandEvent& event);
 
@@ -97,6 +108,7 @@ private:
 	void NotifyRun() override;
 	void MoveIP() override;
 	void NotifyModuleLoaded(void* module) override;
+	void NotifyGraphicPacksModified() override;
 	void NotifyModuleUnloaded(void* module) override;
 
 	XMLDebuggerConfig m_config;

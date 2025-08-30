@@ -8,8 +8,12 @@
 #elif __ANDROID__
 #include <byteswap.h>
 #include "Common/unix/platform.h"
-#elif BOOST_OS_LINUX
+#elif BOOST_OS_LINUX || BOOST_OS_BSD
+#if BOOST_OS_LINUX
 #include <byteswap.h>
+#elif BOOST_OS_BSD
+#include <endian.h>
+#endif
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xutil.h>

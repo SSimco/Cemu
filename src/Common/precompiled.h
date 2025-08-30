@@ -242,6 +242,12 @@ inline uint64 _swapEndianU64(uint64 v)
 {
 #if BOOST_OS_MACOS
     return OSSwapInt64(v);
+#elif BOOST_OS_BSD
+#ifdef __OpenBSD__
+    return swap64(v);
+#else // FreeBSD and NetBSD
+    return bswap64(v);
+#endif
 #else
     return bswap_64(v);
 #endif
@@ -251,6 +257,12 @@ inline uint32 _swapEndianU32(uint32 v)
 {
 #if BOOST_OS_MACOS
     return OSSwapInt32(v);
+#elif BOOST_OS_BSD
+#ifdef __OpenBSD__
+    return swap32(v);
+#else // FreeBSD and NetBSD
+    return bswap32(v);
+#endif
 #else
     return bswap_32(v);
 #endif
@@ -260,6 +272,12 @@ inline sint32 _swapEndianS32(sint32 v)
 {
 #if BOOST_OS_MACOS
     return (sint32)OSSwapInt32((uint32)v);
+#elif BOOST_OS_BSD
+#ifdef __OpenBSD__
+    return (sint32)swap32((uint32)v);
+#else // FreeBSD and NetBSD
+    return (sint32)bswap32((uint32)v);
+#endif
 #else
     return (sint32)bswap_32((uint32)v);
 #endif
@@ -551,6 +569,11 @@ bool match_any_of(T1&& value, Types&&... others)
 #elif BOOST_OS_MACOS
 	return std::chrono::steady_clock::time_point(
 		std::chrono::nanoseconds(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)));
+#elif BOOST_OS_BSD
+	struct timespec tp;
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	return std::chrono::steady_clock::time_point(
+		std::chrono::seconds(tp.tv_sec) + std::chrono::nanoseconds(tp.tv_nsec));
 #endif
 }
 
@@ -688,7 +711,8 @@ struct fmt::formatter<betype<T>> : fmt::formatter<T>
 namespace stdx
 {
 	// std::to_underlying
-    template <typename EnumT, typename = std::enable_if_t < std::is_enum<EnumT>{} >>
+    template <typename EnumT>
+		requires (std::is_enum_v<EnumT>)
         constexpr std::underlying_type_t<EnumT> to_underlying(EnumT e) noexcept {
         return static_cast<std::underlying_type_t<EnumT>>(e);
     };
@@ -724,7 +748,7 @@ namespace stdx
 	template<typename T>
 	class atomic_ref
 	{
-		static_assert(std::is_trivially_copyable<T>::value, "atomic_ref requires trivially copyable types");
+		static_assert(std::is_trivially_copyable_v<T>, "atomic_ref requires trivially copyable types");
 	public:
 		using value_type = T;
 

@@ -47,7 +47,7 @@ PRIVATE
 )
 endif()
 
-if(UNIX AND NOT APPLE)
+if(LINUX)
 	target_sources(CemuCommon PRIVATE
 		ExceptionHandler/ELFSymbolTable.cpp
 		ExceptionHandler/ELFSymbolTable.h

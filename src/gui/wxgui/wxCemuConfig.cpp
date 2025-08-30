@@ -26,6 +26,7 @@ void wxCemuConfig::AddRecentNfcFile(std::string_view file)
 void wxCemuConfig::Load(XMLConfigParser& parser)
 {
 	language = parser.get<sint32>("language", wxLANGUAGE_DEFAULT);
+	msw_theme = parser.get<sint32>("msw_theme", msw_theme);
 	use_discord_presence = parser.get("use_discord_presence", true);
 	fullscreen_menubar = parser.get("fullscreen_menubar", false);
 	feral_gamemode = parser.get("feral_gamemode", false);
@@ -120,6 +121,7 @@ void wxCemuConfig::Save(XMLConfigParser& config)
 {
 	// general settings
 	config.set<sint32>("language", language);
+	config.set<sint32>("msw_theme", msw_theme);
 	config.set<bool>("use_discord_presence", use_discord_presence);
 	config.set<bool>("fullscreen_menubar", fullscreen_menubar);
 	config.set<bool>("feral_gamemode", feral_gamemode);
@@ -136,7 +138,6 @@ void wxCemuConfig::Save(XMLConfigParser& config)
 	wpos.set<sint32>("y", window_position.y);
 	auto wsize = config.set("window_size");
 	wsize.set<sint32>("x", window_size.x);
-	cemu_assert_debug(window_size.x != 0);
 	wsize.set<sint32>("y", window_size.y);
 	config.set<bool>("window_maximized", window_maximized);
 

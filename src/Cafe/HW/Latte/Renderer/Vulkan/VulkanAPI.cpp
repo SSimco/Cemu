@@ -3,7 +3,7 @@
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include <numeric> // for std::iota
 
-#if BOOST_OS_LINUX || BOOST_OS_MACOS
+#if BOOST_OS_LINUX || BOOST_OS_MACOS || BOOST_OS_BSD
 #include <dlfcn.h>
 #endif
 
@@ -215,7 +215,7 @@ void* load_custom_driver()
 
 void* dlopen_vulkan_loader()
 {
-#if BOOST_OS_LINUX
+#if BOOST_OS_LINUX || BOOST_OS_BSD
 	static void* vulkan_so = nullptr;
 #if __ANDROID__ && defined(__aarch64__)
 	vulkan_so = load_custom_driver();

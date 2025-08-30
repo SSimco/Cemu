@@ -6,12 +6,12 @@
 #include "wglext.h"
 #endif
 
-#if BOOST_OS_LINUX
 #if __ANDROID__
 #define EGL_EGL_PROTOTYPES 0
 #include "egl.h"
 #undef EGL_EGL_PROTOTYPES
-#else
+#elif ( BOOST_OS_LINUX || BOOST_OS_BSD ) > 0
+
 // from Xlib
 #define Bool int
 #define Status int
@@ -37,8 +37,8 @@ typedef struct __GLXFBConfigRec *GLXFBConfig;
 #undef Status
 #undef True
 #undef False
-#endif // __ANDROID__
-#endif // BOOST_OS_LINUX
+
+#endif
 
 namespace CemuGL
 {
