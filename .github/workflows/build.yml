@@ -272,6 +272,9 @@ jobs:
           if [[ -n "$ANDROID_STORE_FILE_BASE64" ]]; then
             base64 --decode <<< "${ANDROID_STORE_FILE_BASE64}" > store.jks
             export ANDROID_STORE_FILE=$(pwd)/store.jks
+            echo "Android signing store file has been set up."
+          else
+            echo "No Android signing store file provided. The APK will not be signed with a release key."
           fi
 
           ./gradlew assembleRelease

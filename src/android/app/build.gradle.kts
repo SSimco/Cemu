@@ -70,7 +70,7 @@ android {
         jniLibs.useLegacyPackaging = true
     }
 
-    val keystoreFilePath: String? = System.getenv("ANDROID_KEYSTORE_FILE")
+    val keystoreFilePath: String? = System.getenv("ANDROID_STORE_FILE")
 
     signingConfigs {
         if (keystoreFilePath != null) {
