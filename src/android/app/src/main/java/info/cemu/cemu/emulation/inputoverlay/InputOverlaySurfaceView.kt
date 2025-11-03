@@ -6,15 +6,29 @@ import android.graphics.Rect
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.SurfaceView
 import android.view.View
 import android.view.View.OnTouchListener
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import info.cemu.cemu.R
+import info.cemu.cemu.common.inputoverlay.OverlayButton
+import info.cemu.cemu.common.inputoverlay.OverlayDpad
+import info.cemu.cemu.common.inputoverlay.OverlayInput
+import info.cemu.cemu.common.inputoverlay.OverlayInputList
+import info.cemu.cemu.common.inputoverlay.OverlayJoystick
+import info.cemu.cemu.common.settings.InputOverlaySettings
 import info.cemu.cemu.common.settings.SettingsManager
-import info.cemu.cemu.emulation.inputoverlay.inputs.DPadInput
+import info.cemu.cemu.emulation.inputoverlay.inputs.DPad
 import info.cemu.cemu.emulation.inputoverlay.inputs.Input
 import info.cemu.cemu.emulation.inputoverlay.inputs.Joystick
 import info.cemu.cemu.emulation.inputoverlay.inputs.RectangleButton
@@ -22,7 +36,6 @@ import info.cemu.cemu.emulation.inputoverlay.inputs.RoundButton
 import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.BlowButtonInnerDrawing
 import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.ButtonInnerDrawing
 import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.HomeButtonInnerDrawing
-import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.StickClickInnerDrawing
 import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.TextButtonInnerDrawing
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.getControllerType
@@ -31,8 +44,7 @@ import info.cemu.cemu.nativeinterface.NativeInput.onOverlayAxis
 import info.cemu.cemu.nativeinterface.NativeInput.onOverlayButton
 import kotlin.math.roundToInt
 
-class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
-    SurfaceView(context, attrs), OnTouchListener {
+class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchListener {
     enum class InputMode {
         DEFAULT,
         EDIT_POSITION,
@@ -56,6 +68,7 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
     private var vibrateOnTouch: Boolean = false
     private var inputsMinWidthHeight: Int = -1
+    private val overlaySettings: InputOverlaySettings
 
     init {
         pixelDensity = context.resources.displayMetrics.densityDpi
@@ -64,13 +77,17 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
         vibrator = getVibrator(context)
         setOnTouchListener(this)
         inputOverlayInputsSettingsManager = InputOverlayInputsSettingsManager(context)
-        val overlaySettings = SettingsManager.inputOverlaySettings
+        overlaySettings = SettingsManager.inputOverlaySettings
         controllerIndex = overlaySettings.controllerIndex
         currentAlpha = overlaySettings.alpha
         vibrateOnTouch = vibrator.hasVibrator() && overlaySettings.isVibrateOnTouchEnabled
     }
 
     fun setVisible(visible: Boolean) {
+        if (this.visible == visible) {
+            return
+        }
+
         this.visible = visible
         invalidate()
     }
@@ -97,7 +114,10 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
             return
         }
         for ((overlayInput, input) in inputs!!) {
-            inputOverlayInputsSettingsManager.saveRectangle(overlayInput, input.getBoundingRectangle())
+            inputOverlayInputsSettingsManager.saveRectangle(
+                overlayInput,
+                input.getBoundingRectangle()
+            )
         }
     }
 
@@ -292,7 +312,12 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
     }
 
     private fun getBoundingRectangleForInput(input: OverlayInput): Rect {
-        return inputOverlayInputsSettingsManager.getInputOverlayRectangle(input, width, height, pixelDensity)
+        return inputOverlayInputsSettingsManager.getInputOverlayRectangle(
+            input,
+            width,
+            height,
+            pixelDensity
+        )
     }
 
     private fun MutableList<Pair<OverlayInput, Input>>.addRoundButton(
@@ -326,7 +351,7 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
 
     private fun MutableList<Pair<OverlayInput, Input>>.addDpad() {
         add(
-            OverlayDpad.DPAD_UP to DPadInput(
+            OverlayDpad.DPAD_UP to DPad(
                 ::onButtonStateChange,
                 currentAlpha,
                 getBoundingRectangleForInput(OverlayDpad.DPAD_UP)
@@ -399,13 +424,14 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
             if (nativeControllerType != NativeInput.EmulatedControllerType.CLASSIC
                 && nativeControllerType != NativeInput.EmulatedControllerType.WIIMOTE
             ) {
-                addRoundButton(OverlayButton.L_STICK_CLICK, StickClickInnerDrawing())
-                addRoundButton(OverlayButton.R_STICK_CLICK, StickClickInnerDrawing())
+                addRoundButton(OverlayButton.L_STICK_CLICK, "L3")
+                addRoundButton(OverlayButton.R_STICK_CLICK, "R3")
             }
 
             if (nativeControllerType == NativeInput.EmulatedControllerType.VPAD) {
                 addRoundButton(OverlayButton.BLOW_MIC, BlowButtonInnerDrawing())
             }
+            removeAll { (overlayInput, _) -> !overlaySettings.inputVisibilityMap[overlayInput] }
         }
     }
 
@@ -540,5 +566,40 @@ class InputOverlaySurfaceView(context: Context, attrs: AttributeSet?) :
 
     companion object {
         private const val INPUTS_MIN_WIDTH_HEIGHT_DP = 20
+    }
+}
+
+class InputOverlayController(private val viewRef: () -> InputOverlaySurfaceView?) {
+    fun setVisible(visible: Boolean) {
+        viewRef()?.setVisible(visible)
+    }
+
+    fun resetInputs() {
+        viewRef()?.resetInputs()
+    }
+
+    fun setInputMode(inputMode: InputOverlaySurfaceView.InputMode) {
+        viewRef()?.setInputMode(inputMode)
+    }
+}
+
+
+@Composable
+fun InputOverlaySurface(controller: (InputOverlayController) -> Unit) {
+    var viewRef by remember { mutableStateOf<InputOverlaySurfaceView?>(null) }
+
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { context ->
+            InputOverlaySurfaceView(context).apply {
+                viewRef = this
+            }
+        }
+    )
+
+    LaunchedEffect(viewRef) {
+        viewRef?.let { v ->
+            controller(InputOverlayController { v })
+        }
     }
 }

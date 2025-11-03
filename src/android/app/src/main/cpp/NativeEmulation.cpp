@@ -155,13 +155,13 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setReplaceTVWithPadView([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean swapped)
 {
 	// Emulate pressing the TAB key for showing DRC instead of TV
-    WindowSystem::GetWindowInfo().set_keystate(static_cast<uint32>(WindowSystem::PlatformKeyCodes::TAB), swapped);
+	WindowSystem::GetWindowInfo().set_keystate(static_cast<uint32>(WindowSystem::PlatformKeyCodes::TAB), swapped);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeEmulation([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-    FilesystemAndroid::SetFilesystemCallbacks(std::make_shared<AndroidFilesystemCallbacks>());
+	FilesystemAndroid::SetFilesystemCallbacks(std::make_shared<AndroidFilesystemCallbacks>());
 	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
 	NativeEmulation::createCemuDirectories();
 	NetworkConfig::LoadOnce();
@@ -227,11 +227,19 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 			windowHandleInfo.surface = nullptr;
 		}
 		windowHandleInfo.surface = ANativeWindow_fromSurface(env, surface);
+	});
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean is_main_canvas)
+{
+	JNIUtils::handleNativeException(env, [&]() {
 		int width, height;
 		if (is_main_canvas)
 			WindowSystem::GetWindowPhysSize(width, height);
 		else
 			WindowSystem::GetPadWindowPhysSize(width, height);
+
 		VulkanRenderer::GetInstance()->InitializeSurface({width, height}, is_main_canvas);
 	});
 }

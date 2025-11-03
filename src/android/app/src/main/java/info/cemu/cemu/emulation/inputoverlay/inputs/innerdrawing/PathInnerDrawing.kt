@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
 import info.cemu.cemu.emulation.inputoverlay.Colors
+import info.cemu.cemu.emulation.inputoverlay.fitInsideRectangle
 import kotlin.math.min
 
 abstract class PathInnerDrawing : ButtonInnerDrawing {
@@ -27,15 +28,6 @@ abstract class PathInnerDrawing : ButtonInnerDrawing {
 
         path = Path(originalPath)
 
-        val transformMatrix = Matrix()
-        val rectSize = min(boundingRect.width(), boundingRect.height()) * 0.85f
-        val scale = rectSize / canvasSize
-        transformMatrix.setScale(scale, scale)
-        transformMatrix.postTranslate(
-            boundingRect.exactCenterX() - rectSize * 0.5f,
-            boundingRect.exactCenterY() + rectSize * 0.5f
-        )
-
-        path.transform(transformMatrix)
+        path.fitInsideRectangle(boundingRect, canvasSize)
     }
 }

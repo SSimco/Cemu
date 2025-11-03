@@ -24,7 +24,7 @@ class TextButtonInnerDrawing(private val text: String) : ButtonInnerDrawing {
     }
 
     override fun configure(boundingRect: Rect, alpha: Int) {
-        textPaint.textSize = min(boundingRect.width(), boundingRect.height()) * 0.75f
+        textPaint.textSize = min(boundingRect.width(), boundingRect.height()) * 0.65f
         activeColor = Colors.activeStroke(alpha)
         inactiveColor = Colors.inactiveStroke(alpha)
         staticLayout = createStaticLayout()

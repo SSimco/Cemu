@@ -1,7 +1,6 @@
 add_library(CemuAndroid SHARED
         AndroidAudio.cpp
         AndroidEmulatedController.cpp
-        AndroidSwkbdCallbacks.cpp
         CompressTitleCallbacks.cpp
         GameTitleLoader.cpp
         Image.cpp

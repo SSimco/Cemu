@@ -1,28 +1,35 @@
 package info.cemu.cemu.emulation.inputoverlay.inputs
 
 import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PointF
 import android.graphics.Rect
-import android.graphics.RectF
 import android.view.MotionEvent
-import info.cemu.cemu.emulation.inputoverlay.fillCircleWithStroke
-import info.cemu.cemu.emulation.inputoverlay.fillRoundRectangleWithStroke
+import androidx.core.graphics.PathParser
 import info.cemu.cemu.emulation.inputoverlay.Colors
-import info.cemu.cemu.emulation.inputoverlay.OverlayDpad
+import info.cemu.cemu.emulation.inputoverlay.LineBounds
+import info.cemu.cemu.common.inputoverlay.OverlayDpad
+import info.cemu.cemu.emulation.inputoverlay.drawLine
+import info.cemu.cemu.emulation.inputoverlay.fillPathWithStroke
+import info.cemu.cemu.emulation.inputoverlay.fitInsideRectangle
+import info.cemu.cemu.emulation.inputoverlay.rotate
 import kotlin.math.atan2
 import kotlin.math.min
 
-class DPadInput(
+class DPad(
     private val onButtonStateChange: (button: OverlayDpad, state: Boolean) -> Unit,
     private val alpha: Int,
     rect: Rect,
 ) : Input(rect) {
     private var backgroundFillColor: Int = 0
     private var backgroundStrokeColor: Int = 0
-
-    private val dpadUpRect = RectF()
-    private val dpadDownRect = RectF()
-    private val dpadLeftRect = RectF()
-    private val dpadRightRect = RectF()
+    
+    private val markerPaint = Paint().apply { strokeWidth = MARKER_WIDTH }
+    private val upMarker = LineBounds()
+    private val downMarker = LineBounds()
+    private val leftMarker = LineBounds()
+    private val rightMarker = LineBounds()
 
     private var dpadState: Int = NONE
 
@@ -31,6 +38,8 @@ class DPadInput(
     private var radius2: Float = 0f
     private var radius: Float = 0f
     private var currentPointerId: Int = -1
+
+    private var crossPath = Path()
 
     override fun configure() {
         backgroundFillColor = Colors.backgroundFill(alpha)
@@ -41,33 +50,26 @@ class DPadInput(
         centerY = rect.exactCenterY()
         radius = min(rect.width(), rect.height()) * 0.5f
         radius2 = radius * radius
-        val buttonSize = radius / 2
-        val configureButtonRect = { circleXPos: Float, circleYPos: Float, rect: RectF ->
-            val left = circleXPos - buttonSize * 0.5f
-            val top = circleYPos - buttonSize * 0.5f
-            rect.set(left, top, left + buttonSize, top + buttonSize)
+
+        val markerSize = radius * 0.35f
+        val offset = radius * 0.375f
+
+        fun configureMarker(angleDegrees: Float, lineBounds: LineBounds) {
+            val start = PointF(centerX + offset, centerY)
+            val stop = PointF(start.x + markerSize, centerY)
+            start.rotate(centerX, centerY, angleDegrees)
+            stop.rotate(centerX, centerY, angleDegrees)
+            lineBounds.setFromPoints(start, stop)
         }
-        val buttonCenterXYTranslate = 2f * radius / 3f
-        configureButtonRect(
-            centerX,
-            centerY - buttonCenterXYTranslate,
-            dpadUpRect
-        )
-        configureButtonRect(
-            centerX,
-            centerY + buttonCenterXYTranslate,
-            dpadDownRect
-        )
-        configureButtonRect(
-            centerX - buttonCenterXYTranslate,
-            centerY,
-            dpadLeftRect
-        )
-        configureButtonRect(
-            centerX + buttonCenterXYTranslate,
-            centerY,
-            dpadRightRect
-        )
+
+
+        configureMarker(0f, rightMarker)
+        configureMarker(90f, downMarker)
+        configureMarker(180f, leftMarker)
+        configureMarker(270f, upMarker)
+
+        crossPath = Path(OriginalCrossPath)
+        crossPath.fitInsideRectangle(rect, CROSS_PATH_CANVAS_SIZE)
     }
 
     init {
@@ -175,35 +177,30 @@ class DPadInput(
     }
 
     override fun drawInput(canvas: Canvas) {
-        canvas.fillCircleWithStroke(
-            centerX,
-            centerY,
-            radius,
-            paint,
-            backgroundFillColor,
-            backgroundStrokeColor
-        )
-        drawButton(canvas, dpadUpRect, dpadState and UP)
-        drawButton(canvas, dpadDownRect, dpadState and DOWN)
-        drawButton(canvas, dpadLeftRect, dpadState and LEFT)
-        drawButton(canvas, dpadRightRect, dpadState and RIGHT)
+        canvas.fillPathWithStroke(crossPath, paint, backgroundFillColor, backgroundStrokeColor)
+
+        drawMarker(canvas, upMarker, dpadState and UP)
+        drawMarker(canvas, downMarker, dpadState and DOWN)
+        drawMarker(canvas, leftMarker, dpadState and LEFT)
+        drawMarker(canvas, rightMarker, dpadState and RIGHT)
     }
 
-    private fun drawButton(canvas: Canvas, rect: RectF, state: Int) {
-        val fillColor: Int
-        val strokeColor: Int
+    private fun drawMarker(canvas: Canvas, bounds: LineBounds, state: Int) {
         if (state != 0) {
-            fillColor = activeFillColor
-            strokeColor = activeStrokeColor
+            markerPaint.color = activeStrokeColor
         } else {
-            fillColor = inactiveFillColor
-            strokeColor = inactiveStrokeColor
+            markerPaint.color = inactiveStrokeColor
         }
-        canvas.fillRoundRectangleWithStroke(rect, BUTTON_RADIUS, paint, fillColor, strokeColor)
+
+        canvas.drawLine(bounds, markerPaint)
     }
 
     companion object {
-        private const val BUTTON_RADIUS = 5f
+        private const val CROSS_PATH_CANVAS_SIZE = 100F
+        private const val PATH_DATA =
+            "M 0,-65 H 35 V -100 h 30 v 35 h 35 V -35 H 65 v 35 H 35 V -35 H 0 Z"
+        private val OriginalCrossPath by lazy { PathParser.createPathFromPathData(PATH_DATA) }
+        private const val MARKER_WIDTH = 15f
         private const val NONE = 0
         private const val UP = 1 shl 0
         private const val DOWN = 1 shl 1

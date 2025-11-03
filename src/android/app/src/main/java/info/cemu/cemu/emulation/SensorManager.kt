@@ -23,11 +23,21 @@ class SensorManager(context: Context) : SensorEventListener {
     private var gyroZ = 0f
     private var isListening = false
 
+    fun setIsListening(isListening: Boolean) {
+        if (isListening) {
+            startListening()
+        } else {
+            stopListening()
+        }
+
+        this.isListening = isListening
+    }
+
     fun startListening() {
         if (!hasMotionData || isListening) {
             return
         }
-        isListening = true
+
         NativeInput.setMotionEnabled(true)
         sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME)
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
@@ -37,18 +47,18 @@ class SensorManager(context: Context) : SensorEventListener {
         this.deviceRotationProvider = deviceRotationProvider
     }
 
-    fun pauseListening() {
+    fun stopListening() {
         if (!hasMotionData || !isListening) {
             return
         }
-        isListening = false
+
         NativeInput.setMotionEnabled(false)
         sensorManager.unregisterListener(this)
     }
 
-
     override fun onSensorChanged(event: SensorEvent) {
         val values = event.values
+
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
             val gyroValues = getSensorEventValues(values)
             gyroX = gyroValues.first
@@ -56,9 +66,11 @@ class SensorManager(context: Context) : SensorEventListener {
             gyroZ = gyroValues.third
             return
         }
+
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) {
             return
         }
+
         val (accelX, accelY, accelZ) = getSensorEventValues(values)
         NativeInput.onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelZ, -accelY)
     }

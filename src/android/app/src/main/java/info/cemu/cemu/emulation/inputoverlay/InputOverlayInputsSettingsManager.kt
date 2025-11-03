@@ -4,13 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Rect
 import android.util.DisplayMetrics.DENSITY_DEFAULT
-import info.cemu.cemu.R
+import info.cemu.cemu.common.inputoverlay.OverlayInput
 import kotlin.math.max
 import kotlin.math.min
 
 class InputOverlayInputsSettingsManager(context: Context) {
-    private val defaultInputConfigs =
-        parseDefaultInputConfigs(context.resources.getXml(R.xml.input_overlay_default_configs))
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(INPUT_OVERLAY_SETTINGS_NAME, Context.MODE_PRIVATE)
 
@@ -67,7 +65,7 @@ class InputOverlayInputsSettingsManager(context: Context) {
         density: Int,
     ): Rect {
         fun Int.dpToPx() = (this * density) / DENSITY_DEFAULT
-        val inputConfig = defaultInputConfigs[input.configName] ?: return Rect()
+        val inputConfig = DefaultOverlayConfigs[input.configName] ?: return Rect()
         val inputWidth = inputConfig.width.dpToPx()
         val horizontalPadding = inputConfig.paddingHorizontal.dpToPx()
         val verticalPadding = inputConfig.paddingVertical.dpToPx()
