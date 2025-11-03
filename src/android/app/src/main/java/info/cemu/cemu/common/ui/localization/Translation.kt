@@ -1,5 +1,8 @@
+@file:Suppress("TYPEALIAS_EXPANSION_DEPRECATION")
+
 package info.cemu.cemu.common.ui.localization
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -61,6 +64,7 @@ fun setLanguage(languageCode: String, context: Context) {
 
 fun getCurrentLocale() = I18n.locale
 
+@SuppressLint("NewApi")
 fun setTranslations(context: Context) {
     val assetTranslations = context.assets.list(TRANSLATIONS_FOLDER)?.filter { language ->
         if (language == DEFAULT_LANGUAGE) return@filter false

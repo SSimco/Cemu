@@ -7,14 +7,14 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -28,12 +28,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
+import info.cemu.cemu.common.input.GamepadInputHandler
+import info.cemu.cemu.common.input.GamepadInputManager
+import info.cemu.cemu.common.input.NullGamepadInputHandler
 import info.cemu.cemu.common.ui.components.ActivityContent
 import info.cemu.cemu.common.ui.localization.TranslatableContent
 import info.cemu.cemu.common.ui.localization.tr
@@ -51,11 +55,35 @@ import info.cemu.cemu.settings.settingsNavigation
 import info.cemu.cemu.titlemanager.TitleManagerRoute
 import info.cemu.cemu.titlemanager.titleManagerNavigation
 import java.io.File
-
 import android.graphics.drawable.Icon as AndroidIcon
 
+class MainActivity : GamepadInputManager, AppCompatActivity() {
+    private var handler: GamepadInputHandler = NullGamepadInputHandler
 
-class MainActivity : ComponentActivity() {
+    override fun setHandler(handler: GamepadInputHandler) {
+        this.handler = handler
+    }
+
+    override fun clearHandler() {
+        handler = NullGamepadInputHandler
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (handler.onMotionEvent(event)) {
+            return true
+        }
+
+        return super.dispatchGenericMotionEvent(event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (handler.onKeyEvent(event)) {
+            return true
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -133,7 +161,7 @@ private fun GameListToolBarActionsMenu(
         onClick = { expandMenu = true },
     ) {
         Icon(
-            imageVector = Icons.Filled.MoreVert,
+            painter = painterResource(R.drawable.ic_more_vert),
             contentDescription = null
         )
     }
@@ -222,13 +250,12 @@ private fun openCemuFolder(context: Context) {
     }
 }
 
-
 private fun createShortcutForGame(
     context: Context,
     game: Game,
 ) {
     fun onFailedToCreateShortcut() {
-        Toast.makeText(context, tr("Couldn't create shortcut for game"), Toast.LENGTH_LONG).show()
+        Toast.makeText(context, tr("Could not create shortcut for game"), Toast.LENGTH_LONG).show()
     }
 
     try {

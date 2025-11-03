@@ -4,7 +4,7 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import info.cemu.cemu.common.android.inputdevice.isGameController
-import info.cemu.cemu.common.android.motionevent.isMotionEventFromJoystickOrGamepad
+import info.cemu.cemu.common.android.inputevent.isFromPhysicalController
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.setControllerMapping
 import kotlin.math.abs
@@ -43,13 +43,15 @@ object InputMapper {
         mappingId: Int,
         event: MotionEvent,
     ): Boolean {
-        if (!event.isMotionEventFromJoystickOrGamepad()) {
+        if (!event.isFromPhysicalController()) {
             return false
         }
+
         val device = event.device
         var maxAbsAxisValue = 0.0f
         var maxAxis = -1
         val actionPointerIndex = event.actionIndex
+
         for (motionRange in device.motionRanges) {
             val axisValue = event.getAxisValue(motionRange.axis, actionPointerIndex)
             val axis = getNativeAxisKey(motionRange.axis, axisValue > 0) ?: continue
@@ -58,6 +60,7 @@ object InputMapper {
                 maxAbsAxisValue = abs(axisValue.toDouble()).toFloat()
             }
         }
+
         if (maxAbsAxisValue > MIN_ABS_AXIS_VALUE) {
             setControllerMapping(
                 device.descriptor,
@@ -73,6 +76,10 @@ object InputMapper {
 
 
     fun mapKeyEventToMappingId(controllerIndex: Int, mappingId: Int, event: KeyEvent) {
+        if (!event.isFromPhysicalController()) {
+            return
+        }
+
         val device = event.device
         setControllerMapping(
             device.descriptor,

@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import info.cemu.cemu.R
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 
-
 private fun Modifier.iconBorder(borderColor: Color) =
     border(
         width = Dp.Hairline,
@@ -29,10 +28,11 @@ fun GameIcon(
     modifier: Modifier,
 ) {
     val borderColor = MaterialTheme.colorScheme.onSurface
+
     if (game.icon != null) {
         Image(
             modifier = modifier.iconBorder(borderColor),
-            bitmap = game.icon,
+            bitmap = game.icon!!,
             contentDescription = null
         )
     } else {

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastRoundToInt
+import kotlin.math.roundToInt
 import androidx.compose.material3.Slider as MaterialSlider
 
 @Composable
@@ -22,7 +22,7 @@ fun Slider(
     initialValue: () -> Int,
     valueFrom: Int,
     valueTo: Int,
-    @IntRange(from = 0) steps: Int = 0,
+    @IntRange(from = 0) steps: Int = (valueTo - valueFrom - 1).coerceAtLeast(0),
     labelFormatter: (Int) -> String,
     onValueChange: (Int) -> Unit,
 ) {
@@ -36,7 +36,7 @@ fun Slider(
         )
         Text(
             modifier = Modifier.padding(top = 8.dp),
-            text = labelFormatter(value.fastRoundToInt()),
+            text = labelFormatter(value.roundToInt()),
             fontWeight = FontWeight.Light,
             fontSize = 14.sp,
         )
@@ -44,7 +44,7 @@ fun Slider(
             valueRange = valueFrom.toFloat()..valueTo.toFloat(),
             steps = steps,
             value = value,
-            onValueChangeFinished = { onValueChange(value.toInt()) },
+            onValueChangeFinished = { onValueChange(value.roundToInt()) },
             onValueChange = { value = it },
         )
     }

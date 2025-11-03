@@ -4,7 +4,6 @@
 
 package info.cemu.cemu.gamelist
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -160,7 +159,7 @@ private fun GameList(
             .fillMaxSize(),
         columns = GridCells.Adaptive(620.dp)
     ) {
-        items(items = games, key = { it.titleId }) { game ->
+        items(items = games, key = { it.path }) { game ->
             var showDeleteShaderConfirmationDialog by remember { mutableStateOf(false) }
             GameListItem(
                 modifier = Modifier.animateItem(),
@@ -190,10 +189,8 @@ private fun GameList(
                         showDeleteShaderConfirmationDialog = false
                     },
                 )
-
         }
     }
-
 }
 
 @Composable

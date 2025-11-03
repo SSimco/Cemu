@@ -7,9 +7,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import info.cemu.cemu.common.android.inputevent.isFromPhysicalController
 import info.cemu.cemu.nativeinterface.NativeInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+data class ButtonInfo(
+    val name: String,
+    val id: Int,
+)
 
 class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
     private var _controllerType = MutableStateFlow(
@@ -23,6 +29,17 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
 
     private val _controllers = MutableStateFlow<List<Pair<String, Int>>?>(null)
     val controllers = _controllers.asStateFlow()
+
+    private val _buttonToBind = MutableStateFlow<ButtonInfo?>(null)
+    val buttonToBind = _buttonToBind.asStateFlow()
+
+    fun setButtonToBind(buttonInfo: ButtonInfo) {
+        _buttonToBind.value = buttonInfo
+    }
+
+    fun clearButtonToBind() {
+        _buttonToBind.value = null
+    }
 
     private var vpadCount = 0
     private var wpadCount = 0

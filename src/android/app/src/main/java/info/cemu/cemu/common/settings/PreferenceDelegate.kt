@@ -1,9 +1,10 @@
 package info.cemu.cemu.common.settings
 
 import android.content.SharedPreferences
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
 import androidx.core.content.edit
+import kotlin.properties.ReadWriteProperty
+import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KProperty
 
 class PreferenceDelegate<T>(
     private val sharedPreferences: SharedPreferences,
@@ -11,7 +12,6 @@ class PreferenceDelegate<T>(
     private val getter: SharedPreferences.(String, T) -> T,
     private val setter: SharedPreferences.Editor.(String, T) -> Unit
 ) : ReadWriteProperty<Any, T> {
-
     private var cachedValue: T? = null
     private var isCached = false
 
@@ -42,9 +42,7 @@ inline fun <reified T : Enum<T>> SharedPreferences.enumPref(default: T) =
             val enumOrdinal = getInt(key, default.ordinal)
             enumValues<T>().firstOrNull { it.ordinal == enumOrdinal } ?: default
         },
-        { key, value ->
-            putInt(key, value.ordinal)
-        }
+        { key, value -> putInt(key, value.ordinal) }
     )
 
 fun SharedPreferences.booleanPref(default: Boolean) =
@@ -69,3 +67,49 @@ fun SharedPreferences.intPref(default: Int) =
         SharedPreferences::getInt,
         SharedPreferences.Editor::putInt
     )
+
+
+class MapDelegate<T, V>(
+    private val sharedPreferences: SharedPreferences,
+    private val keyName: (T) -> String,
+    private val default: V,
+    private val getter: SharedPreferences.(String, V) -> V,
+    private val setter: SharedPreferences.Editor.(String, V) -> Unit,
+) : ReadOnlyProperty<Any, MapDelegate<T, V>.MapPreference> {
+    inner class MapPreference(private val keyPrefix: String) {
+        private val cache = mutableMapOf<T, V>()
+
+        operator fun get(key: T): V {
+            return cache.getOrPut(key) {
+                sharedPreferences.getter("${keyPrefix}_${keyName(key)}", default)
+            }
+        }
+
+        operator fun set(key: T, value: V) {
+            cache[key] = value
+            sharedPreferences.edit { setter("${keyPrefix}_${keyName(key)}", value) }
+        }
+    }
+
+    private var map: MapPreference? = null
+
+    override fun getValue(thisRef: Any, property: KProperty<*>): MapPreference {
+        if (map == null) {
+            val keyPrefix = "${thisRef::class.simpleName}_${property.name}".uppercase()
+            map = MapPreference(keyPrefix)
+        }
+
+        return map!!
+    }
+}
+
+fun <T> SharedPreferences.booleanMapPref(
+    keyName: (T) -> String = { it.toString() },
+    default: Boolean = true
+) = MapDelegate(
+    this,
+    keyName,
+    default,
+    SharedPreferences::getBoolean,
+    SharedPreferences.Editor::putBoolean
+)

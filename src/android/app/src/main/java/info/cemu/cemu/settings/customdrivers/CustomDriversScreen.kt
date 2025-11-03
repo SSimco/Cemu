@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -36,11 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import info.cemu.cemu.R
 import info.cemu.cemu.common.ui.components.ScreenContentLazy
 import info.cemu.cemu.common.ui.localization.tr
 import kotlinx.coroutines.launch
@@ -82,7 +80,7 @@ fun CustomDriversScreen(
         actions = {
             IconButton(onClick = { customDriversInstallLauncher.launch(arrayOf("application/zip")) }) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
+                    painter = painterResource(R.drawable.ic_add),
                     contentDescription = null
                 )
             }
@@ -153,13 +151,13 @@ private fun CustomDriverListItem(driver: Driver, onDelete: () -> Unit, onSelect:
             IconButton(onClick = { showDriverInfo = !showDriverInfo }) {
                 Icon(
                     modifier = Modifier.rotate(if (showDriverInfo) 180f else 0f),
-                    imageVector = Icons.Filled.ArrowDropDown,
+                    painter = painterResource(R.drawable.ic_arrow_drop_down),
                     contentDescription = null
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Filled.Delete,
+                    painter = painterResource(R.drawable.ic_delete),
                     contentDescription = null
                 )
             }

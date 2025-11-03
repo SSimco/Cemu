@@ -39,7 +39,7 @@ fun SingleSelection(
     choices: Collection<String>,
     isChoiceEnabled: (String) -> Boolean = { true },
     enabled: Boolean = true,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     onChoiceChanged: (String) -> Unit,
 ) {
     SingleSelection(
@@ -60,7 +60,7 @@ fun <T> SingleSelection(
     label: String,
     initialChoice: () -> T,
     choices: Collection<T>,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     choiceToString: @Composable (T) -> String,
     isChoiceEnabled: (T) -> Boolean = { true },
     enabled: Boolean = true,
@@ -88,7 +88,7 @@ fun <T> SingleSelection(
     choice: T,
     choices: Collection<T>,
     choiceToString: @Composable (T) -> String,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isChoiceEnabled: (T) -> Boolean = { true },
     onChoiceChanged: (T) -> Unit,
@@ -107,6 +107,7 @@ fun <T> SingleSelection(
     {
         Column(
             modifier = modifier
+                .fillMaxWidth()
                 .then(clickableModifier)
                 .padding(8.dp),
             verticalArrangement = Arrangement.Center,

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
+import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.android.rememberLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LicenseDialog
 import com.mikepenz.aboutlibraries.ui.compose.m3.LicenseDialogBody
@@ -48,14 +49,14 @@ typealias AboutLibrary = com.mikepenz.aboutlibraries.entity.Library
 @Composable
 fun AboutCemuScreen(navigateBack: () -> Unit) {
     var openLicenseDialog by remember { mutableStateOf<AboutLibrary?>(null) }
-    val libraries by rememberLibraries(R.raw.aboutlibraries)
+    val libraries by produceLibraries(R.raw.aboutlibraries)
 
     ScreenContentLazy(
         appBarText = tr("About Cemu"),
         navigateBack = navigateBack,
         contentModifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(8.dp),
         contentVerticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         aboutCemuSection()

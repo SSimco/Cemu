@@ -21,13 +21,13 @@ object NativeAccount {
 
     @Keep
     data class Account(
-        val persistentId: Int,
-        val miiName: String,
-        val birthday: Long,
-        val gender: Byte,
-        val email: String,
-        val country: Int,
-        val isValid: Boolean,
+        val persistentId: Int = 0,
+        val miiName: String = DEFAULT_MII_NAME,
+        val birthday: Long = 0,
+        val gender: Byte = AccountGender.FEMALE,
+        val email: String = "",
+        val country: Int = 0,
+        val isValid: Boolean = false,
     )
 
     @JvmStatic

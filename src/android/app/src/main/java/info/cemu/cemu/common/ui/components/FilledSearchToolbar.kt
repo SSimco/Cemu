@@ -13,10 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,10 +35,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import info.cemu.cemu.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,7 +90,7 @@ fun FilledSearchToolbar(
                                         .size(32.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        painter = painterResource(R.drawable.ic_arrow_back),
                                         contentDescription = null
                                     )
                                 }
@@ -154,7 +152,7 @@ fun SearchToolbarInput(
                     .size(32.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Clear,
+                    painter = painterResource(R.drawable.ic_date_range),
                     contentDescription = null
                 )
             }
@@ -177,7 +175,7 @@ fun SearchToolbarHint(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .size(24.dp),
-            imageVector = Icons.Default.Search,
+            painter = painterResource(R.drawable.ic_search),
             tint = color,
             contentDescription = null
         )

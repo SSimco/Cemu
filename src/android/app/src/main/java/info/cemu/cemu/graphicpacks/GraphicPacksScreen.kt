@@ -17,10 +17,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -61,6 +57,7 @@ import info.cemu.cemu.common.ui.components.ScreenContentLazy
 import info.cemu.cemu.common.ui.components.SearchToolbarInput
 import info.cemu.cemu.common.ui.components.SingleSelection
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.common.ui.localization.trNoop
 import kotlinx.coroutines.launch
 
 @Composable
@@ -245,7 +242,7 @@ private fun GraphicPacksRootSectionActions(
             onClick = onSearchClicked
         ) {
             Icon(
-                imageVector = Icons.Filled.Search,
+                painter = painterResource(R.drawable.ic_search),
                 contentDescription = null
             )
         }
@@ -263,7 +260,7 @@ private fun GraphicPacksRootSectionActions(
         onClick = { showMoreOptions = true }
     ) {
         Icon(
-            imageVector = Icons.Filled.MoreVert,
+            painter = painterResource(R.drawable.ic_more_vert),
             contentDescription = null
         )
     }
@@ -388,7 +385,7 @@ private fun GraphicPackDataListItemIcon(isEnabled: Boolean) {
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                 .size(16.dp),
-            imageVector = Icons.Filled.Check,
+            painter = painterResource(R.drawable.ic_check),
             tint = contentColorFor(MaterialTheme.colorScheme.primary),
             contentDescription = null
         )

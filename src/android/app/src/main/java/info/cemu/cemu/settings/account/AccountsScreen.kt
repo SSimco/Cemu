@@ -12,22 +12,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -47,21 +45,19 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
+import info.cemu.cemu.common.string.parseHexOrNull
+import info.cemu.cemu.common.ui.components.DateField
 import info.cemu.cemu.common.ui.components.Header
 import info.cemu.cemu.common.ui.components.ScreenContent
+import info.cemu.cemu.common.ui.components.SelectField
 import info.cemu.cemu.common.ui.components.SingleSelection
-import info.cemu.cemu.common.ui.localization.getCurrentLocale
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeAccount
 import info.cemu.cemu.nativeinterface.NativeAccount.AccountGender
-import info.cemu.cemu.nativeinterface.NativeAccount.DEFAULT_MII_NAME
 import info.cemu.cemu.nativeinterface.NativeAccount.MAX_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeAccount.MIN_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeSettings
 import info.cemu.cemu.nativeinterface.NativeSettings.NetworkService
-import info.cemu.cemu.common.string.parseHexOrNull
-import java.text.SimpleDateFormat
-import java.util.Date
 
 private val Countries = NativeAccount.getAccountCountries().toList()
 private val CountriesIndices = Countries.map { it.index }
@@ -73,18 +69,19 @@ fun AccountSettingsScreen(
     accountsViewModel: AccountsViewModel = viewModel(),
 ) {
     val accounts by accountsViewModel.accounts.collectAsState()
-    val activeAccountData by accountsViewModel.activeAccount.collectAsState()
-    val activeAccount by remember {
-        derivedStateOf {
-            accounts.firstOrNull { it.persistentId == activeAccountData.persistentId }
-                ?: accounts.first()
-        }
-    }
+    val activeAccountData by accountsViewModel.activeAccountData.collectAsState()
+    val activeAccount = activeAccountData.account
     val onlineFullyValid =
         activeAccount.isValid && accountsViewModel.onlineFilesStatus.hasRequiredOnlineFiles
     val hasCustomNetworkConfiguration = remember { NativeSettings.hasCustomNetworkConfiguration() }
     var showCreateAccountDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            accountsViewModel.saveActiveAccount()
+        }
+    }
 
     ScreenContent(
         appBarText = tr("Account settings"),
@@ -95,8 +92,7 @@ fun AccountSettingsScreen(
             choice = activeAccount,
             choices = accounts,
             choiceToString = { String.format("%s (%x)", it.miiName, it.persistentId) },
-            onChoiceChanged = { accountsViewModel.setActiveAccount(it.persistentId) }
-        )
+            onChoiceChanged = { accountsViewModel.setActiveAccount(it.persistentId) })
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -109,8 +105,7 @@ fun AccountSettingsScreen(
 
             OutlinedButton(
                 enabled = accounts.size > MIN_ACCOUNT_COUNT,
-                onClick = { showDeleteAccountDialog = true }
-            ) {
+                onClick = { showDeleteAccountDialog = true }) {
                 Text(tr("Delete"))
             }
         }
@@ -141,7 +136,7 @@ fun AccountSettingsScreen(
 
         AccountInformation(
             account = activeAccount,
-            onDataChange = accountsViewModel::saveAccount,
+            onDataChange = accountsViewModel::updateActiveAccount,
         )
     }
 
@@ -169,6 +164,27 @@ fun AccountSettingsScreen(
 }
 
 @Composable
+private fun AccountStatusIcon(isValid: Boolean) {
+    val resId: Int
+    val tint: Color
+
+    if (isValid) {
+        resId = R.drawable.ic_check_circle
+        tint = MaterialTheme.colorScheme.primary
+    } else {
+        resId = R.drawable.ic_warning
+        tint = MaterialTheme.colorScheme.error
+    }
+
+    Icon(
+        painter = painterResource(resId),
+        modifier = Modifier.padding(end = 8.dp),
+        tint = tint,
+        contentDescription = null
+    )
+}
+
+@Composable
 private fun OnlinePlayRequirements(
     account: NativeAccount.Account,
     onlineFilesStatus: OnlineFilesStatus,
@@ -184,24 +200,17 @@ private fun OnlinePlayRequirements(
     Header(tr("Online play requirements"))
 
     Row(
-        modifier = Modifier.padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = if (onlineFullyValid) Icons.Outlined.CheckCircle else Icons.Outlined.Warning,
-            modifier = Modifier.padding(end = 2.dp),
-            contentDescription = null
-        )
+        AccountStatusIcon(onlineFullyValid)
         Text(getAccountStatus(account, onlineFilesStatus))
     }
 
     if (!onlineFullyValid) {
         Button(
             onClick = {
-                if (onlineValidationErrors != null) return@Button
                 onlineValidationErrors = onGetOnlineValidationErrors()
-            },
-            modifier = Modifier.padding(top = 2.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
+            }, modifier = Modifier.padding(top = 2.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
         ) {
             Text(tr("Show online status"))
         }
@@ -211,39 +220,33 @@ private fun OnlinePlayRequirements(
 
     onlineValidationErrors?.let {
         OnlineErrorsDialog(
-            validationErrors = it,
-            onDismissRequest = { onlineValidationErrors = null })
+            validationErrors = it, onDismissRequest = { onlineValidationErrors = null })
     }
 }
 
 @Composable
-fun OnlineErrorsDialog(
+private fun OnlineErrorsDialog(
     validationErrors: Array<NativeAccount.OnlineValidationError>,
     onDismissRequest: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(tr("Online status"))
-        },
+        title = { Text(tr("Online status")) },
         text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-            ) {
-                validationErrors.forEach {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                validationErrors.forEachIndexed { index, error ->
                     Text(
                         modifier = Modifier.padding(horizontal = 2.dp, vertical = 4.dp),
-                        text = getErrorMessage(it)
+                        text = getErrorMessage(error)
                     )
+
+                    if (index < validationErrors.lastIndex) {
+                        HorizontalDivider()
+                    }
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(tr("OK"))
-            }
-        },
+        confirmButton = { TextButton(onClick = onDismissRequest) { Text(tr("OK")) } },
     )
 }
 
@@ -263,7 +266,7 @@ private fun getAccountErrorMessage(error: Int): String = when (error) {
     NativeAccount.OnlineAccountError.NO_PASSWORD_CACHED -> tr("IsPasswordCacheEnabled is set to false (The remember password option on your Wii U must be enabled for this account before dumping it)")
     NativeAccount.OnlineAccountError.PASSWORD_CACHE_EMPTY -> tr("AccountPasswordCache is empty (The remember password option on your Wii U must be enabled for this account before dumping it)")
     NativeAccount.OnlineAccountError.NO_PRINCIPAL_ID -> tr("PrincipalId missing")
-    else -> "no error"
+    else -> throw IllegalArgumentException("Unexpected account error $error")
 }
 
 private fun getAccountStatus(
@@ -285,12 +288,10 @@ private fun getAccountStatus(
 @Composable
 private fun OnlineTutorial() {
     Text(
-        modifier = Modifier.padding(8.dp),
-        text = buildAnnotatedString {
+        modifier = Modifier.padding(8.dp), text = buildAnnotatedString {
             withLink(
                 LinkAnnotation.Url(
-                    stringResource(R.string.cemu_online_guide),
-                    TextLinkStyles(
+                    stringResource(R.string.cemu_online_guide), TextLinkStyles(
                         style = SpanStyle(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textDecoration = TextDecoration.Underline,
@@ -300,8 +301,7 @@ private fun OnlineTutorial() {
             ) {
                 append(tr("Online play tutorial"))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -328,16 +328,17 @@ private fun AccountInformation(
             .fillMaxWidth()
             .padding(8.dp),
         singleLine = true,
-        onValueChange = { onDataChange(account.copy(miiName = it.ifBlank { DEFAULT_MII_NAME })) },
+        onValueChange = { onDataChange(account.copy(miiName = it)) },
         label = { Text(tr("Mii name")) },
     )
 
-    AccountBirthday(
-        account = account,
-        onDataChange = onDataChange,
+    DateField(
+        label = tr("Birthday"),
+        dateMillis = account.birthday,
+        onDateChange = { onDataChange(account.copy(birthday = it)) },
     )
 
-    SingleSelection(
+    SelectField(
         choice = account.gender,
         choiceToString = { accountGenderToString(it) },
         choices = listOf(
@@ -354,79 +355,18 @@ private fun AccountInformation(
             .fillMaxWidth()
             .padding(8.dp),
         singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         onValueChange = { onDataChange(account.copy(email = it)) },
         label = { Text(tr("Email")) },
     )
 
-    SingleSelection(
+    SelectField(
         label = tr("Country"),
         choice = account.country,
         choiceToString = { CountriesMap[it] ?: it.toString() },
         choices = CountriesIndices,
-        onChoiceChanged = { onDataChange(account.copy(country = it)) }
+        onChoiceChanged = { onDataChange(account.copy(country = it)) },
     )
-}
-
-@Composable
-private fun AccountBirthday(
-    account: NativeAccount.Account,
-    onDataChange: (NativeAccount.Account) -> Unit,
-) {
-    var showDatePicker by remember { mutableStateOf(false) }
-    Text(
-        text = tr("Birthday: {0}", convertMillisToDate(account.birthday)),
-        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 8.dp, end = 8.dp),
-    )
-
-    Button(
-        onClick = { showDatePicker = true },
-        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
-    ) {
-        Text(tr("Pick a date"))
-    }
-
-    if (showDatePicker) {
-        DatePickerModal(
-            initialDateMillis = account.birthday,
-            onDateSelected = { onDataChange(account.copy(birthday = it)) },
-            onDismiss = { showDatePicker = false },
-        )
-    }
-}
-
-
-@Composable
-private fun DatePickerModal(
-    initialDateMillis: Long,
-    onDateSelected: (Long) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis ?: 0)
-                onDismiss()
-            }) {
-                Text(tr("OK"))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(tr("Cancel"))
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
-
-
-private fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("yyyy-MM-dd", getCurrentLocale())
-    return formatter.format(Date(millis))
 }
 
 @Composable
@@ -437,9 +377,7 @@ private fun DeleteActiveAccountConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(tr("Confirmation"))
-        },
+        title = { Text(tr("Confirmation")) },
         text = {
             Text(
                 tr(
@@ -449,16 +387,8 @@ private fun DeleteActiveAccountConfirmationDialog(
                 )
             )
         },
-        confirmButton = {
-            TextButton(onClick = onConfirmation) {
-                Text(tr("Yes"))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(tr("No"))
-            }
-        }
+        confirmButton = { TextButton(onClick = onConfirmation) { Text(tr("Yes")) } },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text(tr("No")) } },
     )
 }
 
@@ -476,11 +406,8 @@ private fun CreateAccountDialog(
             )
         )
     }
-    val createError by remember {
-        derivedStateOf {
-            onValidateCreateAccount(createAccount)
-        }
-    }
+
+    val createError by remember { derivedStateOf { onValidateCreateAccount(createAccount) } }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -505,8 +432,7 @@ private fun CreateAccountDialog(
                     singleLine = true,
                     isError = createError != null,
                     supportingText = {
-                        val currentError = createError
-                        val errorMessage = when (currentError) {
+                        val errorMessage = when (val currentError = createError) {
                             is CreateAccountError.ConflictingPersistentId -> tr(
                                 "The persistent id {0} is already in use by account {1}!",
                                 currentError.existingPersistentId.toUInt().toString(16),
@@ -537,20 +463,12 @@ private fun CreateAccountDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                if (createError == null) {
-                    onCreateAccount(createAccount)
-                }
-            }) {
+            TextButton(
+                enabled = createError == null, onClick = { onCreateAccount(createAccount) }) {
                 Text(tr("OK"))
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(tr("Cancel"))
-            }
-        }
-    )
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text(tr("Cancel")) } })
 }
 
 private fun accountGenderToString(gender: Byte) = when (gender) {

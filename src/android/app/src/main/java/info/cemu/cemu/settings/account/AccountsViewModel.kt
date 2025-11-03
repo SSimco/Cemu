@@ -1,22 +1,26 @@
 package info.cemu.cemu.settings.account
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import info.cemu.cemu.nativeinterface.NativeAccount
 import info.cemu.cemu.nativeinterface.NativeAccount.MAX_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeAccount.MIN_ACCOUNT_COUNT
 import info.cemu.cemu.nativeinterface.NativeActiveSettings
 import info.cemu.cemu.nativeinterface.NativeSettings
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-
-data class ActiveAccount(
-    val persistentId: Int,
-    val networkService: Int,
-)
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 data class CreateAccount(
     val persistentId: Int?,
     val miiName: String,
+)
+
+data class ActiveAccountData(
+    val account: NativeAccount.Account,
+    val networkService: Int,
 )
 
 data class OnlineFilesStatus(
@@ -40,38 +44,49 @@ class AccountsViewModel : ViewModel() {
     private val _accounts = MutableStateFlow(NativeAccount.getAccounts().toList())
     val accounts = _accounts.asStateFlow()
 
+    private val activeAccountPersistentId =
+        MutableStateFlow(NativeSettings.getAccountPersistentId())
+
+    private val activeAccountNetworkService =
+        MutableStateFlow(NativeSettings.getAccountNetworkService(activeAccountPersistentId.value))
+
     val onlineFilesStatus = OnlineFilesStatus(
         hasRequiredOnlineFiles = NativeActiveSettings.hasRequiredOnlineFiles(),
         isOTPPresent = NativeAccount.isOTPPresent(),
         isSEEPREOMPresent = NativeAccount.isSEEPROMPresent(),
     )
 
-    private fun getActiveAccount(persistentId: Int): ActiveAccount {
-        val networkService = NativeSettings.getAccountNetworkService(persistentId)
+    val activeAccountData =
+        combine(
+            accounts,
+            activeAccountPersistentId,
+            activeAccountNetworkService
+        ) { accounts, activeAccountPersistentId, activeAccountNetworkService ->
+            val account = accounts.firstOrNull { it.persistentId == activeAccountPersistentId }
+                ?: accounts.first()
 
-        return ActiveAccount(
-            persistentId = persistentId,
-            networkService = networkService,
+            ActiveAccountData(account, activeAccountNetworkService)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            ActiveAccountData(NativeAccount.Account(), NativeSettings.NetworkService.OFFLINE)
         )
-    }
 
-    private val _activeAccount =
-        MutableStateFlow(getActiveAccount(NativeSettings.getAccountPersistentId()))
-    val activeAccount = _activeAccount.asStateFlow()
 
     fun setActiveAccount(persistentId: Int) {
         if (!accounts.value.any { it.persistentId == persistentId }) {
             return
         }
 
+        saveActiveAccount()
+
         NativeSettings.setAccountPersistentId(persistentId)
-        _activeAccount.value = getActiveAccount(persistentId)
+        activeAccountPersistentId.value = persistentId
     }
 
     fun setNetworkServiceForActiveAccount(networkService: Int) {
-        val activeAccount = activeAccount.value
-        NativeSettings.setAccountNetworkService(activeAccount.persistentId, networkService)
-        _activeAccount.value = activeAccount.copy(networkService = networkService)
+        NativeSettings.setAccountNetworkService(activeAccountPersistentId.value, networkService)
+        activeAccountNetworkService.value = networkService
     }
 
     fun deleteActiveAccount() {
@@ -79,11 +94,9 @@ class AccountsViewModel : ViewModel() {
             return
         }
 
-        val activeAccountPersistentId = activeAccount.value.persistentId
-
-        NativeAccount.deleteAccount(activeAccountPersistentId)
+        NativeAccount.deleteAccount(activeAccountPersistentId.value)
+        activeAccountPersistentId.value = accounts.value.first().persistentId
         refreshAccountList()
-        _activeAccount.value = getActiveAccount(_accounts.value.first().persistentId)
     }
 
 
@@ -112,7 +125,16 @@ class AccountsViewModel : ViewModel() {
         return null
     }
 
-    fun saveAccount(account: NativeAccount.Account) {
+    fun updateActiveAccount(account: NativeAccount.Account) {
+        _accounts.value =
+            _accounts.value.map { if (it.persistentId == account.persistentId) account else it }
+    }
+
+    fun saveActiveAccount() {
+        var account = activeAccountData.value.account
+        if (account.miiName.isEmpty()) {
+            account = account.copy(miiName = NativeAccount.DEFAULT_MII_NAME)
+        }
         NativeAccount.saveAccount(account)
         refreshAccountList()
     }
@@ -131,14 +153,9 @@ class AccountsViewModel : ViewModel() {
     }
 
     fun getActiveAccountValidationErrors(): Array<NativeAccount.OnlineValidationError> {
-        val persistentId = activeAccount.value.persistentId
-        val accounts = accounts.value
-        val activeAccount =
-            accounts.firstOrNull { it.persistentId == persistentId }
-                ?: accounts.firstOrNull()
-                ?: return arrayOf()
+        val persistentId = activeAccountData.value.account.persistentId
 
-        return NativeAccount.getAccountValidationErrors(activeAccount.persistentId)
+        return NativeAccount.getAccountValidationErrors(persistentId)
     }
 
     fun refreshAccountList() {

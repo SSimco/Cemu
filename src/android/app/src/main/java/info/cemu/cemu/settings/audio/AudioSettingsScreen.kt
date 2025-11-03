@@ -9,6 +9,7 @@ import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeSettings
 
 private const val AUDIO_LATENCY_STEPS = 22
+private const val AUDIO_VOLUME_STEPS = 19
 
 @Composable
 fun AudioSettingsScreen(navigateBack: () -> Unit) {
@@ -46,6 +47,7 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             label = tr("TV volume"),
             initialValue = { NativeSettings.getAudioDeviceVolume(true) },
             valueFrom = NativeSettings.AUDIO_MIN_VOLUME,
+            steps = AUDIO_VOLUME_STEPS,
             valueTo = NativeSettings.AUDIO_MAX_VOLUME,
             onValueChange = { NativeSettings.setAudioDeviceVolume(it, true) },
             labelFormatter = { "$it%" }
@@ -69,6 +71,7 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             label = tr("Gamepad volume"),
             initialValue = { NativeSettings.getAudioDeviceVolume(false) },
             valueFrom = NativeSettings.AUDIO_MIN_VOLUME,
+            steps = AUDIO_VOLUME_STEPS,
             valueTo = NativeSettings.AUDIO_MAX_VOLUME,
             onValueChange = { NativeSettings.setAudioDeviceVolume(it, false) },
             labelFormatter = { "$it%" }

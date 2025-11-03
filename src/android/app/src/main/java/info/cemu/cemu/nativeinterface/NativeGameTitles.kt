@@ -79,7 +79,7 @@ object NativeGameTitles {
     @Keep
     data class Game(
         val titleId: Long,
-        val path: String?,
+        val path: String,
         val name: String?,
         val version: Short,
         val dlc: Short,
@@ -107,11 +107,15 @@ object NativeGameTitles {
             return name?.compareTo(other.name ?: "") ?: 0
         }
 
-        val icon: ImageBitmap? = _icon?.asImageBitmap()
+        private var iconBitmap: ImageBitmap? = null
+        val icon: ImageBitmap?
+            get() {
+                if (iconBitmap == null) {
+                    iconBitmap = _icon?.asImageBitmap()
+                }
 
-        fun isValid(): Boolean {
-            return !path.isNullOrEmpty() && !name.isNullOrEmpty()
-        }
+                return iconBitmap
+            }
     }
 
     @Keep

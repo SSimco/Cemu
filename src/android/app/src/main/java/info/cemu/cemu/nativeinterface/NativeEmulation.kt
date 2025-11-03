@@ -10,6 +10,9 @@ object NativeEmulation {
     external fun setDPI(dpi: Float)
 
     @JvmStatic
+    external fun initializeSurface(isMainCanvas: Boolean)
+
+    @JvmStatic
     external fun setSurface(surface: Surface?, isMainCanvas: Boolean)
 
     @JvmStatic

@@ -39,10 +39,7 @@ class GameListViewModel : ViewModel() {
 
     init {
         NativeGameTitles.setGameTitleLoadedCallback(NativeGameTitles.GameTitleLoadedCallback { game: Game ->
-            if (!game.isValid())
-                return@GameTitleLoadedCallback
-
-            if (_games.value.any { it.titleId == game.titleId })
+            if (_games.value.any { it.titleId == game.titleId || it.path == game.path })
                 return@GameTitleLoadedCallback
 
             _games.value += game

@@ -24,7 +24,7 @@ fun Toggle(
     label: String,
     initialCheckedState: () -> Boolean,
     onCheckedChanged: (Boolean) -> Unit,
-    description: String?,
+    description: String? = null,
 ) {
     var checked by rememberSaveable { mutableStateOf(initialCheckedState()) }
     Row(

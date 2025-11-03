@@ -21,12 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -157,7 +151,7 @@ fun TitleManagerScreen(
                 showNotificationMessage(tr("Refreshing titles"))
             }) {
                 Icon(
-                    imageVector = Icons.Filled.Refresh,
+                    painter = painterResource(R.drawable.ic_refresh),
                     contentDescription = null
                 )
             }
@@ -435,7 +429,7 @@ Do you still want to continue with the installation? It will replace the current
     AlertDialog(
         icon = {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                painter = painterResource(R.drawable.ic_warning),
                 contentDescription = null
             )
         },
@@ -519,7 +513,7 @@ private fun <T : Enum<T>> FilterRow(
             Text(text = filterRowLabel, modifier = Modifier.weight(1f))
             Icon(
                 modifier = Modifier.rotate(if (showOptions) 180f else 0f),
-                imageVector = Icons.Filled.ArrowDropDown,
+                painter = painterResource(R.drawable.ic_arrow_drop_down),
                 contentDescription = null
             )
         }
@@ -545,7 +539,7 @@ fun FilterChip(label: String, selected: Boolean, onToggle: () -> Unit) {
         leadingIcon = {
             if (selected)
                 Icon(
-                    imageVector = Icons.Filled.Check,
+                    painter = painterResource(R.drawable.ic_check),
                     contentDescription = null
                 )
         },
@@ -600,7 +594,7 @@ private fun TitleEntryListItem(
                 onClick = { showTitleInfo = !showTitleInfo }) {
                 Icon(
                     modifier = Modifier.rotate(if (showTitleInfo) 180f else 0f),
-                    imageVector = Icons.Filled.ArrowDropDown,
+                    painter = painterResource(R.drawable.ic_arrow_drop_down),
                     contentDescription = null
                 )
             }
@@ -640,7 +634,7 @@ private fun TitleDropDownMenu(
     Box {
         IconButton(onClick = { expandMenu = true }) {
             Icon(
-                imageVector = Icons.Filled.MoreVert,
+                painter = painterResource(R.drawable.ic_more_vert),
                 contentDescription = null
             )
         }
@@ -662,7 +656,7 @@ private fun DeleteTitleProgressDialog(titleEntry: TitleEntry) {
     AlertDialog(
         icon = {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                painter = painterResource(R.drawable.ic_warning),
                 contentDescription = null
             )
         },
@@ -697,7 +691,7 @@ private fun DeleteTitleConfirmationDialog(
     AlertDialog(
         icon = {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                painter = painterResource(R.drawable.ic_warning),
                 contentDescription = null
             )
         },

@@ -39,9 +39,9 @@ jobs:
       - name: "Generate POT file from the Android App"
         run: |
           cemu_dir=$(pwd)
-          cd src/android/app
+          cd src/android
           ./gradlew gettext
-          mv cemu_kt.pot "$cemu_dir"
+          mv app/cemu_kt.pot "$cemu_dir"
 
       - name: "Combine the POT files"
         run: |

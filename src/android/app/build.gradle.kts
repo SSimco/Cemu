@@ -39,19 +39,16 @@ fun getVersionName(): String {
     return getGitHash() ?: "1.0"
 }
 
-fun getVersionCode(): Int = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
-
 val cemuDataFilesFolder = "../../../bin"
 
 android {
     namespace = "info.cemu.cemu"
     compileSdk = 36
-    ndkVersion = "26.3.11579264"
+    ndkVersion = "27.3.13750724"
     defaultConfig {
         applicationId = "info.cemu.cemu"
         minSdk = 31
         targetSdk = 35
-        versionCode = getVersionCode()
         versionName = getVersionName()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -114,6 +111,7 @@ android {
     }
 
     defaultConfig {
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
@@ -138,6 +136,7 @@ android {
                         )
                     )
                 }
+                // abiFilters("arm64-v8a", "x86_64")
                 abiFilters("arm64-v8a")
             }
         }
@@ -161,8 +160,13 @@ abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
         Pattern.compile(".*Cemu_(?:debug|release)"),
     )
 
-    @get:Input
-    abstract val cemuDataFolder: Property<String>
+    @get:InputDirectory
+    abstract val cemuDataFolder: DirectoryProperty
+
+    @get:OutputFile
+    val hashFile: RegularFileProperty = project.objects.fileProperty().convention(
+        project.layout.projectDirectory.dir("src/main/assets").file("hash.txt")
+    )
 
     private fun isFileIgnored(file: File): Boolean {
         return ignoreFilePatterns.any { pattern -> pattern.matcher(file.path).matches() }
@@ -170,41 +174,32 @@ abstract class ComputeCemuDataFilesHashTask : DefaultTask() {
 
     @TaskAction
     fun computeCemuDataFilesHash() {
-        val assetDir = File(project.projectDir, "src/main/assets")
-        if (!assetDir.exists()) {
-            assetDir.mkdirs()
-        }
+        val cemuDataFilesDir = cemuDataFolder.get().asFile
+        val hashOutFile = hashFile.get().asFile
 
-        val cemuDataFilesDir = File(project.projectDir, cemuDataFolder.get())
-        val hashFile = File(assetDir, "hash.txt")
-        val md = MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
 
         if (!cemuDataFilesDir.isDirectory) {
-            hashFile.writeText("invalid")
+            hashOutFile.writeText("invalid")
             return
         }
 
-        val fileHashes = cemuDataFilesDir.walkTopDown()
+        cemuDataFilesDir.walkTopDown()
             .filter { it.isFile && !isFileIgnored(it) }
             .sortedBy { it.path }
-            .map {
-                md.reset()
-                md.update(it.path.toByteArray())
-                md.update(it.readBytes())
-                md.digest()
+            .forEach {
+                val relativePath = it.relativeTo(cemuDataFilesDir).path.toByteArray()
+                digest.update(relativePath)
+                digest.update(it.readBytes())
             }
-            .toList()
 
-        md.reset()
-        fileHashes.forEach { md.update(it) }
-
-        hashFile.writeText(DatatypeConverter.printHexBinary(md.digest()))
+        hashOutFile.writeText(DatatypeConverter.printHexBinary(digest.digest()))
     }
 }
 
 val computeCemuDataFilesHashTask =
     tasks.register<ComputeCemuDataFilesHashTask>("computeCemuDataFilesHash") {
-        cemuDataFolder = cemuDataFilesFolder
+        cemuDataFolder.set(File(cemuDataFilesFolder))
     }
 tasks.preBuild.dependsOn(computeCemuDataFilesHashTask)
 
@@ -219,9 +214,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.documentfile)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui)
     testImplementation(libs.junit)
     testImplementation(libs.archunit.junit4)
     androidTestImplementation(libs.androidx.junit)
