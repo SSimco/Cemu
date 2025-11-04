@@ -1,4 +1,4 @@
-package info.cemu.cemu.gamelist
+package info.cemu.cemu.games.details
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.localization.regionToString
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.games.GameIcon
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

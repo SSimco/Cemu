@@ -188,6 +188,16 @@ enum class CrashDump
 ENABLE_ENUM_ITERATORS(CrashDump, CrashDump::Disabled, CrashDump::Enabled);
 #endif
 
+#if __ANDROID__
+enum class DriverSettingMode
+{
+	Global,
+	System,
+	Custom,
+};
+ENABLE_ENUM_ITERATORS(DriverSettingMode, DriverSettingMode::Global, DriverSettingMode::Custom);
+#endif
+
 template <>
 struct fmt::formatter<PrecompiledShaderOption> : formatter<string_view> {
 	template <typename FormatContext>

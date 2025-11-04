@@ -71,7 +71,7 @@ fun EmulationScreen(
     onQuit: () -> Unit,
     viewModel: EmulationViewModel = viewModel(
         factory = EmulationViewModel.Factory, extras = MutableCreationExtras().apply {
-            set(EmulationViewModel.GAME_PATH_KEY, gamePath)
+            set(EmulationViewModel.LAUNCH_PATH_KEY, gamePath)
         }),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }

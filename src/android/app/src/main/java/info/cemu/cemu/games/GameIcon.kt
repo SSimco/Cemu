@@ -1,4 +1,4 @@
-package info.cemu.cemu.gamelist
+package info.cemu.cemu.games
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border

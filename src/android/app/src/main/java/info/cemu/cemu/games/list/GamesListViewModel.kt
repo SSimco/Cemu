@@ -1,4 +1,4 @@
-package info.cemu.cemu.gamelist
+package info.cemu.cemu.games.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class GameListViewModel : ViewModel() {
+class GamesListViewModel : ViewModel() {
     private var gamePaths = NativeSettings.getGamesPaths().toSet()
 
     private val _filterText = MutableStateFlow("")

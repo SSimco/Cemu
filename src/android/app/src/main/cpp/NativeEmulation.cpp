@@ -93,7 +93,8 @@ namespace NativeEmulation
 		if (!fs::exists(memorySearcherFolder))
 			fs::create_directories(memorySearcherFolder);
 	}
-	enum StartGameResult : sint32
+
+	enum PrepareTitleResult : sint32
 	{
 		SUCCESSFUL = 0,
 		ERROR_GAME_BASE_FILES_NOT_FOUND = 1,
@@ -101,54 +102,6 @@ namespace NativeEmulation
 		ERROR_NO_TITLE_TIK = 3,
 		ERROR_UNKNOWN = 4,
 	};
-	StartGameResult startGame(const fs::path& launchPath)
-	{
-		TitleInfo launchTitle{launchPath};
-		if (launchTitle.IsValid())
-		{
-			// the title might not be in the TitleList, so we add it as a temporary entry
-			CafeTitleList::AddTitleFromPath(launchPath);
-			// title is valid, launch from TitleId
-			TitleId baseTitleId;
-			if (!CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
-			{
-				return ERROR_GAME_BASE_FILES_NOT_FOUND;
-			}
-			CafeSystem::PREPARE_STATUS_CODE r = CafeSystem::PrepareForegroundTitle(baseTitleId);
-			if (r != CafeSystem::PREPARE_STATUS_CODE::SUCCESS)
-			{
-				return ERROR_UNKNOWN;
-			}
-		}
-		else // if (launchTitle.GetFormat() == TitleInfo::TitleDataFormat::INVALID_STRUCTURE )
-		{
-			// title is invalid, if it's an RPX/ELF we can launch it directly
-			// otherwise it's an error
-			CafeTitleFileType fileType = DetermineCafeSystemFileType(launchPath);
-			if (fileType == CafeTitleFileType::RPX || fileType == CafeTitleFileType::ELF)
-			{
-				CafeSystem::PREPARE_STATUS_CODE r = CafeSystem::PrepareForegroundTitleFromStandaloneRPX(launchPath);
-				if (r != CafeSystem::PREPARE_STATUS_CODE::SUCCESS)
-				{
-					return ERROR_UNKNOWN;
-				}
-			}
-			else if (launchTitle.GetInvalidReason() == TitleInfo::InvalidReason::NO_DISC_KEY)
-			{
-				return ERROR_NO_DISC_KEY;
-			}
-			else if (launchTitle.GetInvalidReason() == TitleInfo::InvalidReason::NO_TITLE_TIK)
-			{
-				return ERROR_NO_TITLE_TIK;
-			}
-			else
-			{
-				return ERROR_UNKNOWN;
-			}
-		}
-		CafeSystem::LaunchForegroundTitle();
-		return SUCCESSFUL;
-	}
 } // namespace NativeEmulation
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -260,10 +213,70 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unuse
 	}
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_startGame([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launchPath)
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSystems([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
 	WindowSystem::GetWindowInfo().set_keystatesup();
 	NativeEmulation::initializeAudioDevices();
-	return NativeEmulation::startGame(JNIUtils::toString(env, launchPath));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_prepareTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launch_path)
+{
+	fs::path launchPath = JNIUtils::toString(env, launch_path);
+
+	TitleInfo launchTitle{launchPath};
+
+	using enum NativeEmulation::PrepareTitleResult;
+
+	if (launchTitle.IsValid())
+	{
+		// the title might not be in the TitleList, so we add it as a temporary entry
+		CafeTitleList::AddTitleFromPath(launchPath);
+		// title is valid, launch from TitleId
+		TitleId baseTitleId;
+		if (!CafeTitleList::FindBaseTitleId(launchTitle.GetAppTitleId(), baseTitleId))
+		{
+			return ERROR_GAME_BASE_FILES_NOT_FOUND;
+		}
+		CafeSystem::PREPARE_STATUS_CODE r = CafeSystem::PrepareForegroundTitle(baseTitleId);
+		if (r != CafeSystem::PREPARE_STATUS_CODE::SUCCESS)
+		{
+			return ERROR_UNKNOWN;
+		}
+	}
+	else // if (launchTitle.GetFormat() == TitleInfo::TitleDataFormat::INVALID_STRUCTURE )
+	{
+		// title is invalid, if it's an RPX/ELF we can launch it directly
+		// otherwise it's an error
+		CafeTitleFileType fileType = DetermineCafeSystemFileType(launchPath);
+		if (fileType == CafeTitleFileType::RPX || fileType == CafeTitleFileType::ELF)
+		{
+			CafeSystem::PREPARE_STATUS_CODE r = CafeSystem::PrepareForegroundTitleFromStandaloneRPX(launchPath);
+			if (r != CafeSystem::PREPARE_STATUS_CODE::SUCCESS)
+			{
+				return ERROR_UNKNOWN;
+			}
+		}
+		else if (launchTitle.GetInvalidReason() == TitleInfo::InvalidReason::NO_DISC_KEY)
+		{
+			return ERROR_NO_DISC_KEY;
+		}
+		else if (launchTitle.GetInvalidReason() == TitleInfo::InvalidReason::NO_TITLE_TIK)
+		{
+			return ERROR_NO_TITLE_TIK;
+		}
+		else
+		{
+			return ERROR_UNKNOWN;
+		}
+	}
+
+	return SUCCESSFUL;
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_launchTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	CafeSystem::LaunchForegroundTitle();
 }

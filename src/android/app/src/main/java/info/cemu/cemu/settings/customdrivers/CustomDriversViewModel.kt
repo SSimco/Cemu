@@ -7,10 +7,15 @@ import android.net.Uri
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import info.cemu.cemu.nativeinterface.NativeActiveSettings
-import info.cemu.cemu.nativeinterface.NativeSettings
+import info.cemu.cemu.common.customdrivers.DriverMetadata
+import info.cemu.cemu.common.customdrivers.META_FILE_NAME
+import info.cemu.cemu.common.customdrivers.SUPPORTED_SCHEMA_VERSION
+import info.cemu.cemu.common.customdrivers.getCustomDriversDir
+import info.cemu.cemu.common.customdrivers.parseInstalledDrivers
 import info.cemu.cemu.common.io.decodeJsonFromFile
 import info.cemu.cemu.common.io.unzip
+import info.cemu.cemu.nativeinterface.NativeActiveSettings
+import info.cemu.cemu.nativeinterface.NativeSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,31 +23,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import java.io.File
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.io.path.moveTo
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-
-@Serializable
-data class DriverMetadata(
-    val schemaVersion: Int,
-    val name: String,
-    val description: String,
-    val author: String,
-    val packageVersion: String,
-    val vendor: String,
-    val driverVersion: String,
-    val minApi: Int,
-    val libraryName: String,
-)
 
 data class Driver(
     val path: String,
@@ -69,40 +57,15 @@ class CustomDriversViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            _installedDrivers.value = parseInstalledDrivers()
-        }
-    }
-
-    private suspend fun parseInstalledDrivers(): List<Driver> {
-        return withContext(Dispatchers.IO) {
-            val customDriversDir = getCustomDriversDir()
-
-            if (!customDriversDir.isDirectory())
-                return@withContext emptyList()
-
-            val driverDirs: Array<File> =
-                customDriversDir.toFile().listFiles() ?: return@withContext emptyList()
-
-            val drivers = mutableListOf<Driver>()
             val selectedDriver = selectedDriverPath.value
 
-            for (driverDir in driverDirs) {
-                if (!driverDir.isDirectory)
-                    continue
-                val metadata =
-                    decodeJsonFromFile<DriverMetadata>(driverDir.resolve(META_FILE_NAME))
-                        ?: continue
-                val driver = Driver(
-                    path = driverDir.path,
-                    metadata = metadata,
-                    selected = selectedDriver == driverDir.path,
+            _installedDrivers.value = parseInstalledDrivers().map {
+                Driver(
+                    it.path,
+                    it.metadata,
+                    selected = selectedDriver == it.path,
                 )
-                drivers.add(driver)
             }
-
-            drivers.sortBy { it.metadata.name }
-
-            return@withContext drivers
         }
     }
 
@@ -218,13 +181,5 @@ class CustomDriversViewModel : ViewModel() {
 
         NativeSettings.setCustomDriverPath(driver.path)
         selectedDriverPath.value = driver.path
-    }
-
-    companion object {
-        private const val SUPPORTED_SCHEMA_VERSION = 1
-        private const val META_FILE_NAME = "meta.json"
-        private const val CUSTOM_DRIVERS_DIR_NAME = "customDrivers"
-        private fun getCustomDriversDir() =
-            Path(NativeActiveSettings.getUserDataPath()).resolve(CUSTOM_DRIVERS_DIR_NAME)
     }
 }

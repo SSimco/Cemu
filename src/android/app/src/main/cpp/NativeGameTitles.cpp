@@ -27,15 +27,15 @@ namespace NativeGameTitles
 
 		return cachePaths;
 	}
-	TitleId s_currentTitleId = 0;
-	GameProfile s_currentGameProfile{};
+	TitleId g_currentTitleId = 0;
+	GameProfile g_currentGameProfile{};
 	void LoadGameProfile(TitleId titleId)
 	{
-		if (s_currentTitleId == titleId)
+		if (g_currentTitleId == titleId)
 			return;
-		s_currentTitleId = titleId;
-		s_currentGameProfile.Reset();
-		s_currentGameProfile.Load(titleId);
+		g_currentTitleId = titleId;
+		g_currentGameProfile.Reset();
+		g_currentGameProfile.Load(titleId);
 	}
 
 	std::unique_ptr<WuaConverter> s_wuaConverter;
@@ -45,60 +45,106 @@ extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_isLoadingSharedLibrariesForTitleEnabled([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	return NativeGameTitles::s_currentGameProfile.ShouldLoadSharedLibraries().value_or(false);
+	return NativeGameTitles::g_currentGameProfile.ShouldLoadSharedLibraries().value_or(false);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setLoadingSharedLibrariesForTitleEnabled([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id, jboolean enabled)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	NativeGameTitles::s_currentGameProfile.SetShouldLoadSharedLibraries(enabled);
-	NativeGameTitles::s_currentGameProfile.Save(game_title_id);
+	NativeGameTitles::g_currentGameProfile.SetShouldLoadSharedLibraries(enabled);
+	NativeGameTitles::g_currentGameProfile.Save(game_title_id);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCpuModeForTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	return static_cast<jint>(NativeGameTitles::s_currentGameProfile.GetCPUMode().value_or(CPUMode::Auto));
+	return static_cast<jint>(NativeGameTitles::g_currentGameProfile.GetCPUMode().value_or(CPUMode::Auto));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setCpuModeForTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id, jint cpu_mode)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	NativeGameTitles::s_currentGameProfile.SetCPUMode(static_cast<CPUMode>(cpu_mode));
-	NativeGameTitles::s_currentGameProfile.Save(game_title_id);
+	NativeGameTitles::g_currentGameProfile.SetCPUMode(static_cast<CPUMode>(cpu_mode));
+	NativeGameTitles::g_currentGameProfile.Save(game_title_id);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getThreadQuantumForTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	return NativeGameTitles::s_currentGameProfile.GetThreadQuantum();
+	return NativeGameTitles::g_currentGameProfile.GetThreadQuantum();
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setThreadQuantumForTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id, jint thread_quantum)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	NativeGameTitles::s_currentGameProfile.SetThreadQuantum(std::clamp(thread_quantum, 5000, 536870912));
-	NativeGameTitles::s_currentGameProfile.Save(game_title_id);
+	NativeGameTitles::g_currentGameProfile.SetThreadQuantum(std::clamp(thread_quantum, 5000, 536870912));
+	NativeGameTitles::g_currentGameProfile.Save(game_title_id);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_isShaderMultiplicationAccuracyForTitleEnabled([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	return NativeGameTitles::s_currentGameProfile.GetAccurateShaderMul() == AccurateShaderMulOption::True;
+	return NativeGameTitles::g_currentGameProfile.GetAccurateShaderMul() == AccurateShaderMulOption::True;
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setShaderMultiplicationAccuracyForTitleEnabled([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id, jboolean enabled)
 {
 	NativeGameTitles::LoadGameProfile(game_title_id);
-	NativeGameTitles::s_currentGameProfile.SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
-	NativeGameTitles::s_currentGameProfile.Save(game_title_id);
+	NativeGameTitles::g_currentGameProfile.SetAccurateShaderMul(enabled ? AccurateShaderMulOption::True : AccurateShaderMulOption::False);
+	NativeGameTitles::g_currentGameProfile.Save(game_title_id);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getDriverSettingForTitle(JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id)
+{
+	NativeGameTitles::LoadGameProfile(game_title_id);
+	jclass driverSettingClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGameTitles$DriverSetting");
+	jmethodID constructorMId = env->GetMethodID(driverSettingClass, "<init>", "(ILjava/lang/String;)V");
+
+	const auto& driverSetting = NativeGameTitles::g_currentGameProfile.GetDriverSetting();
+
+	jstring customPath = nullptr;
+	if (driverSetting.customPath.has_value())
+	{
+		customPath = env->NewStringUTF(driverSetting.customPath.value().c_str());
+	}
+
+	jint mode = static_cast<jint>(driverSetting.mode);
+
+	return env->NewObject(
+		driverSettingClass,
+		constructorMId,
+		mode,
+		customPath);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setDriverSettingForTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong game_title_id, jobject driver_setting)
+{
+	NativeGameTitles::LoadGameProfile(game_title_id);
+	jclass driverSettingClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGameTitles$DriverSetting");
+
+	jfieldID modeFieldId = env->GetFieldID(driverSettingClass, "mode", "I");
+	jfieldID customPathFieldId = env->GetFieldID(driverSettingClass, "customPath", "Ljava/lang/String;");
+
+	jint mode = env->GetIntField(driver_setting, modeFieldId);
+	auto customPath = static_cast<jstring>(env->GetObjectField(driver_setting, customPathFieldId));
+
+	GameProfile::DriverSetting driverSetting{
+		.mode = static_cast<DriverSettingMode>(mode),
+		.customPath = customPath == nullptr ? std::optional<std::string>() : JNIUtils::toString(env, customPath),
+	};
+
+	NativeGameTitles::g_currentGameProfile.SetDriverSetting(driverSetting);
+
+	NativeGameTitles::g_currentGameProfile.Save(game_title_id);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
@@ -306,26 +352,26 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_refreshCafeTitleList([[mayb
 	CafeTitleList::Refresh();
 }
 
-std::unique_ptr<TitleListCallbacks> s_titleListCallbacks;
+std::unique_ptr<TitleListCallbacks> g_titleListCallbacks;
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setTitleListCallbacks([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jobject title_list_callbacks)
 {
 	if (title_list_callbacks == nullptr)
-		s_titleListCallbacks = nullptr;
+		g_titleListCallbacks = nullptr;
 	else
-		s_titleListCallbacks = std::make_unique<TitleListCallbacks>(title_list_callbacks);
+		g_titleListCallbacks = std::make_unique<TitleListCallbacks>(title_list_callbacks);
 }
 
-std::unique_ptr<SaveListCallback> s_saveListCallback;
+std::unique_ptr<SaveListCallback> g_saveListCallback;
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_setSaveListCallback([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jobject save_list_callback)
 {
 	if (save_list_callback == nullptr)
-		s_saveListCallback = nullptr;
+		g_saveListCallback = nullptr;
 	else
-		s_saveListCallback = std::make_unique<SaveListCallback>(save_list_callback);
+		g_saveListCallback = std::make_unique<SaveListCallback>(save_list_callback);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL

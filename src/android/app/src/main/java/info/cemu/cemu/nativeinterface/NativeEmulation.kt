@@ -24,7 +24,7 @@ object NativeEmulation {
     @JvmStatic
     external fun initializeRenderer(surface: Surface?)
 
-    object StartGameStatusCode {
+    object PrepareTitleResult {
         const val SUCCESSFUL: Int = 0
         const val ERROR_GAME_BASE_FILES_NOT_FOUND: Int = 1
         const val ERROR_NO_DISC_KEY: Int = 2
@@ -33,7 +33,13 @@ object NativeEmulation {
     }
 
     @JvmStatic
-    external fun startGame(launchPath: String?): Int
+    external fun prepareTitle(launchPath: String?): Int
+
+    @JvmStatic
+    external fun launchTitle()
+
+    @JvmStatic
+    external fun initializeSystems()
 
     @JvmStatic
     external fun setReplaceTVWithPadView(swapped: Boolean)

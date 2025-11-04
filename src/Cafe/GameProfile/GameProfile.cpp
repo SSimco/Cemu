@@ -127,7 +127,7 @@ bool gameProfile_loadIntegerOption(IniParser& iniParser, const char* optionName,
 	{
 		cemuLog_log(LogType::Force, "Value '{}' is out of range for option '{}' in game profile", *option_value, optionName);
 		return false;
-	}	
+	}
 }
 
 template<typename T>
@@ -224,7 +224,7 @@ bool GameProfile::Load(uint64_t title_id)
 			gameProfile_loadIntegerOption(&iniParser, "graphics_api", &graphicsApi, -1, 0, 1);
 			if (graphicsApi.value != -1)
 				m_graphics_api = (GraphicAPI)graphicsApi.value;
-			
+
 			gameProfile_loadEnumOption(iniParser, "accurateShaderMul", m_accurateShaderMul);
 
 			// legacy support
@@ -270,6 +270,17 @@ bool GameProfile::Load(uint64_t title_id)
 			}
 
 		}
+#if __ANDROID__
+		else if (boost::iequals(iniParser.GetCurrentSectionName(), "AndroidDriver"))
+		{
+			gameProfile_loadEnumOption(iniParser, "mode", m_driverSetting.mode);
+
+			if (m_driverSetting.mode == DriverSettingMode::Custom)
+			{
+				m_driverSetting.customPath = iniParser.FindOption("customPath");
+			}
+		}
+#endif
 	}
 	return true;
 }
@@ -277,7 +288,7 @@ bool GameProfile::Load(uint64_t title_id)
 void GameProfile::Save(uint64_t title_id)
 {
 	auto gameProfileDir = ActiveSettings::GetConfigPath("gameProfiles");
-	if (std::error_code ex_ec; !fs::exists(gameProfileDir, ex_ec)) 
+	if (std::error_code ex_ec; !fs::exists(gameProfileDir, ex_ec))
 		fs::create_directories(gameProfileDir, ex_ec);
 	auto gameProfilePath = gameProfileDir / fmt::format("{:016x}.ini", title_id);
 	FileStream* fs = FileStream::createFile2(gameProfilePath);
@@ -321,6 +332,14 @@ void GameProfile::Save(uint64_t title_id)
 
 	fs->writeLine("");
 
+#if __ANDROID__
+	fs->writeLine("[AndroidDriver]");
+	fs->writeLine(fmt::format("{} = {}", "mode", m_driverSetting.mode).c_str());
+	if (m_driverSetting.mode == DriverSettingMode::Custom && m_driverSetting.customPath.has_value())
+		fs->writeLine(fmt::format("{} = {}", "customPath", m_driverSetting.customPath.value()).c_str());
+	fs->writeLine("");
+#endif
+
 #undef WRITE_OPTIONAL_ENTRY
 #undef WRITE_ENTRY
 
@@ -354,7 +373,7 @@ void GameProfile::Reset()
 	// general settings
 	m_loadSharedLibraries = true;
 	m_startWithPadView = false;
-	
+
 	// graphic settings
 	m_accurateShaderMul = AccurateShaderMulOption::True;
 	m_precompiledShaders = PrecompiledShaderOption::Auto;

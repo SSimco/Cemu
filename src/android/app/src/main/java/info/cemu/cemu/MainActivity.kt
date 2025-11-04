@@ -42,8 +42,8 @@ import info.cemu.cemu.common.ui.components.ActivityContent
 import info.cemu.cemu.common.ui.localization.TranslatableContent
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.emulation.EmulationActivity
-import info.cemu.cemu.gamelist.GameListRoute
-import info.cemu.cemu.gamelist.gameListNavigation
+import info.cemu.cemu.games.GameListRoute
+import info.cemu.cemu.games.gamesNavigation
 import info.cemu.cemu.graphicpacks.GraphicPacksRoute
 import info.cemu.cemu.graphicpacks.graphicPacksNavigation
 import info.cemu.cemu.nativeinterface.NativeActiveSettings
@@ -117,7 +117,7 @@ private fun MainNav() {
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }
     ) {
-        gameListNavigation(
+        gamesNavigation(
             navController = navController,
             startGame = { startGame(context, it) },
             createShortcut = { createShortcutForGame(context, it) }

@@ -61,7 +61,7 @@ fun <T> SingleSelection(
     initialChoice: () -> T,
     choices: Collection<T>,
     modifier: Modifier = Modifier,
-    choiceToString: @Composable (T) -> String,
+    choiceToString: (T) -> String,
     isChoiceEnabled: (T) -> Boolean = { true },
     enabled: Boolean = true,
     onChoiceChanged: (T) -> Unit,
@@ -87,7 +87,7 @@ fun <T> SingleSelection(
     label: String,
     choice: T,
     choices: Collection<T>,
-    choiceToString: @Composable (T) -> String,
+    choiceToString: (T) -> String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isChoiceEnabled: (T) -> Boolean = { true },
@@ -145,7 +145,7 @@ private fun <T> SelectDialog(
     currentChoice: T,
     choices: Collection<T>,
     isChoiceEnabled: (T) -> Boolean,
-    choiceToString: @Composable (T) -> String,
+    choiceToString: (T) -> String,
     onDismissRequest: () -> Unit,
     onChoiceChanged: (T) -> Unit,
 ) {
@@ -208,10 +208,7 @@ fun Choice(label: String, selected: Boolean, isEnabled: Boolean, onClick: () -> 
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .let {
-                if (isEnabled) it.clickable { onClick() }
-                else it
-            }
+            .clickable(isEnabled, onClick = onClick)
             .padding(vertical = 16.dp, horizontal = 8.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,

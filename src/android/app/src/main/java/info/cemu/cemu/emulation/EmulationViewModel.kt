@@ -46,7 +46,7 @@ data class SurfacesConfig(
     }
 }
 
-class EmulationViewModel(private val gamePath: String) : ViewModel() {
+class EmulationViewModel(private val launchPath: String) : ViewModel() {
     private val _emulationError = MutableStateFlow<String?>(null)
     val emulationError = _emulationError.asStateFlow()
 
@@ -101,6 +101,13 @@ class EmulationViewModel(private val gamePath: String) : ViewModel() {
     val mainHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(true)
     val padHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(false)
 
+    private suspend fun initializeSystems(): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            NativeEmulation.initializeSystems()
+            return@withContext Result.success(Unit)
+        }
+    }
+
     private suspend fun initializeRenderer(): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
@@ -115,6 +122,7 @@ class EmulationViewModel(private val gamePath: String) : ViewModel() {
                 NativeEmulation.initializeSurface(true)
 
                 return@withContext Result.success(Unit)
+
             } catch (exception: NativeException) {
                 val errorMessage = tr("Failed creating renderer: {0}", exception.message!!)
                 return@withContext Result.failure(errorMessage)
@@ -122,22 +130,31 @@ class EmulationViewModel(private val gamePath: String) : ViewModel() {
         }
     }
 
-    private suspend fun launchGame(): Result<Unit> {
+    private suspend fun prepareTitle(): Result<Unit> {
         return withContext(Dispatchers.IO) {
-            val result = NativeEmulation.startGame(gamePath)
+            val result = NativeEmulation.prepareTitle(launchPath)
 
-            if (result == NativeEmulation.StartGameStatusCode.SUCCESSFUL) {
+            if (result == NativeEmulation.PrepareTitleResult.SUCCESSFUL) {
                 return@withContext Result.success(Unit)
             }
 
             val errorMessage = when (result) {
-                NativeEmulation.StartGameStatusCode.ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
-                NativeEmulation.StartGameStatusCode.ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
-                NativeEmulation.StartGameStatusCode.ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
-                else -> tr("Unable to launch game\nPath: {0}", gamePath)
+                NativeEmulation.PrepareTitleResult.ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
+                NativeEmulation.PrepareTitleResult.ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
+                NativeEmulation.PrepareTitleResult.ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
+                else -> tr("Unable to launch game\nPath: {0}", launchPath)
             }
 
             return@withContext Result.failure(errorMessage)
+        }
+    }
+
+
+    private suspend fun launchTitle(): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            NativeEmulation.launchTitle()
+
+            return@withContext Result.success(Unit)
         }
     }
 
@@ -150,7 +167,9 @@ class EmulationViewModel(private val gamePath: String) : ViewModel() {
         }
 
         emulationInitializationJob = viewModelScope.launch {
-            initializeRenderer().then { launchGame() }
+            prepareTitle().then { initializeSystems() }
+                .then { initializeRenderer() }
+                .then { launchTitle() }
                 .onFailure { _emulationError.value = it.message }
 
             _isEmulationInitialized.value = true
@@ -158,11 +177,11 @@ class EmulationViewModel(private val gamePath: String) : ViewModel() {
     }
 
     companion object {
-        val GAME_PATH_KEY = object : CreationExtras.Key<String> {}
+        val LAUNCH_PATH_KEY = object : CreationExtras.Key<String> {}
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 EmulationViewModel(
-                    this[GAME_PATH_KEY] as String
+                    this[LAUNCH_PATH_KEY] as String
                 )
             }
         }

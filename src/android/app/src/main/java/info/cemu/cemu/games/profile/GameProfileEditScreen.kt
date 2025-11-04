@@ -1,23 +1,39 @@
-package info.cemu.cemu.gamelist
+package info.cemu.cemu.games.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.MutableCreationExtras
+import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.common.ui.components.Header
 import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.components.SingleSelection
 import info.cemu.cemu.common.ui.components.Toggle
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
+import info.cemu.cemu.nativeinterface.NativeGameTitles.DriverSettingMode
+import info.cemu.cemu.settings.input.ControllersViewModel
 
 @Composable
-fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit) {
-    if (game == null)
-        return
+fun GameProfileEditScreen(
+    game: NativeGameTitles.Game,
+    navigateBack: () -> Unit,
+    viewModel: GameProfileEditViewModel = viewModel(
+        factory = GameProfileEditViewModel.Factory,
+        extras = MutableCreationExtras().apply {
+            set(GameProfileEditViewModel.GAME_KEY, game)
+        },
+    ),
+) {
+    val driverSettingChoices by viewModel.driverSettingChoices.collectAsState()
+    val selectedDriverSetting by viewModel.selectedDriverSetting.collectAsState()
 
     val titleId = game.titleId
+
     ScreenContent(
         appBarText = tr("Edit game profile"),
         navigateBack = navigateBack,
@@ -35,8 +51,7 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             },
             onCheckedChanged = { enabled ->
                 NativeGameTitles.setLoadingSharedLibrariesForTitleEnabled(
-                    titleId,
-                    enabled
+                    titleId, enabled
                 )
             },
         )
@@ -50,8 +65,7 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
             },
             onCheckedChanged = { enabled ->
                 NativeGameTitles.setShaderMultiplicationAccuracyForTitleEnabled(
-                    titleId,
-                    enabled
+                    titleId, enabled
                 )
             },
         )
@@ -65,19 +79,32 @@ fun GameProfileEditScreen(game: NativeGameTitles.Game?, navigateBack: () -> Unit
                 NativeGameTitles.CPUMode.AUTO
             ),
             choiceToString = { cpuMode -> cpuModeToString(cpuMode) },
-            onChoiceChanged = { cpuMode -> NativeGameTitles.setCpuModeForTitle(titleId, cpuMode) }
-        )
+            onChoiceChanged = { cpuMode -> NativeGameTitles.setCpuModeForTitle(titleId, cpuMode) })
         SingleSelection(
             label = tr("Thread quantum"),
             initialChoice = { NativeGameTitles.getThreadQuantumForTitle(titleId) },
-            choices = NativeGameTitles.THREAD_QUANTUM_VALUES.toList(),
+            choices = NativeGameTitles.THREAD_QUANTUM_VALUES,
             choiceToString = { it.toString() },
             onChoiceChanged = { threadQuantum ->
                 NativeGameTitles.setThreadQuantumForTitle(titleId, threadQuantum)
-            }
-        )
+            })
+        SingleSelection(
+            label = tr("Custom driver"),
+            choice = selectedDriverSetting,
+            choices = driverSettingChoices,
+            choiceToString = ::customDriverSettingChoiceToString,
+            onChoiceChanged = { driverSetting ->
+                viewModel.setSelectedDriverSetting(driverSetting = driverSetting)
+            })
     }
 }
+
+private fun customDriverSettingChoiceToString(driverSettingChoice: DriverSettingChoice): String =
+    when (driverSettingChoice.mode) {
+        DriverSettingMode.GLOBAL -> tr("Global")
+        DriverSettingMode.SYSTEM -> tr("System driver")
+        else -> driverSettingChoice.customDriverData!!.name
+    }
 
 private fun cpuModeToString(cpuMode: Int): String = when (cpuMode) {
     NativeGameTitles.CPUMode.SINGLECOREINTERPRETER -> tr("Single-core interpreter")

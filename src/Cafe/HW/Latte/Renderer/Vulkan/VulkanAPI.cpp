@@ -100,7 +100,7 @@ bool InitializeGlobalVulkan()
 		FreeLibrary(hmodule);
 		return false;
 	}
-	
+
 	g_vulkan_available = true;
 	return true;
 }
@@ -113,7 +113,7 @@ bool InitializeInstanceVulkan(VkInstance instance)
 
 	#define VKFUNC_INSTANCE_INIT
 	#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
-	
+
 	return true;
 }
 
@@ -157,6 +157,7 @@ constexpr auto CUSTOM_DRIVER_LIB_NAME = "custom_vulkan.so";
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include "config/ActiveSettings.h"
+#include "Cafe/GameProfile/GameProfile.h"
 
 std::string get_custom_driver_lib_name(const fs::path& driver_path)
 {
@@ -180,17 +181,37 @@ std::string get_custom_driver_lib_name(const fs::path& driver_path)
 	return lib_name;
 }
 
+std::optional<std::string> get_custom_driver_path()
+{
+	const auto& driverSetting = g_current_game_profile->GetDriverSetting();
+	if (driverSetting.mode == DriverSettingMode::System)
+	{
+		return {};
+	}
+
+	std::error_code ec;
+	if (driverSetting.mode == DriverSettingMode::Custom &&
+		driverSetting.customPath.has_value() &&
+		fs::exists(driverSetting.customPath.value(), ec))
+	{
+		return driverSetting.customPath;
+	}
+
+	return GetConfig().custom_driver_path;
+}
+
 void* load_custom_driver()
 {
-	std::string driver_path = GetConfig().custom_driver_path;
-	if (driver_path.empty())
+	std::optional<std::string> driver_path = get_custom_driver_path();
+
+	if (!driver_path.has_value() || driver_path->empty())
 		return nullptr;
-	std::string driver_name = get_custom_driver_lib_name(driver_path);
+	std::string driver_name = get_custom_driver_lib_name(driver_path.value());
 	if (driver_name.empty())
 		return nullptr;
 
 	std::error_code ec;
-	fs::copy(fs::path(driver_path) / driver_name, ActiveSettings::GetInternalPath(CUSTOM_DRIVER_LIB_NAME), fs::copy_options::overwrite_existing, ec);
+	fs::copy(fs::path(driver_path.value()) / driver_name, ActiveSettings::GetInternalPath(CUSTOM_DRIVER_LIB_NAME), fs::copy_options::overwrite_existing, ec);
 
 	void* vulkan_so = adrenotools_open_libvulkan(
 		RTLD_NOW | RTLD_LOCAL,

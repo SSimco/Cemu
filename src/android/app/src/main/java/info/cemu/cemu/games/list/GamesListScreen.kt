@@ -2,7 +2,7 @@
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
 )
 
-package info.cemu.cemu.gamelist
+package info.cemu.cemu.games.list
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
 import info.cemu.cemu.common.ui.components.FilledSearchToolbar
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.games.GameIcon
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
 import kotlinx.coroutines.delay
@@ -64,7 +65,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun GamesListScreen(
-    gameListViewModel: GameListViewModel = viewModel(),
+    gamesListViewModel: GamesListViewModel = viewModel(),
     goToGameDetails: (Game) -> Unit,
     goToGameEditProfile: (Game) -> Unit,
     startGame: (Game) -> Unit,
@@ -76,19 +77,19 @@ fun GamesListScreen(
     val coroutineScope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val gameSearchQuery by gameListViewModel.filterText.collectAsStateWithLifecycle()
-    val games by gameListViewModel.games.collectAsStateWithLifecycle()
+    val gameSearchQuery by gamesListViewModel.filterText.collectAsStateWithLifecycle()
+    val games by gamesListViewModel.games.collectAsStateWithLifecycle()
 
     val state = rememberPullToRefreshState()
 
     LaunchedEffect(lifecycleState) {
-        if (lifecycleState == Lifecycle.State.RESUMED && gameListViewModel.gamePathsHaveChanged())
-            gameListViewModel.refreshGames()
+        if (lifecycleState == Lifecycle.State.RESUMED && gamesListViewModel.gamePathsHaveChanged())
+            gamesListViewModel.refreshGames()
     }
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
-            gameListViewModel.setFilterText("")
+            gamesListViewModel.setFilterText("")
         }
     }
 
@@ -99,7 +100,7 @@ fun GamesListScreen(
                 actions = toolbarActions,
                 hint = tr("Search games"),
                 query = gameSearchQuery,
-                onValueChange = gameListViewModel::setFilterText
+                onValueChange = gamesListViewModel::setFilterText
             )
         },
     ) { scaffoldPadding ->
@@ -113,7 +114,7 @@ fun GamesListScreen(
                     onRefresh = {
                         coroutineScope.launch {
                             refreshing = true
-                            gameListViewModel.refreshGames()
+                            gamesListViewModel.refreshGames()
                             delay(1500)
                             refreshing = false
                         }
@@ -122,10 +123,10 @@ fun GamesListScreen(
         ) {
             GameList(
                 games = games,
-                setFavorite = gameListViewModel::setGameTitleFavorite,
+                setFavorite = gamesListViewModel::setGameTitleFavorite,
                 deleteShaderCaches = {
                     coroutineScope.launch { snackbarHostState.showSnackbar(tr("Shader caches removed")) }
-                    gameListViewModel.removeShadersForGame(it)
+                    gamesListViewModel.removeShadersForGame(it)
                 },
                 startGame = startGame,
                 goToGameDetails = goToGameDetails,
