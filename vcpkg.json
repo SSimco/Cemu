@@ -29,11 +29,11 @@
     "boost-static-string",
     {
       "name": "boost-iostreams",
-      "platform" : "android"
+      "platform": "android"
     },
     {
       "name": "boost-stacktrace",
-      "platform" : "android"
+      "platform": "android"
     },
     "boost-random",
     "fmt",
@@ -80,6 +80,10 @@
     "libusb"
   ],
   "overrides": [
+    {
+      "name": "fmt",
+      "version": "12.1.0"
+    },
     {
       "name": "glslang",
       "version": "15.1.0"
