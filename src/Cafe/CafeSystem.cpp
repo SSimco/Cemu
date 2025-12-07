@@ -74,7 +74,7 @@
 #include <sys/sysctl.h>
 #endif
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 #include <android/api-level.h>
 #endif
 
@@ -454,6 +454,8 @@ namespace CafeSystem
 	bool sSystemRunning = false;
 	TitleId sForegroundTitleId = 0;
 
+	bool sTitlePaused = false;
+
 	GameInfo2 sGameInfo_ForegroundTitle;
 
 
@@ -528,7 +530,7 @@ namespace CafeSystem
 	{
 		std::string buffer;
 		const char* platform = NULL;
-		#if __ANDROID__
+		#if BOOST_PLAT_ANDROID
         buffer = fmt::format("Android (API level {})", android_get_device_api_level());;
 		platform = buffer.c_str();
 		#elif BOOST_OS_WINDOWS
@@ -897,6 +899,30 @@ namespace CafeSystem
 	bool IsTitleRunning()
 	{
 		return sSystemRunning;
+	}
+
+	void PauseTitle()
+	{
+		if (!sSystemRunning || sTitlePaused)
+		{
+			return;
+		}
+
+		sTitlePaused = true;
+
+		coreinit::SuspendActiveThreads();
+	}
+
+	void ResumeTitle()
+	{
+		if (!sSystemRunning || !sTitlePaused)
+		{
+			return;
+		}
+
+		sTitlePaused = false;
+
+		coreinit::ResumeActiveThreads();
 	}
 
 	TitleId GetForegroundTitleId()

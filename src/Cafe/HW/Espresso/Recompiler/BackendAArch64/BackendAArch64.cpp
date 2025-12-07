@@ -32,12 +32,12 @@ struct FPReg
 	{
 	}
 	const size_t index;
-	const VReg VReg;
-	const QReg QReg;
-	const DReg DReg;
-	const SReg SReg;
-	const HReg HReg;
-	const BReg BReg;
+	const ::VReg VReg;
+	const ::QReg QReg;
+	const ::DReg DReg;
+	const ::SReg SReg;
+	const ::HReg HReg;
+	const ::BReg BReg;
 };
 
 struct GPReg
@@ -47,8 +47,8 @@ struct GPReg
 	{
 	}
 	const size_t index;
-	const XReg XReg;
-	const WReg WReg;
+	const ::XReg XReg;
+	const ::WReg WReg;
 };
 
 static const XReg HCPU_REG{HCPU_REG_ID}, PPC_REC_INSTANCE_REG{PPC_RECOMPILER_INSTANCE_DATA_REG_ID}, MEM_BASE_REG{MEMORY_BASE_REG_ID};

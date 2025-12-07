@@ -11,7 +11,7 @@ bool InitializeGlobalVulkan();
 bool InitializeInstanceVulkan(VkInstance instance);
 bool InitializeDeviceVulkan(VkDevice device);
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 bool SupportsLoadingCustomDriver();
 #endif
 
@@ -135,7 +135,7 @@ VKFUNC_DEVICE(vkDestroyPipeline);
 VKFUNC_DEVICE(vkCmdBindPipeline);
 
 // swapchain
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 VKFUNC_INSTANCE(vkCreateAndroidSurfaceKHR);
 #elif BOOST_OS_LINUX || BOOST_OS_BSD
 VKFUNC_INSTANCE(vkCreateXlibSurfaceKHR);

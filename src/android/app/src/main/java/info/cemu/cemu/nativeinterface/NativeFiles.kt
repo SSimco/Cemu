@@ -20,7 +20,7 @@ fun Uri.toNativePath(): String {
     if (delimiterPos == -1) {
         return uriPath
     }
-    return uriPath.substring(0, delimiterPos) + uriPath.substring(delimiterPos).replace(
+    return uriPath.take(delimiterPos) + uriPath.substring(delimiterPos).replace(
         PATH_SEPARATOR_ENCODED, PATH_SEPARATOR_DECODED
     )
 }

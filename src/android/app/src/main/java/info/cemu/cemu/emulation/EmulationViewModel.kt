@@ -1,7 +1,5 @@
 package info.cemu.cemu.emulation
 
-import android.graphics.SurfaceTexture
-import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -11,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import info.cemu.cemu.common.result.failure
 import info.cemu.cemu.common.result.then
+import info.cemu.cemu.common.result.thenRun
 import info.cemu.cemu.common.settings.SettingsManager
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeEmulation
@@ -46,6 +45,24 @@ data class SurfacesConfig(
     }
 }
 
+class ConditionFlags(
+    var isMainConditionMet: Boolean = false,
+    var isPadConditionMet: Boolean = false
+) {
+    fun get(isMain: Boolean): Boolean {
+        return if (isMain) isMainConditionMet else isPadConditionMet
+    }
+
+    fun set(isMain: Boolean, value: Boolean) {
+        if (isMain) {
+            isMainConditionMet = value
+        } else {
+            isPadConditionMet = value
+        }
+    }
+}
+
+
 class EmulationViewModel(private val launchPath: String) : ViewModel() {
     private val _emulationError = MutableStateFlow<String?>(null)
     val emulationError = _emulationError.asStateFlow()
@@ -63,9 +80,11 @@ class EmulationViewModel(private val launchPath: String) : ViewModel() {
 
     val surfacesConfig = SurfacesConfig.createFromSettings()
 
+    val destroyedSurfaces = ConditionFlags()
+    var setSurfaces = ConditionFlags()
+
     private inner class CanvasSurfaceHolderCallback(val isMainCanvas: Boolean) :
         SurfaceHolder.Callback {
-        var surfaceSet: Boolean = false
 
         override fun surfaceCreated(surfaceHolder: SurfaceHolder) {}
 
@@ -77,49 +96,62 @@ class EmulationViewModel(private val launchPath: String) : ViewModel() {
         ) {
             try {
                 NativeEmulation.setSurfaceSize(width, height, isMainCanvas)
-                if (surfaceSet) {
+
+                if (setSurfaces.get(isMainCanvas)) {
                     return
                 }
-                NativeEmulation.setSurface(surfaceHolder.surface, isMainCanvas)
-                surfaceSet = true
 
-                if (!isMainCanvas) {
-                    NativeEmulation.initializeSurface(false)
+                NativeEmulation.setSurface(surfaceHolder.surface, isMainCanvas)
+                val mainSurfaceWasDestroyed = destroyedSurfaces.get(isMain = true)
+
+                if (mainSurfaceWasDestroyed && isMainCanvas) {
+                    NativeEmulation.resumeTitle()
                 }
 
+                setSurfaces.set(isMainCanvas, true)
+
+                val padSurfaceWasSet = setSurfaces.get(isMain = false)
+                if ((!isMainCanvas && !mainSurfaceWasDestroyed) || (isMainCanvas && padSurfaceWasSet)) {
+                    NativeEmulation.initializeSurface(isMainCanvas = false)
+                }
+
+                destroyedSurfaces.set(isMainCanvas, false)
             } catch (exception: NativeException) {
                 _emulationError.value = tr("Failed creating surface: {0}", exception.message!!)
             }
         }
 
         override fun surfaceDestroyed(surfaceHolder: SurfaceHolder) {
-            NativeEmulation.clearSurface(isMainCanvas)
-            surfaceSet = false
+            if (setSurfaces.get(isMain = false)) {
+                NativeEmulation.clearPadSurface()
+                setSurfaces.set(isMain = false, false)
+                destroyedSurfaces.set(isMain = false, true)
+            }
+
+            if (isMainCanvas) {
+                NativeEmulation.pauseTitle()
+
+                setSurfaces.set(isMain = true, false)
+                destroyedSurfaces.set(isMain = true, true)
+            }
         }
     }
 
     val mainHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(true)
     val padHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(false)
 
-    private suspend fun initializeSystems(): Result<Unit> {
+    private suspend fun initializeSystems() {
         return withContext(Dispatchers.IO) {
             NativeEmulation.initializeSystems()
-            return@withContext Result.success(Unit)
         }
     }
 
     private suspend fun initializeRenderer(): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val testSurfaceTexture = SurfaceTexture(0)
-                val testSurface = Surface(testSurfaceTexture)
+                NativeEmulation.initializeRenderer()
 
-                NativeEmulation.initializeRenderer(testSurface)
-
-                testSurface.release()
-                testSurfaceTexture.release()
-
-                NativeEmulation.initializeSurface(true)
+                NativeEmulation.initializeSurface(isMainCanvas = true)
 
                 return@withContext Result.success(Unit)
 
@@ -150,11 +182,9 @@ class EmulationViewModel(private val launchPath: String) : ViewModel() {
     }
 
 
-    private suspend fun launchTitle(): Result<Unit> {
+    private suspend fun launchTitle() {
         return withContext(Dispatchers.IO) {
             NativeEmulation.launchTitle()
-
-            return@withContext Result.success(Unit)
         }
     }
 
@@ -167,9 +197,10 @@ class EmulationViewModel(private val launchPath: String) : ViewModel() {
         }
 
         emulationInitializationJob = viewModelScope.launch {
-            prepareTitle().then { initializeSystems() }
+            prepareTitle()
+                .thenRun { initializeSystems() }
                 .then { initializeRenderer() }
-                .then { launchTitle() }
+                .thenRun { launchTitle() }
                 .onFailure { _emulationError.value = it.message }
 
             _isEmulationInitialized.value = true

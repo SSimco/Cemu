@@ -206,7 +206,7 @@ public:
 #if BOOST_OS_WINDOWS
 	static VkSurfaceKHR CreateWinSurface(VkInstance instance, HWND hwindow);
 #endif
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	static VkSurfaceKHR CreateAndroidSurface(VkInstance instance, ANativeWindow* window);
 #elif BOOST_OS_LINUX || BOOST_OS_BSD
 	static VkSurfaceKHR CreateXlibSurface(VkInstance instance, Display* dpy, Window window);
@@ -216,8 +216,11 @@ public:
 #endif // HAS_WAYLAND
 #endif
 
+#if BOOST_PLAT_ANDROID
+	static VkSurfaceKHR CreateFramebufferSurface(VkInstance instance, struct WindowSystem::WindowHandleInfo& windowInfo, ANativeWindow** nativeWindow = nullptr);
+#else
 	static VkSurfaceKHR CreateFramebufferSurface(VkInstance instance, struct WindowSystem::WindowHandleInfo& windowInfo);
-
+#endif
 	void AppendOverlayDebugInfo() override;
 
 	void ImguiInit();

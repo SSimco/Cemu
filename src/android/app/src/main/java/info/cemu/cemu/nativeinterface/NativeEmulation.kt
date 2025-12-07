@@ -9,20 +9,21 @@ object NativeEmulation {
     @JvmStatic
     external fun setDPI(dpi: Float)
 
-    @JvmStatic
-    external fun initializeSurface(isMainCanvas: Boolean)
 
     @JvmStatic
     external fun setSurface(surface: Surface?, isMainCanvas: Boolean)
 
     @JvmStatic
-    external fun clearSurface(isMainCanvas: Boolean)
+    external fun initializeSurface(isMainCanvas: Boolean)
+
+    @JvmStatic
+    external fun clearPadSurface()
 
     @JvmStatic
     external fun setSurfaceSize(width: Int, height: Int, isMainCanvas: Boolean)
 
     @JvmStatic
-    external fun initializeRenderer(surface: Surface?)
+    external fun initializeRenderer()
 
     object PrepareTitleResult {
         const val SUCCESSFUL: Int = 0
@@ -39,13 +40,16 @@ object NativeEmulation {
     external fun launchTitle()
 
     @JvmStatic
+    external fun pauseTitle()
+
+    @JvmStatic
+    external fun resumeTitle()
+
+    @JvmStatic
     external fun initializeSystems()
 
     @JvmStatic
     external fun setReplaceTVWithPadView(swapped: Boolean)
-
-    @JvmStatic
-    external fun recreateRenderSurface(isMainCanvas: Boolean)
 
     @JvmStatic
     external fun supportsLoadingCustomDriver(): Boolean

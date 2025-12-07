@@ -138,7 +138,7 @@ bool InitializeDeviceVulkan(VkDevice device)
 
 void* g_vulkan_so = nullptr;
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 bool SupportsLoadingCustomDriver()
 {
 #ifdef __aarch64__
@@ -232,13 +232,13 @@ void* load_custom_driver()
 }
 #endif // __aarch64__
 
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 
 void* dlopen_vulkan_loader()
 {
 #if BOOST_OS_LINUX || BOOST_OS_BSD
 	static void* vulkan_so = nullptr;
-#if __ANDROID__ && defined(__aarch64__)
+#if BOOST_PLAT_ANDROID && defined(__aarch64__)
 	vulkan_so = load_custom_driver();
 	if (vulkan_so)
 		return vulkan_so;
@@ -290,7 +290,7 @@ void CleanupGlobalVulkan()
 
 	g_vulkan_available = false;
 
-#if __ANDROID__ && defined(__aarch64__)
+#if BOOST_PLAT_ANDROID && defined(__aarch64__)
 	std::error_code ec;
 	fs::remove(ActiveSettings::GetInternalPath(CUSTOM_DRIVER_LIB_NAME), ec);
 #endif

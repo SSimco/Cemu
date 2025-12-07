@@ -17,20 +17,20 @@ import kotlin.system.exitProcess
 class EmulationActivity : AppCompatActivity() {
     private lateinit var sensorManager: SensorManager
 
-    override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
-        if (InputHandler.onMotionEvent(event!!)) {
+    override fun onGenericMotionEvent(event: MotionEvent): Boolean {
+        if (InputHandler.onMotionEvent(event)) {
             return true
         }
 
         return super.onGenericMotionEvent(event)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (InputHandler.onKeyEvent(event!!)) {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (InputHandler.onKeyEvent(event)) {
             return true
         }
 
-        return super.onKeyDown(keyCode, event)
+        return super.dispatchKeyEvent(event)
     }
 
     private fun getGamePath(): String {
@@ -71,7 +71,7 @@ class EmulationActivity : AppCompatActivity() {
                     EmulationScreen(
                         gamePath = gamePath,
                         setMotionSensorEnabled = sensorManager::setIsListening,
-                        onQuit = ::quit,
+                        onQuit = ::onQuit,
                     )
                 }
             }
@@ -94,7 +94,6 @@ class EmulationActivity : AppCompatActivity() {
         sensorManager.stopListening()
     }
 
-
     private fun setFullscreen() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
@@ -103,8 +102,8 @@ class EmulationActivity : AppCompatActivity() {
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    private fun quit() {
-        finishAffinity()
+    private fun onQuit() {
+        finish()
         exitProcess(0)
     }
 

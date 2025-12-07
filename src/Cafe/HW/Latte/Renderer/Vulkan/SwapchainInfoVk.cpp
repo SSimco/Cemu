@@ -15,7 +15,7 @@ SwapchainInfoVk::SwapchainInfoVk(bool mainWindow, Vector2i size) : mainWindow(ma
 	m_logicalDevice = renderer->GetLogicalDevice();
 	m_physicalDevice = renderer->GetPhysicalDevice();
 
-	m_surface = renderer->CreateFramebufferSurface(m_instance, windowHandleInfo);
+	m_surface = renderer->CreateFramebufferSurface(m_instance, windowHandleInfo, &m_currentWindow);
 }
 
 
@@ -26,8 +26,31 @@ SwapchainInfoVk::~SwapchainInfoVk()
 		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 }
 
+#if BOOST_PLAT_ANDROID
+void SwapchainInfoVk::RecreateSurface()
+{
+	if (!mainWindow)
+		return;
+
+	auto& windowHandleInfo = WindowSystem::GetWindowInfo().canvas_main;
+
+	windowHandleInfo.surface.wait(m_currentWindow);
+
+	auto newSurface = VulkanRenderer::CreateFramebufferSurface(m_instance, windowHandleInfo, &m_currentWindow);
+	vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+	m_surface = newSurface;
+
+	surfaceWasLost = false;
+}
+#endif
+
 void SwapchainInfoVk::Create()
 {
+#if BOOST_PLAT_ANDROID
+	if (surfaceWasLost)
+		RecreateSurface();
+#endif
+
 	const auto details = QuerySwapchainSupport(m_surface, m_physicalDevice);
 	m_surfaceFormat = ChooseSurfaceFormat(details.formats);
 	m_actualExtent = ChooseSwapExtent(details.capabilities);
@@ -231,6 +254,15 @@ bool SwapchainInfoVk::AcquireImage()
 	VkResult result = vkAcquireNextImageKHR(m_logicalDevice, m_swapchain, 1'000'000'000, acquireSemaphore, m_imageAvailableFence, &swapchainImageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		m_shouldRecreate = true;
+
+#if BOOST_PLAT_ANDROID
+	if (result == VK_ERROR_SURFACE_LOST_KHR)
+	{
+		surfaceWasLost = true;
+		m_shouldRecreate = true;
+	}
+#endif
+
 	if (result == VK_TIMEOUT)
 	{
 		swapchainImageIndex = -1;
@@ -240,10 +272,17 @@ bool SwapchainInfoVk::AcquireImage()
 	if (result < 0)
 	{
 		swapchainImageIndex = -1;
-		if (result != VK_ERROR_OUT_OF_DATE_KHR)
-			throw std::runtime_error(fmt::format("Failed to acquire next image: {}", result));
-		return false;
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+			return false;
+
+#if BOOST_PLAT_ANDROID
+		if (result == VK_ERROR_SURFACE_LOST_KHR)
+			return false;
+#endif
+
+		throw std::runtime_error(fmt::format("Failed to acquire next image: {}", result));
 	}
+
 	m_currentSemaphore = acquireSemaphore;
 	m_awaitableFence = m_imageAvailableFence;
 	m_acquireIndex = (m_acquireIndex + 1) % m_swapchainImages.size();
@@ -401,7 +440,7 @@ VkSwapchainCreateInfoKHR SwapchainInfoVk::CreateSwapchainCreateInfo(VkSurfaceKHR
 	}
 	else
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 #else
 	createInfo.preTransform = swapchainSupport.capabilities.currentTransform;

@@ -464,7 +464,9 @@ private fun CreateAccountDialog(
         },
         confirmButton = {
             TextButton(
-                enabled = createError == null, onClick = { onCreateAccount(createAccount) }) {
+                enabled = createError == null,
+                onClick = { onCreateAccount(createAccount) },
+            ) {
                 Text(tr("OK"))
             }
         },

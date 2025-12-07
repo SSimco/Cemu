@@ -102,6 +102,73 @@ namespace NativeEmulation
 		ERROR_NO_TITLE_TIK = 3,
 		ERROR_UNKNOWN = 4,
 	};
+
+	std::shared_ptr<ANativeWindow> createANativeWindowFromSurface(JNIEnv* env, jobject surface)
+	{
+		ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+		return {window, &ANativeWindow_release};
+	}
+
+	class TestSurface
+	{
+	  public:
+		TestSurface()
+		{
+			JNIUtils::ScopedJNIENV env;
+
+			jclass surfaceTextureClass = env->FindClass("android/graphics/SurfaceTexture");
+			jmethodID ctorSurfaceTexture = env->GetMethodID(surfaceTextureClass, "<init>", "(I)V");
+			jobject localSurfaceTexture = env->NewObject(surfaceTextureClass, ctorSurfaceTexture, 0);
+
+			jclass surfaceClass = env->FindClass("android/view/Surface");
+			jmethodID ctorSurface = env->GetMethodID(surfaceClass, "<init>", "(Landroid/graphics/SurfaceTexture;)V");
+			jobject localSurface = env->NewObject(surfaceClass, ctorSurface, localSurfaceTexture);
+
+			m_surfaceTexture = env->NewGlobalRef(localSurfaceTexture);
+			m_surface = env->NewGlobalRef(localSurface);
+
+			m_window = ANativeWindow_fromSurface(*env, m_surface);
+			ANativeWindow_acquire(m_window);
+
+			env->DeleteLocalRef(localSurfaceTexture);
+			env->DeleteLocalRef(localSurface);
+			env->DeleteLocalRef(surfaceTextureClass);
+			env->DeleteLocalRef(surfaceClass);
+		}
+
+		~TestSurface()
+		{
+			JNIUtils::ScopedJNIENV env;
+
+			ANativeWindow_release(m_window);
+
+			jclass surfaceClass = env->FindClass("android/view/Surface");
+			jmethodID releaseSurface = env->GetMethodID(surfaceClass, "release", "()V");
+			env->CallVoidMethod(m_surface, releaseSurface);
+			env->DeleteGlobalRef(m_surface);
+			m_surface = nullptr;
+			env->DeleteLocalRef(surfaceClass);
+
+			jclass surfaceTextureClass = env->FindClass("android/graphics/SurfaceTexture");
+			jmethodID releaseSurfaceTexture = env->GetMethodID(surfaceTextureClass, "release", "()V");
+			env->CallVoidMethod(m_surfaceTexture, releaseSurfaceTexture);
+			env->DeleteGlobalRef(m_surfaceTexture);
+			m_surfaceTexture = nullptr;
+			env->DeleteLocalRef(surfaceTextureClass);
+		}
+
+		ANativeWindow* getWindow()
+		{
+			return m_window;
+		}
+
+	  private:
+		ANativeWindow* m_window;
+		jobject m_surface = nullptr;
+		jobject m_surfaceTexture = nullptr;
+	};
+
+	std::unique_ptr<TestSurface> g_testSurface;
 } // namespace NativeEmulation
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -124,17 +191,15 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeEmulation([[maybe_
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject j_testSurface)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
 	InitializeGlobalVulkan();
-	using ANativewindow_Ptr = std::unique_ptr<ANativeWindow, decltype(&ANativeWindow_release)>;
 	JNIUtils::handleNativeException(env, [&]() {
-		cemu_assert_debug(j_testSurface != nullptr);
-		ANativewindow_Ptr testSurface(ANativeWindow_fromSurface(env, j_testSurface), &ANativeWindow_release);
-		WindowSystem::GetWindowInfo().window_main.surface = testSurface.get();
-		WindowSystem::GetWindowInfo().window_main.backend = WindowSystem::WindowHandleInfo::Backend::Android;
+		NativeEmulation::g_testSurface = std::make_unique<NativeEmulation::TestSurface>();
+
+		WindowSystem::GetWindowInfo().window_main.surface = NativeEmulation::g_testSurface->getWindow();
+
 		g_renderer = std::make_unique<VulkanRenderer>();
-		WindowSystem::GetWindowInfo().window_main.surface = nullptr;
 	});
 }
 
@@ -146,20 +211,12 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setDPI([[maybe_unused]] JNIE
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_clearSurface([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean is_main_canvas)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_clearPadSurface([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	if (!is_main_canvas)
-	{
-		auto renderer = static_cast<VulkanRenderer*>(g_renderer.get());
-		if (renderer)
-			renderer->StopUsingPadAndWait();
-	}
+	VulkanRenderer::GetInstance()->StopUsingPadAndWait();
+	WindowSystem::GetWindowInfo().pad_open = false;
 }
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_recreateRenderSurface([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean is_main_canvas)
-{
-	// TODO
-}
+
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_supportsLoadingCustomDriver([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
@@ -171,15 +228,14 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject surface, jboolean is_main_canvas)
 {
 	JNIUtils::handleNativeException(env, [&]() {
-		cemu_assert_debug(surface != nullptr);
 		auto& windowHandleInfo = is_main_canvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
-		windowHandleInfo.backend = WindowSystem::WindowHandleInfo::Backend::Android;
-		if (windowHandleInfo.surface)
-		{
-			ANativeWindow_release(static_cast<ANativeWindow*>(windowHandleInfo.surface));
-			windowHandleInfo.surface = nullptr;
-		}
-		windowHandleInfo.surface = ANativeWindow_fromSurface(env, surface);
+		auto oldWindow = windowHandleInfo.surface.load();
+		if (oldWindow != nullptr)
+			ANativeWindow_release(static_cast<ANativeWindow*>(oldWindow));
+		auto newSurface = ANativeWindow_fromSurface(env, surface);
+		ANativeWindow_acquire(newSurface);
+		windowHandleInfo.surface = newSurface;
+		windowHandleInfo.surface.notify_all();
 	});
 }
 
@@ -189,9 +245,14 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* en
 	JNIUtils::handleNativeException(env, [&]() {
 		int width, height;
 		if (is_main_canvas)
+		{
 			WindowSystem::GetWindowPhysSize(width, height);
+		}
 		else
+		{
 			WindowSystem::GetPadWindowPhysSize(width, height);
+			WindowSystem::GetWindowInfo().pad_open = true;
+		}
 
 		VulkanRenderer::GetInstance()->InitializeSurface({width, height}, is_main_canvas);
 	});
@@ -279,4 +340,16 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_launchTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
 	CafeSystem::LaunchForegroundTitle();
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_pauseTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	CafeSystem::PauseTitle();
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_resumeTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	CafeSystem::ResumeTitle();
 }

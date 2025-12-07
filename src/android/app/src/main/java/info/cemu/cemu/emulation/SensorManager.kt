@@ -75,8 +75,7 @@ class SensorManager(context: Context) : SensorEventListener {
         NativeInput.onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelZ, -accelY)
     }
 
-    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
-    }
+    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
 
     private fun getSensorEventValues(values: FloatArray): Triple<Float, Float, Float> {
         val x: Float
