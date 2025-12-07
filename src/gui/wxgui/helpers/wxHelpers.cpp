@@ -75,9 +75,8 @@ uint32 fix_raw_keycode(uint32 keycode, uint32 raw_flags)
 	return keycode;
 }
 
-WindowSystem::WindowHandleInfo initHandleContextFromWxWidgetsWindow(wxWindow* wxw)
+void initHandleContextFromWxWidgetsWindow(wxWindow* wxw, WindowSystem::WindowHandleInfo& handleInfo)
 {
-	WindowSystem::WindowHandleInfo handleInfo;
 #if BOOST_OS_WINDOWS
 	handleInfo.backend = WindowSystem::WindowHandleInfo::Backend::Windows;
 	handleInfo.surface = reinterpret_cast<void*>(wxw->GetHWND());
@@ -112,5 +111,4 @@ WindowSystem::WindowHandleInfo initHandleContextFromWxWidgetsWindow(wxWindow* wx
 	handleInfo.backend = WindowSystem::WindowHandleInfo::Backend::Cocoa;
 	handleInfo.surface = reinterpret_cast<void*>(wxw->GetHandle());
 #endif
-	return handleInfo;
 }

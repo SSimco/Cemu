@@ -301,7 +301,7 @@ MainWindow::MainWindow()
 	wxApp::s_macAboutMenuItemId = MAINFRAME_MENU_ID_HELP_ABOUT;
 	wxApp::s_macPreferencesMenuItemId = MAINFRAME_MENU_ID_OPTIONS_MAC_SETTINGS;
 #endif
-	g_window_info.window_main = initHandleContextFromWxWidgetsWindow(this);
+	initHandleContextFromWxWidgetsWindow(this, g_window_info.window_main);
 	g_mainFrame = this;
 	CafeSystem::SetImplementation(this);
 

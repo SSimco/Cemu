@@ -26,7 +26,7 @@ extern WindowSystem::WindowInfo g_window_info;
 PadViewFrame::PadViewFrame(wxFrame* parent)
 	: wxFrame(nullptr, wxID_ANY, _("GamePad View"), wxDefaultPosition, wxDefaultSize, wxMINIMIZE_BOX | wxMAXIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxCLOSE_BOX | wxWANTS_CHARS)
 {
-	g_window_info.window_pad = initHandleContextFromWxWidgetsWindow(this);
+	initHandleContextFromWxWidgetsWindow(this, g_window_info.window_pad);
 
 	SetIcon(wxICON(M_WND_ICON128));
 	wxWindow::EnableTouchEvents(wxTOUCH_PAN_GESTURES);

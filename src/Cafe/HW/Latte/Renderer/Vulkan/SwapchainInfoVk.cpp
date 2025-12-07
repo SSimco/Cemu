@@ -15,7 +15,11 @@ SwapchainInfoVk::SwapchainInfoVk(bool mainWindow, Vector2i size) : mainWindow(ma
 	m_logicalDevice = renderer->GetLogicalDevice();
 	m_physicalDevice = renderer->GetPhysicalDevice();
 
+#if BOOST_PLAT_ANDROID
 	m_surface = renderer->CreateFramebufferSurface(m_instance, windowHandleInfo, &m_currentWindow);
+#else
+	m_surface = renderer->CreateFramebufferSurface(m_instance, windowHandleInfo);
+#endif
 }
 
 

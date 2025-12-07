@@ -111,4 +111,4 @@ void update_slider_text(wxCommandEvent& event, const wxFormatString& format = "%
 
 uint32 fix_raw_keycode(uint32 keycode, uint32 raw_flags);
 
-WindowSystem::WindowHandleInfo initHandleContextFromWxWidgetsWindow(wxWindow* wxw);
+void initHandleContextFromWxWidgetsWindow(wxWindow* wxw, WindowSystem::WindowHandleInfo& handleInfo);
