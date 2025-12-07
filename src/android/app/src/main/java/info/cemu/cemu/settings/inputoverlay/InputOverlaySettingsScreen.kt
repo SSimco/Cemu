@@ -1,6 +1,5 @@
 package info.cemu.cemu.settings.inputoverlay
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.common.inputoverlay.OverlayButton

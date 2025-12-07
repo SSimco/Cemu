@@ -2,8 +2,8 @@ package info.cemu.cemu.common.settings
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import kotlin.properties.ReadWriteProperty
 import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class PreferenceDelegate<T>(

@@ -188,7 +188,7 @@ enum class CrashDump
 ENABLE_ENUM_ITERATORS(CrashDump, CrashDump::Disabled, CrashDump::Enabled);
 #endif
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 enum class DriverSettingMode
 {
 	Global,
@@ -373,7 +373,7 @@ struct CemuConfig
 #undef DISABLE_SCREENSAVER_DEFAULT
 	ConfigValue<bool> play_boot_sound{false};
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	ConfigValue<std::string> custom_driver_path{};
 #endif
 

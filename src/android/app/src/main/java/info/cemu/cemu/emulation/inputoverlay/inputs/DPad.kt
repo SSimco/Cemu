@@ -7,9 +7,9 @@ import android.graphics.PointF
 import android.graphics.Rect
 import android.view.MotionEvent
 import androidx.core.graphics.PathParser
+import info.cemu.cemu.common.inputoverlay.OverlayDpad
 import info.cemu.cemu.emulation.inputoverlay.Colors
 import info.cemu.cemu.emulation.inputoverlay.LineBounds
-import info.cemu.cemu.common.inputoverlay.OverlayDpad
 import info.cemu.cemu.emulation.inputoverlay.drawLine
 import info.cemu.cemu.emulation.inputoverlay.fillPathWithStroke
 import info.cemu.cemu.emulation.inputoverlay.fitInsideRectangle

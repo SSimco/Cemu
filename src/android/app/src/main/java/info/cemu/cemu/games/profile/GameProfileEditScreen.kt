@@ -16,7 +16,6 @@ import info.cemu.cemu.common.ui.components.Toggle
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.DriverSettingMode
-import info.cemu.cemu.settings.input.ControllersViewModel
 
 @Composable
 fun GameProfileEditScreen(

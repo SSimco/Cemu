@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
-import com.mikepenz.aboutlibraries.ui.compose.android.rememberLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LicenseDialog
 import com.mikepenz.aboutlibraries.ui.compose.m3.LicenseDialogBody
 import com.mikepenz.aboutlibraries.ui.compose.m3.libraryColors

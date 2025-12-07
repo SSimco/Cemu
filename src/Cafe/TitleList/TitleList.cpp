@@ -365,7 +365,7 @@ void CafeTitleList::ScanGamePath(const fs::path& path)
 		else if (boost::iequals(dirName, "meta"))
 			hasMetaFolder = true;
 	};
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	if (FilesystemAndroid::IsContentUri(path))
 	{
 		for (auto&& file : FilesystemAndroid::ListFiles(path))
@@ -383,7 +383,7 @@ void CafeTitleList::ScanGamePath(const fs::path& path)
 		}
 	}
 	else
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 	{
 		std::error_code ec;
 		for (auto& it : fs::directory_iterator(path, ec))

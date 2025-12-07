@@ -2,8 +2,8 @@ package info.cemu.cemu.graphicpacks
 
 import android.content.Context
 import info.cemu.cemu.BuildConfig
-import info.cemu.cemu.nativeinterface.NativeGraphicPacks
 import info.cemu.cemu.common.io.unzip
+import info.cemu.cemu.nativeinterface.NativeGraphicPacks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient

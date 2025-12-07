@@ -2,6 +2,7 @@ package info.cemu.cemu
 
 import android.app.Application
 import info.cemu.cemu.common.android.context.internalFolder
+import info.cemu.cemu.common.settings.SettingsManager
 import info.cemu.cemu.common.ui.localization.setLanguage
 import info.cemu.cemu.common.ui.localization.setTranslations
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.initializeActiveSettings
@@ -9,11 +10,10 @@ import info.cemu.cemu.nativeinterface.NativeActiveSettings.setInternalDir
 import info.cemu.cemu.nativeinterface.NativeActiveSettings.setNativeLibDir
 import info.cemu.cemu.nativeinterface.NativeEmulation.initializeEmulation
 import info.cemu.cemu.nativeinterface.NativeEmulation.setDPI
+import info.cemu.cemu.nativeinterface.NativeFiles
 import info.cemu.cemu.nativeinterface.NativeGraphicPacks.refreshGraphicPacks
 import info.cemu.cemu.nativeinterface.NativeLogging.crashLog
 import info.cemu.cemu.nativeinterface.NativeSwkbd.initializeSwkbd
-import info.cemu.cemu.common.settings.SettingsManager
-import info.cemu.cemu.nativeinterface.NativeFiles
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter

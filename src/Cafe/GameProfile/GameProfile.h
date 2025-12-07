@@ -44,7 +44,7 @@ public:
 
 	[[nodiscard]] const std::array< std::optional<std::string>, 8>& GetControllerProfile() const { return m_controllerProfile; }
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
   public:
 	struct DriverSetting
 	{

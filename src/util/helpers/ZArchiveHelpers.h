@@ -2,16 +2,16 @@
 
 #include <zarchive/zarchivereader.h>
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 #include "Common/android/FilesystemAndroid.h"
 #include "Common/android/FdStream.h"
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 
 namespace ZArchiveHelpers
 {
 	inline ZArchiveReader* OpenReader(const fs::path& path)
 	{
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 		if (FilesystemAndroid::IsContentUri(path))
 		{
 			int fd = FilesystemAndroid::OpenContentUri(path);
@@ -21,7 +21,7 @@ namespace ZArchiveHelpers
 
 			return ZArchiveReader::OpenFromStream(std::make_unique<FdStream>(fd));
 		}
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 
 		return ZArchiveReader::OpenFromFile(path);
 	}

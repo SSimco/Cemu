@@ -1,13 +1,11 @@
 package info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing
 
 import android.graphics.Canvas
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
 import info.cemu.cemu.emulation.inputoverlay.Colors
 import info.cemu.cemu.emulation.inputoverlay.fitInsideRectangle
-import kotlin.math.min
 
 abstract class PathInnerDrawing : ButtonInnerDrawing {
     private var activeColor = 0

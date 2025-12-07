@@ -241,7 +241,7 @@ void LoadOpenGLImports()
 #include "Common/GLInclude/glFunctions.h"
 #undef GLFUNC
 }
-#elif __ANDROID__
+#elif BOOST_PLAT_ANDROID
 void LoadOpenGLImports()
 {
 	cemu_assert_unimplemented();

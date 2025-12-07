@@ -46,7 +46,7 @@ InputManager::InputManager()
 #if HAS_WIIMOTE
 	create_provider<WiimoteControllerProvider>();
 #endif
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	create_provider<AndroidControllerProvider>();
 #endif
 

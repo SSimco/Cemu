@@ -57,7 +57,6 @@ import info.cemu.cemu.common.ui.components.ScreenContentLazy
 import info.cemu.cemu.common.ui.components.SearchToolbarInput
 import info.cemu.cemu.common.ui.components.SingleSelection
 import info.cemu.cemu.common.ui.localization.tr
-import info.cemu.cemu.common.ui.localization.trNoop
 import kotlinx.coroutines.launch
 
 @Composable
@@ -273,7 +272,7 @@ private fun GraphicPacksRootSectionActions(
                 installedOnlyValueChange(!installedOnlyChecked)
             },
             text = {
-                Text(text = tr("Installed only"))
+                Text(tr("Installed only"))
             },
             trailingIcon = {
                 Checkbox(

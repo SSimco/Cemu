@@ -275,7 +275,7 @@ XMLConfigParser CemuConfig::Load(XMLConfigParser& parser)
 	emulated_usb_devices.emulate_dimensions_toypad = usbdevices.get("EmulateDimensionsToypad", emulated_usb_devices.emulate_dimensions_toypad);
 
 	
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	custom_driver_path = parser.get("custom_driver_path", "");
 #endif
 
@@ -431,7 +431,7 @@ XMLConfigParser CemuConfig::Save(XMLConfigParser& parser)
 	usbdevices.set("EmulateInfinityBase", emulated_usb_devices.emulate_infinity_base.GetValue());
 	usbdevices.set("EmulateDimensionsToypad", emulated_usb_devices.emulate_dimensions_toypad.GetValue());
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	config.set("custom_driver_path", custom_driver_path.GetValue());
 #endif
 

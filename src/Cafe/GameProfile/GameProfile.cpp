@@ -270,7 +270,7 @@ bool GameProfile::Load(uint64_t title_id)
 			}
 
 		}
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 		else if (boost::iequals(iniParser.GetCurrentSectionName(), "AndroidDriver"))
 		{
 			gameProfile_loadEnumOption(iniParser, "mode", m_driverSetting.mode);
@@ -332,7 +332,7 @@ void GameProfile::Save(uint64_t title_id)
 
 	fs->writeLine("");
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	fs->writeLine("[AndroidDriver]");
 	fs->writeLine(fmt::format("{} = {}", "mode", m_driverSetting.mode).c_str());
 	if (m_driverSetting.mode == DriverSettingMode::Custom && m_driverSetting.customPath.has_value())

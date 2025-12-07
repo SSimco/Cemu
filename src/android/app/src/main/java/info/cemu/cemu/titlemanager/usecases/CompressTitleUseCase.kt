@@ -3,9 +3,15 @@ package info.cemu.cemu.titlemanager.usecases
 import android.content.Context
 import android.net.Uri
 import info.cemu.cemu.nativeinterface.NativeGameTitles
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 private typealias NativeCompressResult = NativeGameTitles.CompressResult
 

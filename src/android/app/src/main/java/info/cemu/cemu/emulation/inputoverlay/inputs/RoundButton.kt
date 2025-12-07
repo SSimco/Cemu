@@ -2,8 +2,8 @@ package info.cemu.cemu.emulation.inputoverlay.inputs
 
 import android.graphics.Canvas
 import android.graphics.Rect
-import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.ButtonInnerDrawing
 import info.cemu.cemu.emulation.inputoverlay.fillCircleWithStroke
+import info.cemu.cemu.emulation.inputoverlay.inputs.innerdrawing.ButtonInnerDrawing
 import kotlin.math.min
 
 class RoundButton(

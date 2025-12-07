@@ -6,7 +6,7 @@
 #include "wglext.h"
 #endif
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 #define EGL_EGL_PROTOTYPES 0
 #include "egl.h"
 #undef EGL_EGL_PROTOTYPES

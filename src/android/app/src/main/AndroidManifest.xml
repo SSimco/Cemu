@@ -36,6 +36,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
+            android:process=":EmulationProcess"
             android:screenOrientation="userLandscape"
             tools:ignore="DiscouragedApi">
             <intent-filter>

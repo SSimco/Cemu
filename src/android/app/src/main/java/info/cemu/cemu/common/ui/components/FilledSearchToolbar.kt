@@ -53,7 +53,10 @@ fun FilledSearchToolbar(
 ) {
     var searchBarActive by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = searchBarActive) { searchBarActive = false }
+    BackHandler(enabled = searchBarActive) {
+        onValueChange("")
+        searchBarActive = false
+    }
 
     TopAppBar(
         actions = actions,
@@ -152,7 +155,7 @@ fun SearchToolbarInput(
                     .size(32.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_date_range),
+                    painter = painterResource(R.drawable.ic_close_small),
                     contentDescription = null
                 )
             }

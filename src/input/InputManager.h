@@ -16,7 +16,7 @@
 #include "input/api/DSU/DSUControllerProvider.h"
 #include "input/api/GameCube/GameCubeControllerProvider.h"
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 #include "input/api/Android/AndroidControllerProvider.h"
 #endif
 

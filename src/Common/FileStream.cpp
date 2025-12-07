@@ -2,10 +2,10 @@
 
 #if BOOST_OS_UNIX
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 #include "Common/android/FileStream_saf.h"
 #include "Common/android/FilesystemAndroid.h"
-#endif // __ANDROID__
+#endif
 
 #include "Common/unix/FileStream_unix.h"
 
@@ -21,7 +21,7 @@ FileStream* FileStream::openFile(const wchar_t* path, bool allowWrite)
 
 FileStream* FileStream::openFile2(const fs::path& path, bool allowWrite)
 {
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	if (FilesystemAndroid::IsContentUri(path))
 	{
 		if (allowWrite || FilesystemAndroid::IsDirectory(path))
@@ -34,7 +34,7 @@ FileStream* FileStream::openFile2(const fs::path& path, bool allowWrite)
 		delete fs;
 		return nullptr;
 	}
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 
 	FileStreamUnix* fs = new FileStreamUnix(path, true, allowWrite);
 	if (fs->m_isValid)

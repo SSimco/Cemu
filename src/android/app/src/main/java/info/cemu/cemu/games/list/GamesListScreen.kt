@@ -158,7 +158,7 @@ private fun GameList(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxSize(),
-        columns = GridCells.Adaptive(620.dp)
+        columns = GridCells.Adaptive(620.dp),
     ) {
         items(items = games, key = { it.path }) { game ->
             var showDeleteShaderConfirmationDialog by remember { mutableStateOf(false) }
@@ -181,7 +181,7 @@ private fun GameList(
                 },
             )
 
-            if (showDeleteShaderConfirmationDialog)
+            if (showDeleteShaderConfirmationDialog) {
                 ShaderCachesConfirmationDialog(
                     gameName = game.name ?: "",
                     onDismissRequest = { showDeleteShaderConfirmationDialog = false },
@@ -190,6 +190,7 @@ private fun GameList(
                         showDeleteShaderConfirmationDialog = false
                     },
                 )
+            }
         }
     }
 }
@@ -201,27 +202,11 @@ private fun ShaderCachesConfirmationDialog(
     onConfirm: () -> Unit,
 ) {
     AlertDialog(
-        title = {
-            Text(tr("Remove shader caches"))
-        },
-        text = {
-            Text(tr("Remove the shader caches for {0}?", gameName))
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismissRequest
-            ) {
-                Text(tr("No"))
-            }
-        },
+        title = { Text(tr("Remove shader caches")) },
+        text = { Text(tr("Remove the shader caches for {0}?", gameName)) },
+        dismissButton = { TextButton(onClick = onDismissRequest) { Text(tr("No")) } },
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm
-            ) {
-                Text(tr("Yes"))
-            }
-        }
+        confirmButton = { TextButton(onClick = onConfirm) { Text(tr("Yes")) } },
     )
 }
 
@@ -318,29 +303,22 @@ private fun GameContextMenu(
             trailingIcon = trailingIcon,
         )
     }
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest
-    ) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         val gameTitleHasCaches = rememberSaveable {
             NativeGameTitles.titleHasShaderCacheFiles(game.titleId)
         }
         GameContextMenuItem(
             onClick = { onIsFavoriteChanged(!game.isFavorite) },
             text = tr("Favorite"),
-            trailingIcon = {
-                Checkbox(checked = game.isFavorite, onCheckedChange = null)
-            }
+            trailingIcon = { Checkbox(checked = game.isFavorite, onCheckedChange = null) },
         )
         GameContextMenuItem(
             onClick = onEditGameProfile,
-            text = tr("Edit game profile")
+            text = tr("Edit game profile"),
         )
         GameContextMenuItem(
             enabled = gameTitleHasCaches,
-            onClick = {
-                onRemoveShaderCaches()
-            },
+            onClick = onRemoveShaderCaches,
             text = tr("Remove shader caches")
         )
         GameContextMenuItem(
@@ -349,7 +327,7 @@ private fun GameContextMenu(
         )
         GameContextMenuItem(
             onClick = onCreateShortcut,
-            text = tr("Create shortcut")
+            text = tr("Create shortcut"),
         )
     }
 }

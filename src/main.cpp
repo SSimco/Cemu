@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-#elif __ANDROID__
+#elif BOOST_PLAT_ANDROID
 #else
 
 int main(int argc, char *argv[])

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import info.cemu.cemu.common.inputoverlay.OverlayInput
 import info.cemu.cemu.common.ui.localization.DEFAULT_LANGUAGE
-import kotlin.getValue
 
 enum class GamePadPosition {
     ABOVE,

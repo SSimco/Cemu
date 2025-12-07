@@ -269,7 +269,7 @@ fs::path ActiveSettings::GetDefaultMLCPath()
 	return GetUserDataPath("mlc01");
 }
 
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 void ActiveSettings::SetNativeLibPath(const fs::path& nativeLibPath)
 {
 	s_native_lib_path = nativeLibPath;

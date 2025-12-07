@@ -42,7 +42,7 @@ std::string getCpuBrandNameLinux()
 		return default_name;
 	return model;
 }
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 
 #include <sys/system_properties.h>
 
@@ -85,7 +85,7 @@ std::string getCpuBrandNameAndroid()
 		return getCpuBrandNameLinux();
     return tmp;
 }
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 #endif // BOOST_OS_LINUX
 #endif // defined(__aarch64__)
 
@@ -93,11 +93,11 @@ CPUFeaturesImpl::CPUFeaturesImpl()
 {
 #if defined(__aarch64__)
 #if BOOST_OS_LINUX
-#if __ANDROID__
+#if BOOST_PLAT_ANDROID
 	m_cpuBrandName = getCpuBrandNameAndroid();
 #else
 	m_cpuBrandName = getCpuBrandNameLinux();
-#endif // __ANDROID__
+#endif // BOOST_PLAT_ANDROID
 #endif // BOOST_OS_LINUX
 #endif // defined(__aarch64__)
 
