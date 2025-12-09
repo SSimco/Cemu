@@ -1,6 +1,8 @@
 package info.cemu.cemu.settings.inputoverlay
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.common.inputoverlay.OverlayButton
 import info.cemu.cemu.common.inputoverlay.OverlayDpad
@@ -18,17 +20,17 @@ private val ControllerIndexChoices = (0..<NativeInput.MAX_CONTROLLERS).toList()
 
 @Composable
 fun InputOverlaySettingsScreen(
-    inputOverlaySettingsViewModel: InputOverlaySettingsViewModel = viewModel(),
+    viewModel: InputOverlaySettingsViewModel = viewModel(),
     navigateBack: () -> Unit,
 ) {
-    val overlaySettings = inputOverlaySettingsViewModel.overlaySettings
+    val overlaySettings by viewModel.overlaySettings.collectAsState()
 
     @Composable
     fun VisibleInputToggle(inputName: String, input: OverlayInput) {
         Toggle(
             label = inputName,
-            initialCheckedState = { overlaySettings.inputVisibilityMap[input] },
-            onCheckedChanged = { overlaySettings.inputVisibilityMap[input] = it }
+            initialCheckedState = { overlaySettings.inputVisibilityMap[input] ?: true },
+            onCheckedChanged = { viewModel.setInputVisibility(input, it) }
         )
     }
 
@@ -41,14 +43,14 @@ fun InputOverlaySettingsScreen(
             label = tr("Input overlay"),
             description = tr("Enable input overlay"),
             initialCheckedState = { overlaySettings.isOverlayEnabled },
-            onCheckedChanged = { overlaySettings.isOverlayEnabled = it }
+            onCheckedChanged = { viewModel.setOverlayEnabled(it) }
         )
 
         Toggle(
             label = tr("Vibrate"),
             description = tr("Enable vibrate on touch"),
             initialCheckedState = { overlaySettings.isVibrateOnTouchEnabled },
-            onCheckedChanged = { overlaySettings.isVibrateOnTouchEnabled = it }
+            onCheckedChanged = { viewModel.setVibrateOnTouch(it) }
         )
 
         Slider(
@@ -57,7 +59,7 @@ fun InputOverlaySettingsScreen(
             valueFrom = 0,
             steps = 16,
             valueTo = 255,
-            onValueChange = { overlaySettings.alpha = it },
+            onValueChange = { viewModel.setAlpha(it) },
             labelFormatter = { it.toString() },
         )
 
@@ -66,7 +68,7 @@ fun InputOverlaySettingsScreen(
             initialChoice = { overlaySettings.controllerIndex },
             choices = ControllerIndexChoices,
             choiceToString = { tr("Controller {0}", it + 1) },
-            onChoiceChanged = { overlaySettings.controllerIndex = it }
+            onChoiceChanged = { viewModel.setControllerIndex(it) },
         )
 
         Header(tr("Visible Inputs"))

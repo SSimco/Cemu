@@ -1,6 +1,8 @@
 package info.cemu.cemu.settings.general
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,9 +17,12 @@ import info.cemu.cemu.nativeinterface.NativeSettings
 fun GeneralSettingsScreen(
     navigateBack: () -> Unit,
     goToGamePathsSettings: () -> Unit,
-    generalSettingsViewModel: GeneralSettingsViewModel = viewModel(),
+    viewModel: GeneralSettingsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
+
+    val emulationSettings by viewModel.emulationSettings.collectAsState()
+    val guiSettings by viewModel.guiSettings.collectAsState()
 
     ScreenContent(
         appBarText = tr("General settings"),
@@ -30,10 +35,10 @@ fun GeneralSettingsScreen(
         )
         SingleSelection(
             label = tr("Language"),
-            initialChoice = { generalSettingsViewModel.guiSettings.language },
-            onChoiceChanged = { generalSettingsViewModel.setLanguage(language = it, context) },
-            choiceToString = { generalSettingsViewModel.languageToDisplayNameMap[it] ?: it },
-            choices = generalSettingsViewModel.languages,
+            choice = guiSettings.language,
+            onChoiceChanged = { viewModel.setLanguage(language = it, context) },
+            choiceToString = { viewModel.languageToDisplayNameMap[it] ?: it },
+            choices = viewModel.languages,
         )
         SingleSelection(
             label = tr("Console language"),
@@ -58,8 +63,8 @@ fun GeneralSettingsScreen(
 
         SingleSelection(
             label = tr("GamePad position"),
-            initialChoice = { generalSettingsViewModel.emulationSettings.gamePadPosition },
-            onChoiceChanged = { generalSettingsViewModel.emulationSettings.gamePadPosition = it },
+            choice = emulationSettings.gamePadPosition,
+            onChoiceChanged = { viewModel.setGamePadPosition(it) },
             choiceToString = { gamePadPositionToString(it) },
             choices = GamePadPosition.entries,
         )

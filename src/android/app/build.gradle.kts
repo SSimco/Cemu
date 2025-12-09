@@ -210,6 +210,7 @@ gettext {
 
 dependencies {
     implementation(libs.aboutlibraries.compose.m3)
+    implementation(libs.androidx.datastore)
     implementation(libs.kotlinx.gettext)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)

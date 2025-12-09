@@ -54,6 +54,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
+import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.emulation.inputoverlay.InputOverlayController
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurface
@@ -82,7 +83,16 @@ fun EmulationScreen(
     val sideMenuState by viewModel.sideMenuState.collectAsState()
     var showQuitConfirmationDialog by remember { mutableStateOf(false) }
     var inputOverlayController by remember { mutableStateOf<InputOverlayController?>(null) }
+    val inputOverlaySettings by viewModel.inputOverlaySettings.collectAsState()
     var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
+
+    LaunchedEffect(inputOverlayController, inputOverlaySettings) {
+        inputOverlayController?.applySettings(inputOverlaySettings)
+    }
+
+    LaunchedEffect(inputOverlayController) {
+        inputOverlayController?.setEditActionListener { viewModel.saveInputOverlayRectangles(it) }
+    }
 
     LaunchedEffect(inputOverlayInputMode) {
         inputOverlayController?.setInputMode(inputOverlayInputMode)
@@ -134,7 +144,7 @@ fun EmulationScreen(
                             closeDrawer()
                         },
                         onResetInputOverlay = {
-                            inputOverlayController?.resetInputs()
+                            viewModel.resetInputOverlayLayout()
                             closeDrawer()
                         },
                         onQuit = {
@@ -347,8 +357,9 @@ private fun TextButtonItem(
 @Composable
 private fun EmulationSurfaces(viewModel: EmulationViewModel) {
     val sideMenuState by viewModel.sideMenuState.collectAsState()
+    val gamePadPosition by viewModel.gamePadPosition.collectAsState()
 
-    LinearLayout(viewModel.surfacesConfig) { itemModifier ->
+    LinearLayout(gamePadPosition) { itemModifier ->
         EmulationSurface(
             modifier = itemModifier,
             isTV = true,
@@ -403,11 +414,12 @@ private fun EmulationSurface(
 
 @Composable
 private fun LinearLayout(
-    surfacesConfig: SurfacesConfig,
+    gamePadPosition: GamePadPosition,
     content: @Composable (itemModifier: Modifier) -> Unit,
 ) {
-    if (surfacesConfig.isVertical) {
-        val arrangement = if (surfacesConfig.isReversed) Arrangement.Top else Arrangement.Bottom
+    if (gamePadPosition.isVertical()) {
+        val arrangement =
+            if (gamePadPosition.appearsAfterTV()) Arrangement.Top else Arrangement.Bottom
 
         Column(
             modifier = Modifier.fillMaxSize(), verticalArrangement = arrangement
@@ -415,7 +427,8 @@ private fun LinearLayout(
             content(Modifier.weight(1f))
         }
     } else {
-        val arrangement = if (surfacesConfig.isReversed) Arrangement.Start else Arrangement.End
+        val arrangement =
+            if (gamePadPosition.appearsAfterTV()) Arrangement.Start else Arrangement.End
 
         Row(
             modifier = Modifier.fillMaxSize(),

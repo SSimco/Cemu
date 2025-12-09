@@ -1,8 +1,13 @@
 package info.cemu.cemu.emulation.inputoverlay
 
+import android.graphics.Rect
+import android.util.DisplayMetrics.DENSITY_DEFAULT
 import info.cemu.cemu.common.inputoverlay.OverlayButton
 import info.cemu.cemu.common.inputoverlay.OverlayDpad
+import info.cemu.cemu.common.inputoverlay.OverlayInput
 import info.cemu.cemu.common.inputoverlay.OverlayJoystick
+import kotlin.math.max
+import kotlin.math.min
 
 data class InputOverlayConfig(
     val alignBottom: Boolean = false,
@@ -170,3 +175,33 @@ val DefaultOverlayConfigs = mapOf(
         size = 40
     )
 ).mapKeys { it.key.configName }
+
+fun getDefaultRectangle(
+    input: OverlayInput,
+    width: Int,
+    height: Int,
+    density: Int,
+): Rect {
+    fun Int.dpToPx() = (this * density) / DENSITY_DEFAULT
+    val inputConfig = DefaultOverlayConfigs[input.configName] ?: return Rect()
+    val inputWidth = inputConfig.width.dpToPx()
+    val horizontalPadding = inputConfig.paddingHorizontal.dpToPx()
+    val verticalPadding = inputConfig.paddingVertical.dpToPx()
+    val inputHeight = inputConfig.height.dpToPx()
+    val top = min(
+        max(if (inputConfig.alignBottom) height - inputHeight else 0, verticalPadding),
+        height - verticalPadding - inputHeight
+    )
+    val left = min(
+        max(if (inputConfig.alignEnd) width - inputWidth else 0, horizontalPadding),
+        width - horizontalPadding - inputWidth
+    )
+    val right = left + inputWidth
+    val bottom = top + inputHeight
+    return Rect(
+        left,
+        top,
+        right,
+        bottom,
+    )
+}

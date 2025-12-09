@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.view.MotionEvent
 import androidx.annotation.ColorInt
+import info.cemu.cemu.common.settings.InputOverlayRect
 import info.cemu.cemu.emulation.inputoverlay.Colors
 import kotlin.math.max
 import kotlin.math.min
@@ -22,7 +23,12 @@ abstract class Input protected constructor(
         strokeWidth = 3f
     }
 
-    fun getBoundingRectangle() = rect
+    fun getBoundingRectangle() = InputOverlayRect(
+        left = rect.left,
+        top = rect.top,
+        right = rect.right,
+        bottom = rect.bottom,
+    )
 
     abstract fun onTouch(event: MotionEvent): Boolean
 
