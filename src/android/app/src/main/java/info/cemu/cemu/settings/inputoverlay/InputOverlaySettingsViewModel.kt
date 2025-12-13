@@ -3,10 +3,10 @@ package info.cemu.cemu.settings.inputoverlay
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import info.cemu.cemu.common.inputoverlay.OverlayInput
 import info.cemu.cemu.common.settings.AppSettings
 import info.cemu.cemu.common.settings.AppSettingsStore
 import info.cemu.cemu.common.settings.InputOverlaySettings
+import info.cemu.cemu.common.settings.OverlayInputConfig
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -24,9 +24,9 @@ class InputOverlaySettingsViewModel(
 
     private fun updateOverlay(transform: (InputOverlaySettings) -> InputOverlaySettings) {
         viewModelScope.launch {
-            dataStore.updateData { current ->
-                current.copy(
-                    inputOverlaySettings = transform(current.inputOverlaySettings)
+            dataStore.updateData {
+                it.copy(
+                    inputOverlaySettings = transform(it.inputOverlaySettings)
                 )
             }
         }
@@ -48,7 +48,7 @@ class InputOverlaySettingsViewModel(
         it.copy(alpha = alpha)
     }
 
-    fun setInputVisibility(input: OverlayInput, visible: Boolean) = updateOverlay {
+    fun setInputVisibility(input: OverlayInputConfig, visible: Boolean) = updateOverlay {
         it.copy(
             inputVisibilityMap = it.inputVisibilityMap.toMutableMap().apply {
                 this[input] = visible

@@ -197,6 +197,8 @@ private fun GameListToolBarActionsMenu(
 }
 
 private fun startGame(context: Context, game: Game) {
+    NativeSettings.saveSettings()
+    
     Intent(
         context,
         EmulationActivity::class.java

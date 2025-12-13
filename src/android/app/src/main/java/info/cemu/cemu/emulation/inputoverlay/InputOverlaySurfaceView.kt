@@ -14,20 +14,13 @@ import android.view.View
 import android.view.View.OnTouchListener
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import info.cemu.cemu.R
-import info.cemu.cemu.common.inputoverlay.OverlayButton
-import info.cemu.cemu.common.inputoverlay.OverlayDpad
-import info.cemu.cemu.common.inputoverlay.OverlayInput
-import info.cemu.cemu.common.inputoverlay.OverlayJoystick
 import info.cemu.cemu.common.settings.InputOverlayRect
 import info.cemu.cemu.common.settings.InputOverlaySettings
+import info.cemu.cemu.common.settings.OverlayInputConfig
+import info.cemu.cemu.common.settings.getDefaultRectangle
 import info.cemu.cemu.emulation.inputoverlay.inputs.DPad
 import info.cemu.cemu.emulation.inputoverlay.inputs.Input
 import info.cemu.cemu.emulation.inputoverlay.inputs.Joystick
@@ -49,9 +42,8 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
         DEFAULT, EDIT_POSITION, EDIT_SIZE,
     }
 
-    fun interface EditActionListener {
-        fun onEditFinished(inputsRectangles: Map<OverlayInput, InputOverlayRect>)
-    }
+    var onEditFinishedListener: ((Map<OverlayInputConfig, InputOverlayRect>) -> Unit)? =
+        null
 
     private var inputMode = InputMode.DEFAULT
     private var pixelDensity = 1
@@ -69,12 +61,10 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
         get() = visibility == VISIBLE
 
     private var settings: InputOverlaySettings = InputOverlaySettings()
-    private val controllerIndex: Int = settings.controllerIndex
-    private val currentAlpha = settings.alpha
-    private val isVibrateOnTouchEnabled: Boolean =
-        settings.isVibrateOnTouchEnabled && vibrator.hasVibrator()
-
-    private var editActionListener: EditActionListener? = null
+    private val controllerIndex get() = settings.controllerIndex
+    private val currentAlpha get() = settings.alpha
+    private val isVibrateOnTouchEnabled: Boolean
+        get() = settings.isVibrateOnTouchEnabled && vibrator.hasVibrator()
 
     init {
         visibility = GONE
@@ -88,15 +78,15 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
     }
 
     fun applySettings(inputOverlaySettings: InputOverlaySettings) {
+        if (this.settings == inputOverlaySettings) {
+            return
+        }
+
         this.settings = inputOverlaySettings
 
         setInputs()
 
         invalidate()
-    }
-
-    fun setEditActionListener(editActionListener: EditActionListener) {
-        this.editActionListener = editActionListener
     }
 
     fun setVisible(isVisible: Boolean) {
@@ -110,14 +100,20 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
     }
 
     fun setInputMode(inputMode: InputMode) {
+        if (this.inputMode == inputMode) {
+            return
+        }
+
         this.inputMode = inputMode
 
         if (this.inputMode != InputMode.DEFAULT) {
             return
         }
 
-        val inputsRectangles = inputs.associate { it.first to it.second.getBoundingRectangle() }
-        editActionListener?.onEditFinished(inputsRectangles)
+        val inputsRectangles =
+            inputs.associate { it.first.toConfig() to it.second.getBoundingRectangle() }
+
+        onEditFinishedListener?.invoke(inputsRectangles)
     }
 
     private fun getVibrator(context: Context): Vibrator {
@@ -315,7 +311,7 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
     }
 
     private fun getBoundingRectangleForInput(input: OverlayInput): Rect {
-        val rect = settings.inputOverlayRectMap[input]
+        val rect = settings.inputOverlayRectMap[input.toConfig()]
 
         if (rect != null) {
             return Rect(
@@ -326,7 +322,7 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
             )
         }
 
-        return getDefaultRectangle(input, width, height, pixelDensity)
+        return getDefaultRectangle(input.toConfig(), width, height, pixelDensity)
     }
 
     private fun MutableList<Pair<OverlayInput, Input>>.addRoundButton(
@@ -436,12 +432,12 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
                 addRoundButton(OverlayButton.BLOW_MIC, BlowButtonInnerDrawing())
             }
 
-            removeAll { (overlayInput, _) -> isInputVisible(overlayInput) }
+            removeAll { (overlayInput, _) -> !isInputVisible(overlayInput) }
         }
     }
 
     private fun isInputVisible(overlayInput: OverlayInput) =
-        settings.inputVisibilityMap[overlayInput] ?: true
+        settings.inputVisibilityMap[overlayInput.toConfig()] ?: true
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
@@ -471,6 +467,9 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
                     input.enableDrawingBoundingRect(
                         resources.getColor(R.color.purple, context.theme)
                     )
+                    val x = event.x.toInt()
+                    val y = event.y.toInt()
+                    input.moveInput(x, y, width, height)
                     return true
                 }
             }
@@ -569,39 +568,28 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
     }
 }
 
-class InputOverlayController(private val viewRef: () -> InputOverlaySurfaceView?) {
-    fun setVisible(visible: Boolean) {
-        viewRef()?.setVisible(visible)
-    }
-
-    fun setInputMode(inputMode: InputOverlaySurfaceView.InputMode) {
-        viewRef()?.setInputMode(inputMode)
-    }
-
-    fun applySettings(inputOverlaySettings: InputOverlaySettings) {
-        viewRef()?.applySettings(inputOverlaySettings)
-    }
-
-    fun setEditActionListener(editActionListener: InputOverlaySurfaceView.EditActionListener) {
-        viewRef()?.setEditActionListener(editActionListener)
-    }
-}
-
-
 @Composable
-fun InputOverlaySurface(controller: (InputOverlayController) -> Unit) {
-    var viewRef by remember { mutableStateOf<InputOverlaySurfaceView?>(null) }
-
+fun InputOverlaySurface(
+    isVisible: Boolean,
+    inputOverlaySettings: InputOverlaySettings,
+    inputMode: InputOverlaySurfaceView.InputMode,
+    onEditFinished: (Map<OverlayInputConfig, InputOverlayRect>) -> Unit,
+) {
     AndroidView(
-        modifier = Modifier.fillMaxSize(), factory = { context ->
+        modifier = Modifier.fillMaxSize(),
+        factory = { context ->
             InputOverlaySurfaceView(context).apply {
-                viewRef = this
+                setVisible(isVisible)
+                setInputMode(inputMode)
+                applySettings(inputOverlaySettings)
+                onEditFinishedListener = onEditFinished
             }
-        })
-
-    LaunchedEffect(viewRef) {
-        viewRef?.let { v ->
-            controller(InputOverlayController { v })
+        },
+        update = { view ->
+            view.setVisible(isVisible)
+            view.setInputMode(inputMode)
+            view.applySettings(inputOverlaySettings)
+            view.onEditFinishedListener = onEditFinished
         }
-    }
+    )
 }

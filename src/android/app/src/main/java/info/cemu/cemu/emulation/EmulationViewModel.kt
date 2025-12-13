@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import info.cemu.cemu.common.inputoverlay.OverlayInput
 import info.cemu.cemu.common.result.failure
 import info.cemu.cemu.common.result.then
 import info.cemu.cemu.common.result.thenRun
@@ -17,6 +16,7 @@ import info.cemu.cemu.common.settings.AppSettingsStore
 import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.settings.InputOverlayRect
 import info.cemu.cemu.common.settings.InputOverlaySettings
+import info.cemu.cemu.common.settings.OverlayInputConfig
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeException
@@ -25,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -34,7 +35,6 @@ import kotlinx.coroutines.withContext
 
 data class SideMenuState(
     val isMotionEnabled: Boolean = false,
-    val isDrawerLocked: Boolean = false,
     val isTVReplacedWithPad: Boolean = false,
     val isPadVisible: Boolean = false,
     val isInputOverlayVisible: Boolean = false,
@@ -67,6 +67,14 @@ class EmulationViewModel(
     private val _sideMenuState = MutableStateFlow(SideMenuState())
     val sideMenuState = _sideMenuState.asStateFlow()
 
+    val isInputOverlayVisible =
+        sideMenuState.map { it.isInputOverlayVisible }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                false,
+            )
+
     init {
         viewModelScope.launch {
             val settings = dataStore.data.first()
@@ -80,7 +88,7 @@ class EmulationViewModel(
         InputOverlaySettings(),
     )
 
-    fun saveInputOverlayRectangles(inputOverlayRectMap: Map<OverlayInput, InputOverlayRect>) {
+    fun saveInputOverlayRectangles(inputOverlayRectMap: Map<OverlayInputConfig, InputOverlayRect>) {
         viewModelScope.launch {
             dataStore.updateData {
                 val overlaySettings =
@@ -94,10 +102,10 @@ class EmulationViewModel(
     fun resetInputOverlayLayout() {
         viewModelScope.launch {
             dataStore.updateData {
-                val inputOverlaySettings =
+                val overlaySettings =
                     it.inputOverlaySettings.copy(inputOverlayRectMap = emptyMap())
 
-                it.copy(inputOverlaySettings = inputOverlaySettings)
+                it.copy(inputOverlaySettings = overlaySettings)
             }
         }
     }

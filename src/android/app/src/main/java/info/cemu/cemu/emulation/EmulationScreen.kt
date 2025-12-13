@@ -36,7 +36,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +55,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
 import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.ui.localization.tr
-import info.cemu.cemu.emulation.inputoverlay.InputOverlayController
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurface
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.DEFAULT
@@ -82,21 +80,9 @@ fun EmulationScreen(
     val isEmulationInitialized by viewModel.isEmulationInitialized.collectAsState()
     val sideMenuState by viewModel.sideMenuState.collectAsState()
     var showQuitConfirmationDialog by remember { mutableStateOf(false) }
-    var inputOverlayController by remember { mutableStateOf<InputOverlayController?>(null) }
+    val isInputOverlayVisible by viewModel.isInputOverlayVisible.collectAsState()
     val inputOverlaySettings by viewModel.inputOverlaySettings.collectAsState()
     var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
-
-    LaunchedEffect(inputOverlayController, inputOverlaySettings) {
-        inputOverlayController?.applySettings(inputOverlaySettings)
-    }
-
-    LaunchedEffect(inputOverlayController) {
-        inputOverlayController?.setEditActionListener { viewModel.saveInputOverlayRectangles(it) }
-    }
-
-    LaunchedEffect(inputOverlayInputMode) {
-        inputOverlayController?.setInputMode(inputOverlayInputMode)
-    }
 
     fun snackbarMessage(message: String) {
         scope.launch {
@@ -119,7 +105,7 @@ fun EmulationScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = !sideMenuState.isDrawerLocked || drawerState.isOpen,
+        gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet {
                 Column(
@@ -132,7 +118,6 @@ fun EmulationScreen(
                         sideMenuState = sideMenuState,
                         updateState = {
                             viewModel.updateSideMenuState(it)
-                            inputOverlayController?.setVisible(it.isInputOverlayVisible)
                             setMotionSensorEnabled(it.isMotionEnabled)
                             NativeEmulation.setReplaceTVWithPadView(it.isTVReplacedWithPad)
                             closeDrawer()
@@ -140,7 +125,6 @@ fun EmulationScreen(
                         onEditInputOverlay = {
                             snackbarMessage(tr("Edit input positions"))
                             inputOverlayInputMode = EDIT_POSITION
-                            inputOverlayController?.setInputMode(EDIT_POSITION)
                             closeDrawer()
                         },
                         onResetInputOverlay = {
@@ -160,10 +144,12 @@ fun EmulationScreen(
             Box(Modifier.padding(contentPadding)) {
                 EmulationSurfaces(viewModel)
 
-                InputOverlaySurface {
-                    inputOverlayController = it
-                    it.setVisible(sideMenuState.isInputOverlayVisible)
-                }
+                InputOverlaySurface(
+                    isVisible = isInputOverlayVisible,
+                    inputOverlaySettings = inputOverlaySettings,
+                    inputMode = inputOverlayInputMode,
+                    onEditFinished = { viewModel.saveInputOverlayRectangles(it) },
+                )
 
                 if (inputOverlayInputMode != DEFAULT) {
                     EditInputsLayout(
@@ -260,12 +246,6 @@ private fun EmulationSideMenuContent(
         label = tr("Enable motion"),
         checked = sideMenuState.isMotionEnabled,
         onCheckedChange = { updateState(sideMenuState.copy(isMotionEnabled = it)) },
-    )
-
-    CheckboxItem(
-        label = tr("Lock drawer"),
-        checked = sideMenuState.isDrawerLocked,
-        onCheckedChange = { updateState(sideMenuState.copy(isDrawerLocked = it)) },
     )
 
     CheckboxItem(

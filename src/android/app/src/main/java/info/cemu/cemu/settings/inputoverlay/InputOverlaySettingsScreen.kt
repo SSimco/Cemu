@@ -4,10 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import info.cemu.cemu.common.inputoverlay.OverlayButton
-import info.cemu.cemu.common.inputoverlay.OverlayDpad
-import info.cemu.cemu.common.inputoverlay.OverlayInput
-import info.cemu.cemu.common.inputoverlay.OverlayJoystick
+import info.cemu.cemu.common.settings.OverlayInputConfig
 import info.cemu.cemu.common.ui.components.Header
 import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.components.SingleSelection
@@ -26,10 +23,10 @@ fun InputOverlaySettingsScreen(
     val overlaySettings by viewModel.overlaySettings.collectAsState()
 
     @Composable
-    fun VisibleInputToggle(inputName: String, input: OverlayInput) {
+    fun VisibleInputToggle(inputName: String, input: OverlayInputConfig) {
         Toggle(
             label = inputName,
-            initialCheckedState = { overlaySettings.inputVisibilityMap[input] ?: true },
+            checked = overlaySettings.inputVisibilityMap[input] ?: true,
             onCheckedChanged = { viewModel.setInputVisibility(input, it) }
         )
     }
@@ -42,20 +39,20 @@ fun InputOverlaySettingsScreen(
         Toggle(
             label = tr("Input overlay"),
             description = tr("Enable input overlay"),
-            initialCheckedState = { overlaySettings.isOverlayEnabled },
+            checked = overlaySettings.isOverlayEnabled,
             onCheckedChanged = { viewModel.setOverlayEnabled(it) }
         )
 
         Toggle(
             label = tr("Vibrate"),
             description = tr("Enable vibrate on touch"),
-            initialCheckedState = { overlaySettings.isVibrateOnTouchEnabled },
+            checked = overlaySettings.isVibrateOnTouchEnabled,
             onCheckedChanged = { viewModel.setVibrateOnTouch(it) }
         )
 
         Slider(
             label = tr("Inputs opacity"),
-            initialValue = { overlaySettings.alpha },
+            value = overlaySettings.alpha,
             valueFrom = 0,
             steps = 16,
             valueTo = 255,
@@ -65,7 +62,7 @@ fun InputOverlaySettingsScreen(
 
         SingleSelection(
             label = tr("Overlay controller"),
-            initialChoice = { overlaySettings.controllerIndex },
+            choice = overlaySettings.controllerIndex,
             choices = ControllerIndexChoices,
             choiceToString = { tr("Controller {0}", it + 1) },
             onChoiceChanged = { viewModel.setControllerIndex(it) },
@@ -73,28 +70,28 @@ fun InputOverlaySettingsScreen(
 
         Header(tr("Visible Inputs"))
 
-        VisibleInputToggle("A", OverlayButton.A)
-        VisibleInputToggle("B", OverlayButton.B)
-        VisibleInputToggle("X", OverlayButton.X)
-        VisibleInputToggle("Y", OverlayButton.Y)
-        VisibleInputToggle("1", OverlayButton.ONE)
-        VisibleInputToggle("2", OverlayButton.TWO)
-        VisibleInputToggle("C", OverlayButton.C)
-        VisibleInputToggle("Z", OverlayButton.Z)
-        VisibleInputToggle(tr("Home"), OverlayButton.HOME)
-        VisibleInputToggle("L", OverlayButton.L)
-        VisibleInputToggle("R", OverlayButton.R)
-        VisibleInputToggle(tr("Left stick click"), OverlayButton.L_STICK_CLICK)
-        VisibleInputToggle(tr("Right stick click"), OverlayButton.R_STICK_CLICK)
-        VisibleInputToggle(tr("Plus"), OverlayButton.PLUS)
-        VisibleInputToggle(tr("Minus"), OverlayButton.MINUS)
-        VisibleInputToggle("ZL", OverlayButton.ZL)
-        VisibleInputToggle("ZR", OverlayButton.ZR)
-        VisibleInputToggle(tr("Blow mic"), OverlayButton.BLOW_MIC)
+        VisibleInputToggle("A", OverlayInputConfig.BUTTON_A)
+        VisibleInputToggle("B", OverlayInputConfig.BUTTON_B)
+        VisibleInputToggle("X", OverlayInputConfig.BUTTON_X)
+        VisibleInputToggle("Y", OverlayInputConfig.BUTTON_Y)
+        VisibleInputToggle("1", OverlayInputConfig.BUTTON_ONE)
+        VisibleInputToggle("2", OverlayInputConfig.BUTTON_TWO)
+        VisibleInputToggle("C", OverlayInputConfig.BUTTON_C)
+        VisibleInputToggle("Z", OverlayInputConfig.BUTTON_Z)
+        VisibleInputToggle(tr("Home"), OverlayInputConfig.BUTTON_HOME)
+        VisibleInputToggle("L", OverlayInputConfig.BUTTON_L)
+        VisibleInputToggle("R", OverlayInputConfig.BUTTON_R)
+        VisibleInputToggle(tr("Left stick click"), OverlayInputConfig.BUTTON_L_STICK_CLICK)
+        VisibleInputToggle(tr("Right stick click"), OverlayInputConfig.BUTTON_R_STICK_CLICK)
+        VisibleInputToggle(tr("Plus"), OverlayInputConfig.BUTTON_PLUS)
+        VisibleInputToggle(tr("Minus"), OverlayInputConfig.BUTTON_MINUS)
+        VisibleInputToggle("ZL", OverlayInputConfig.BUTTON_ZL)
+        VisibleInputToggle("ZR", OverlayInputConfig.BUTTON_ZR)
+        VisibleInputToggle(tr("Blow mic"), OverlayInputConfig.BUTTON_BLOW_MIC)
 
-        VisibleInputToggle(tr("Left joystick"), OverlayJoystick.LEFT)
-        VisibleInputToggle(tr("Right joystick"), OverlayJoystick.RIGHT)
+        VisibleInputToggle(tr("Left joystick"), OverlayInputConfig.JOYSTICK_LEFT)
+        VisibleInputToggle(tr("Right joystick"), OverlayInputConfig.JOYSTICK_RIGHT)
 
-        VisibleInputToggle(tr("DPad"), OverlayDpad.DPAD_UP)
+        VisibleInputToggle(tr("DPad"), OverlayInputConfig.DPAD)
     }
 }

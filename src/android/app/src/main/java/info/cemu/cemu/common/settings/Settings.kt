@@ -5,22 +5,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.MultiProcessDataStoreFactory
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStoreFile
-import info.cemu.cemu.common.inputoverlay.OverlayInput
 import info.cemu.cemu.common.ui.localization.DEFAULT_LANGUAGE
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
-
-enum class GamePadPosition {
-    ABOVE,
-    BELOW,
-    LEFT,
-    RIGHT;
-
-    fun isVertical() = this == ABOVE || this == BELOW
-    fun appearsAfterTV() = this == BELOW || this == RIGHT
-}
 
 @Serializable
 data class EmulationSettings(
@@ -46,8 +35,8 @@ data class InputOverlaySettings(
     val isOverlayEnabled: Boolean = false,
     val controllerIndex: Int = 0,
     val alpha: Int = 64,
-    val inputVisibilityMap: Map<OverlayInput, Boolean> = emptyMap(),
-    val inputOverlayRectMap: Map<OverlayInput, InputOverlayRect> = emptyMap(),
+    val inputVisibilityMap: Map<OverlayInputConfig, Boolean> = emptyMap(),
+    val inputOverlayRectMap: Map<OverlayInputConfig, InputOverlayRect> = emptyMap(),
 )
 
 @Serializable

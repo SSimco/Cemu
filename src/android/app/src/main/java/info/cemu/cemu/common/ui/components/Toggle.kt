@@ -22,18 +22,16 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun Toggle(
     label: String,
-    initialCheckedState: () -> Boolean,
+    checked: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
     description: String? = null,
 ) {
-    var checked by rememberSaveable { mutableStateOf(initialCheckedState()) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                checked = !checked
-                onCheckedChanged(checked)
+                onCheckedChanged(!checked)
             },
     )
     {
@@ -62,4 +60,24 @@ fun Toggle(
             onCheckedChange = null,
         )
     }
+}
+
+@Composable
+fun Toggle(
+    label: String,
+    initialCheckedState: () -> Boolean,
+    onCheckedChanged: (Boolean) -> Unit,
+    description: String? = null,
+) {
+    var checked by rememberSaveable { mutableStateOf(initialCheckedState()) }
+
+    Toggle(
+        label = label,
+        checked = checked,
+        onCheckedChanged = {
+            checked = it
+            onCheckedChanged(it)
+        },
+        description = description,
+    )
 }
