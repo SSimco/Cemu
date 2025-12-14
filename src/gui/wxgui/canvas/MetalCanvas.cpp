@@ -11,7 +11,7 @@ MetalCanvas::MetalCanvas(wxWindow* parent, const wxSize& size, bool is_main_wind
 	Bind(wxEVT_SIZE, &MetalCanvas::OnResize, this);
 
 	auto& canvas = is_main_window ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
-	canvas = initHandleContextFromWxWidgetsWindow(this);
+	initHandleContextFromWxWidgetsWindow(this, canvas);
 
 	try
 	{

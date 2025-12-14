@@ -17,7 +17,7 @@ on:
 
 jobs:
   generate-pot:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: "Checkout repo"
         uses: actions/checkout@v3
@@ -38,6 +38,8 @@ jobs:
 
       - name: "Generate POT file from the Android App"
         run: |
+          export JAVA_HOME=$JAVA_HOME_21_X64
+
           cemu_dir=$(pwd)
           cd src/android
           ./gradlew gettext
