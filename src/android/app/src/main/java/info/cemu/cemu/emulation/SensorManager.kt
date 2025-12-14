@@ -22,21 +22,35 @@ class SensorManager(context: Context) : SensorEventListener {
     private var gyroY = 0f
     private var gyroZ = 0f
     private var isListening = false
+    private var isActive = false
 
     fun setIsListening(isListening: Boolean) {
-        if (isListening) {
+        this.isListening = isListening
+        if (isListening && !isActive) {
             startListening()
-        } else {
+        } else if (!isListening && isActive) {
             stopListening()
         }
-
-        this.isListening = isListening
     }
 
-    fun startListening() {
-        if (!hasMotionData || isListening) {
+    fun pauseListening() {
+        if (isActive) {
+            stopListening()
+        }
+    }
+
+    fun resumeListening() {
+        if (isListening && !isActive) {
+            startListening()
+        }
+    }
+
+    private fun startListening() {
+        if (!hasMotionData || isActive) {
             return
         }
+
+        isActive = true
 
         NativeInput.setMotionEnabled(true)
         sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME)
@@ -47,10 +61,12 @@ class SensorManager(context: Context) : SensorEventListener {
         this.deviceRotationProvider = deviceRotationProvider
     }
 
-    fun stopListening() {
-        if (!hasMotionData || !isListening) {
+    private fun stopListening() {
+        if (!hasMotionData || !isActive) {
             return
         }
+
+        isActive = false
 
         NativeInput.setMotionEnabled(false)
         sensorManager.unregisterListener(this)
@@ -72,7 +88,8 @@ class SensorManager(context: Context) : SensorEventListener {
         }
 
         val (accelX, accelY, accelZ) = getSensorEventValues(values)
-        NativeInput.onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelZ, -accelY)
+
+        NativeInput.onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelY, -accelZ)
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
@@ -85,21 +102,21 @@ class SensorManager(context: Context) : SensorEventListener {
         when (deviceRotation) {
             Surface.ROTATION_90 -> {
                 x = -values[1]
-                y = values[0]
+                y = -values[0]
             }
 
             Surface.ROTATION_180 -> {
-                x = -values[0]
+                x = values[0]
                 y = -values[1]
             }
 
             Surface.ROTATION_270 -> {
                 x = values[1]
-                y = -values[0]
+                y = values[0]
             }
 
             else /*Surface.ROTATION_0*/ -> {
-                x = values[0]
+                x = -values[0]
                 y = values[1]
             }
         }

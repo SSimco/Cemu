@@ -55,7 +55,6 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         sensorManager = SensorManager(this)
         sensorManager.setDeviceRotationProvider { display.rotation }
 
@@ -80,18 +79,17 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        sensorManager.stopListening()
+        sensorManager.pauseListening()
     }
 
     override fun onResume() {
         super.onResume()
-        sensorManager.startListening()
+        sensorManager.resumeListening()
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
-        sensorManager.stopListening()
+        sensorManager.pauseListening()
     }
 
     private fun setFullscreen() {

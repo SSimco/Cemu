@@ -99,6 +99,14 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
         invalidate()
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        if (oldw == 0 || oldh == 0) {
+            setInputs()
+        }
+
+        super.onSizeChanged(w, h, oldw, oldh)
+    }
+
     fun setInputMode(inputMode: InputMode) {
         if (this.inputMode == inputMode) {
             return

@@ -227,7 +227,7 @@ jobs:
           path: ./bin/Cemu.dmg
 
   build-android:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repo
@@ -265,7 +265,7 @@ jobs:
           EMULATOR_VERSION_MAJOR: ${{ inputs.next_version_major }}
           EMULATOR_VERSION_MINOR: ${{ inputs.next_version_minor }}
         run: |
-          export JAVA_HOME=$JAVA_HOME_17_X64
+          export JAVA_HOME=$JAVA_HOME_21_X64
 
           cd ./src/android
 

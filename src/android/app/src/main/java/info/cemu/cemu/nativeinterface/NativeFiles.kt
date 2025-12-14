@@ -5,9 +5,9 @@ package info.cemu.cemu.nativeinterface
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract
-import android.util.Log
 import androidx.annotation.Keep
 import androidx.core.net.toUri
+import info.cemu.cemu.common.android.util.LogDebug
 
 private const val PATH_SEPARATOR_ENCODED = "%2F"
 private const val PATH_SEPARATOR_DECODED = "/"
@@ -57,7 +57,7 @@ object NativeFiles {
                 return fd
             }
         } catch (e: Exception) {
-            Log.e("NativeFiles", "Cannot open content uri, error: ${e.message}")
+            LogDebug.e("NativeFiles", "Cannot open content uri, error: ${e.message}")
         }
         return -1
     }
@@ -87,7 +87,7 @@ object NativeFiles {
                 }
             }
         } catch (e: Exception) {
-            Log.e("NativeFiles", "Cannot list files: ${e.message}")
+            LogDebug.e("NativeFiles", "Cannot list files: ${e.message}")
         }
         var filesArray = arrayOfNulls<String>(files.size)
         filesArray = files.toArray(filesArray)
@@ -117,7 +117,7 @@ object NativeFiles {
                 return cursor != null && cursor.moveToFirst()
             }
         } catch (e: Exception) {
-            Log.e("NativeFiles", "Failed checking if file exists: ${e.message}")
+            LogDebug.e("NativeFiles", "Failed checking if file exists: ${e.message}")
             return false
         }
     }
