@@ -22,10 +22,12 @@ object NativeSwkbd {
             val currentState = _data.value ?: return
 
             val numChars = if (currentState.maxLength > 0) currentState.maxLength else text.length
-
+            val newText = BlacklistedCharactersRegex.replace(text, "").take(numChars)
             _data.value = currentState.copy(
-                text = BlacklistedCharactersRegex.replace(text, "").take(numChars)
+                text = newText
             )
+
+            onTextChanged(newText)
         }
 
         @Keep
