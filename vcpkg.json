@@ -50,10 +50,6 @@
     "zstd",
     {
       "name": "wxwidgets",
-      "features": [
-        "debug-support"
-      ],
-      "default-features": false,
       "platform": "!android"
     },
     "openssl",

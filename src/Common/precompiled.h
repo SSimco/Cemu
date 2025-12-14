@@ -88,9 +88,7 @@ namespace fs = std::filesystem;
 #include "Common/android/FilesystemAndroid.h"
 #endif // __ANDROID
 
-namespace cemu
-{
-namespace fs
+namespace cemu::fs
 {
 inline bool is_directory(const std::filesystem::path& p)
 {
@@ -140,8 +138,7 @@ inline bool exists(const std::filesystem::path& p, std::error_code& ec)
 #endif
     return std::filesystem::exists(p, ec);
 }
-}  // namespace fs
-}  // namespace cemu
+}  // namespace cemu::fs
 
 #include "enumFlags.h"
 

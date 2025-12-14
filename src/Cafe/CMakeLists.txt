@@ -238,8 +238,6 @@ add_library(CemuCafe
   IOSU/legacy/iosu_acp.h
   IOSU/legacy/iosu_act.cpp
   IOSU/legacy/iosu_act.h
-  IOSU/legacy/iosu_boss.cpp
-  IOSU/legacy/iosu_boss.h
   IOSU/legacy/iosu_crypto.cpp
   IOSU/legacy/iosu_crypto.h
   IOSU/legacy/iosu_fpd.cpp
@@ -252,6 +250,10 @@ add_library(CemuCafe
   IOSU/legacy/iosu_nim.h
   IOSU/nn/iosu_nn_service.cpp
   IOSU/nn/iosu_nn_service.h
+  IOSU/nn/boss/boss_common.cpp
+  IOSU/nn/boss/boss_common.h
+  IOSU/nn/boss/boss_service.cpp
+  IOSU/nn/boss/boss_service.h
   IOSU/PDM/iosu_pdm.cpp
   IOSU/PDM/iosu_pdm.h
   IOSU/ODM/iosu_odm.cpp
@@ -418,6 +420,7 @@ add_library(CemuCafe
   OS/libs/nn_ccr/nn_ccr.h
   OS/libs/nn_cmpt/nn_cmpt.cpp
   OS/libs/nn_cmpt/nn_cmpt.h
+  OS/libs/nn_client_service.h
   OS/libs/nn_common.h
   OS/libs/nn_ec/nn_ec.cpp
   OS/libs/nn_ec/nn_ec.h
@@ -534,7 +537,69 @@ add_library(CemuCafe
 )
 
 if(APPLE)
-	target_sources(CemuCafe PRIVATE "HW/Latte/Renderer/Vulkan/CocoaSurface.mm")
+	target_sources(CemuCafe PRIVATE
+	    HW/Latte/Renderer/Vulkan/CocoaSurface.mm
+	    HW/Latte/Renderer/MetalView.mm
+	    HW/Latte/Renderer/MetalView.h
+	)
+endif()
+
+if(ENABLE_METAL)
+    target_sources(CemuCafe PRIVATE
+        HW/Latte/Renderer/Metal/CachedFBOMtl.cpp
+        HW/Latte/Renderer/Metal/CachedFBOMtl.h
+        HW/Latte/Renderer/Metal/LatteTextureMtl.cpp
+        HW/Latte/Renderer/Metal/LatteTextureMtl.h
+        HW/Latte/Renderer/Metal/LatteTextureReadbackMtl.cpp
+        HW/Latte/Renderer/Metal/LatteTextureReadbackMtl.h
+        HW/Latte/Renderer/Metal/LatteTextureViewMtl.cpp
+        HW/Latte/Renderer/Metal/LatteTextureViewMtl.h
+        HW/Latte/Renderer/Metal/LatteToMtl.cpp
+        HW/Latte/Renderer/Metal/LatteToMtl.h
+        HW/Latte/Renderer/Metal/MetalAttachmentsInfo.cpp
+        HW/Latte/Renderer/Metal/MetalAttachmentsInfo.h
+        HW/Latte/Renderer/Metal/MetalBufferAllocator.cpp
+        HW/Latte/Renderer/Metal/MetalBufferAllocator.h
+        HW/Latte/Renderer/Metal/MetalCommon.h
+        HW/Latte/Renderer/Metal/MetalCppImpl.cpp
+        HW/Latte/Renderer/Metal/MetalDepthStencilCache.cpp
+        HW/Latte/Renderer/Metal/MetalDepthStencilCache.h
+        HW/Latte/Renderer/Metal/MetalLayer.h
+        HW/Latte/Renderer/Metal/MetalLayer.mm
+        HW/Latte/Renderer/Metal/MetalLayerHandle.cpp
+        HW/Latte/Renderer/Metal/MetalLayerHandle.h
+        HW/Latte/Renderer/Metal/MetalMemoryManager.cpp
+        HW/Latte/Renderer/Metal/MetalMemoryManager.h
+        HW/Latte/Renderer/Metal/MetalOutputShaderCache.cpp
+        HW/Latte/Renderer/Metal/MetalOutputShaderCache.h
+        HW/Latte/Renderer/Metal/MetalPerformanceMonitor.h
+        HW/Latte/Renderer/Metal/MetalPipelineCache.cpp
+        HW/Latte/Renderer/Metal/MetalPipelineCache.h
+        HW/Latte/Renderer/Metal/MetalPipelineCompiler.cpp
+        HW/Latte/Renderer/Metal/MetalPipelineCompiler.h
+        HW/Latte/Renderer/Metal/MetalQuery.cpp
+        HW/Latte/Renderer/Metal/MetalQuery.h
+        HW/Latte/Renderer/Metal/MetalRenderer.cpp
+        HW/Latte/Renderer/Metal/MetalRenderer.h
+        HW/Latte/Renderer/Metal/MetalSamplerCache.cpp
+        HW/Latte/Renderer/Metal/MetalSamplerCache.h
+        HW/Latte/Renderer/Metal/MetalVoidVertexPipeline.cpp
+        HW/Latte/Renderer/Metal/MetalVoidVertexPipeline.h
+        HW/Latte/Renderer/Metal/RendererShaderMtl.cpp
+        HW/Latte/Renderer/Metal/RendererShaderMtl.h
+        HW/Latte/Renderer/Metal/UtilityShaderSource.h
+    )
+
+    target_sources(CemuCafe PRIVATE
+        HW/Latte/LegacyShaderDecompiler/LatteDecompilerEmitMSLAttrDecoder.cpp
+        HW/Latte/LegacyShaderDecompiler/LatteDecompilerEmitMSL.cpp
+        HW/Latte/LegacyShaderDecompiler/LatteDecompilerEmitMSLHeader.hpp
+    )
+
+    target_link_libraries(CemuCafe PRIVATE
+        "-framework Metal"
+        "-framework QuartzCore"
+    )
 endif()
 
 if(ANDROID)
@@ -566,28 +631,17 @@ else()
 endif()
 
 target_link_libraries(CemuCafe PRIVATE
-	CemuAudio
 	CemuCommon
-	CemuComponents
-	CemuConfig
-	CemuGui
-	CemuInput
-	CemuResource
-	CemuUtil
-	imguiImpl
-	Boost::headers
-	Boost::nowide
-	CURL::libcurl
-	fmt::fmt
-	${glslang_target}
-	ih264d
-	OpenSSL::Crypto
-	OpenSSL::SSL
-	PNG::PNG
-	pugixml::pugixml
-	ZArchive::zarchive
-	ZLIB::ZLIB
-	zstd::zstd
+  CemuGui
+  ZArchive::zarchive
+  imguiImpl
+  pugixml::pugixml
+  ZLIB::ZLIB
+  CURL::libcurl
+  ih264d
+  ${glslang_target}
+  PUBLIC
+  OpenSSL::SSL
 )
 
 if (ENABLE_WAYLAND)

@@ -17,7 +17,7 @@ public:
 	RendererOutputShader(const std::string& vertex_source, const std::string& fragment_source);
 	virtual ~RendererOutputShader() = default;
 
-	void SetUniformParameters(const LatteTextureView& texture_view, const Vector2i& output_res) const;
+	void SetUniformParameters(const LatteTextureView& texture_view, const Vector2i& output_res, const bool padView) const;
 
 	RendererShader* GetVertexShader() const
 	{
@@ -41,8 +41,9 @@ public:
 	static RendererOutputShader* s_hermit_shader;
 	static RendererOutputShader* s_hermit_shader_ud;
 
-	static std::string GetVulkanVertexSource(bool render_upside_down);
 	static std::string GetOpenGlVertexSource(bool render_upside_down);
+	static std::string GetVulkanVertexSource(bool render_upside_down);
+	static std::string GetMetalVertexSource(bool render_upside_down);
 
 	static std::string PrependFragmentPreamble(const std::string& shaderSrc);
 
@@ -55,6 +56,9 @@ protected:
 		sint32 m_loc_textureSrcResolution = -1;
 		sint32 m_loc_nativeResolution = -1;
 		sint32 m_loc_outputResolution = -1;
+		sint32 m_loc_applySRGBEncoding = -1;
+		sint32 m_loc_targetGamma = -1;
+		sint32 m_loc_displayGamma = -1;
 	} m_uniformLocations[2]{};
 
 private:
@@ -64,4 +68,8 @@ private:
 
 	static const std::string s_bicubic_shader_source_vk;
 	static const std::string s_hermite_shader_source_vk;
+
+	static const std::string s_copy_shader_source_mtl;
+	static const std::string s_bicubic_shader_source_mtl;
+	static const std::string s_hermite_shader_source_mtl;
 };

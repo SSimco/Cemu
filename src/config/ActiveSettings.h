@@ -114,6 +114,10 @@ public:
 	[[nodiscard]] static bool WaitForGX2DrawDoneEnabled();
 	[[nodiscard]] static GraphicAPI GetGraphicsAPI();
 
+	// gamma
+	[[nodiscard]] static float GetTVGamma();
+	[[nodiscard]] static float GetDRCGamma();
+
 	// audio
 	[[nodiscard]] static bool AudioOutputOnlyAux();
 	static void EnableAudioOnlyAux(bool state);

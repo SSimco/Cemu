@@ -98,10 +98,5 @@ if(ANDROID)
 endif()
 
 target_link_libraries(CemuUtil PRIVATE
-	CemuCommon
-	CemuConfig
-  ZArchive::zarchive
-	Boost::headers
-	Boost::nowide
-	OpenSSL::Crypto
+  CemuCommon
 )

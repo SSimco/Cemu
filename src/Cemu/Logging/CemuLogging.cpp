@@ -233,8 +233,26 @@ bool cemuLog_log(LogType type, std::string_view text)
 
 bool cemuLog_log(LogType type, std::u8string_view text)
 {
-	std::basic_string_view<char> s((char*)text.data(), text.size());	
+	std::basic_string_view<char> s((char*)text.data(), text.size());
 	return cemuLog_log(type, s);
+}
+
+void cemuLog_logHexDump(LogType type, const void* data, size_t size, size_t lineSize)
+{
+	const uint8* dataU8 = static_cast<const uint8*>(data);
+	std::vector<char> hexLine;
+	hexLine.resize(6 + lineSize * 3 + 1, ' ');
+	for (size_t i = 0; i < size; i += lineSize)
+	{
+		sprintf(hexLine.data(), "%04X: ", (int)i);
+		size_t remainingSize = std::min<size_t>(lineSize, size - i);
+		for (size_t j=0; j<remainingSize; j++)
+			sprintf(hexLine.data() + 6 + j * 3, "%02X ", dataU8[j]);
+		dataU8 += remainingSize;
+		if (remainingSize == lineSize)
+			hexLine.resize(6 + remainingSize * 3 + 1);
+		cemuLog_log(type, hexLine.data());
+	}
 }
 
 void cemuLog_waitForFlush()

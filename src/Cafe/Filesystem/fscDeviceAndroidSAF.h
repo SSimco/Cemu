@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cafe/Filesystem/fsc.h"
+#include "Common/FileStream.h"
 
 class FSCVirtualFile_AndroidSAF : public FSCVirtualFile
 {
@@ -24,7 +25,7 @@ class FSCVirtualFile_AndroidSAF : public FSCVirtualFile
     FSCVirtualFile_AndroidSAF(uint32 type) : m_type(type){};
 
     uint32 m_type;  // FSC_TYPE_*
-    class FileStream* m_fs{};
+    FileStream* m_fs{};
     // file
     uint64 m_seek{0};
     uint64 m_fileSize{0};

@@ -1,44 +1,56 @@
 #pragma once
 #include "Common/precompiled.h"
-#include "Common/FileStream.h"
 
-class FileStreamUnix : public FileStream
+class FileStreamUnix
 {
-   public:
-    // size and seek
-    void SetPosition(uint64 pos) override;
+ public:
+	static FileStreamUnix* openFile(std::string_view path);
+	static FileStreamUnix* openFile(const wchar_t* path, bool allowWrite = false);
+	static FileStreamUnix* openFile2(const fs::path& path, bool allowWrite = false);
 
-    uint64 GetSize() override;
-    bool SetEndOfFile() override;
-    void extract(std::vector<uint8>& data) override;
+	static FileStreamUnix* createFile(const wchar_t* path);
+	static FileStreamUnix* createFile(std::string_view path);
+	static FileStreamUnix* createFile2(const fs::path& path);
 
-    // reading
-    uint32 readData(void* data, uint32 length) override;
-    bool readU64(uint64& v) override;
-    bool readU32(uint32& v) override;
-    bool readU8(uint8& v) override;
-    bool readLine(std::string& line) override;
+	// helper function to load a file into memory
+	static std::optional<std::vector<uint8>> LoadIntoMemory(const fs::path& path);
 
-    // writing (binary)
-    sint32 writeData(const void* data, sint32 length) override;
-    void writeU64(uint64 v) override;
-    void writeU32(uint32 v) override;
-    void writeU8(uint8 v) override;
+	// size and seek
+	void SetPosition(uint64 pos);
 
-    // writing (strings)
-    void writeStringFmt(const char* format, ...) override;
-    void writeString(const char* str) override;
-    void writeLine(const char* str) override;
+	uint64 GetSize();
+	bool SetEndOfFile();
+	void extract(std::vector<uint8>& data);
 
-    virtual ~FileStreamUnix();
-    FileStreamUnix() = default;
+	void Flush();
 
-   private:
-    friend class FileStream;
-    void SyncReadWriteSeek(bool nextOpIsWrite);
-    FileStreamUnix(const fs::path& path, bool isOpen, bool isWriteable);
+	// reading
+	uint32 readData(void* data, uint32 length);
+	bool readU64(uint64& v);
+	bool readU32(uint32& v);
+	bool readU8(uint8& v);
+	bool readLine(std::string& line);
 
-    bool m_isValid{};
-    std::fstream m_fileStream;
-    bool m_prevOperationWasWrite{false};
+	// writing (binary)
+	sint32 writeData(const void* data, sint32 length);
+	void writeU64(uint64 v);
+	void writeU32(uint32 v);
+	void writeU8(uint8 v);
+
+	// writing (strings)
+	void writeStringFmt(const char* format, ...);
+	void writeString(const char* str);
+	void writeLine(const char* str);
+
+	~FileStreamUnix();
+	FileStreamUnix() {};
+
+ private:
+	void SyncReadWriteSeek(bool nextOpIsWrite);
+	FileStreamUnix(const fs::path& path, bool isOpen, bool isWriteable);
+
+	bool m_isValid{};
+	std::fstream m_fileStream;
+	bool m_prevOperationWasWrite{false};
+
 };

@@ -149,10 +149,6 @@ target_link_libraries(CemuBin PRIVATE
 	CemuUtil
 )
 
-if(ENABLE_OPENGL)
-	target_link_libraries(CemuBin PRIVATE OpenGL::GL)
-endif()
-
 if(ENABLE_SDL)
 	target_link_libraries(CemuBin PRIVATE SDL2::SDL2)
 endif()

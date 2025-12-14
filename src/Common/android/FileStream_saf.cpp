@@ -1,6 +1,18 @@
 #include "FileStream_saf.h"
 #include "FilesystemAndroid.h"
 
+FileStreamSAF* FileStreamSAF::OpenFile(const fs::path& path)
+{
+	auto fileStream = new FileStreamSAF(path);
+	if (fileStream->m_isValid)
+	{
+		return fileStream;
+	}
+
+	delete fileStream;
+	return nullptr;
+}
+
 void FileStreamSAF::SetPosition(uint64 pos)
 {
 	if (!m_isValid)
@@ -104,6 +116,11 @@ void FileStreamSAF::writeString(const char* str)
 }
 
 void FileStreamSAF::writeLine(const char* str)
+{
+	throw std::runtime_error("write operation not supported");
+}
+
+void FileStreamSAF::Flush()
 {
 	throw std::runtime_error("write operation not supported");
 }

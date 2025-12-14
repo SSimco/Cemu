@@ -101,15 +101,8 @@ endif()
 target_include_directories(CemuInput PUBLIC "../")
 
 target_link_libraries(CemuInput PRIVATE
-	CemuCafe
 	CemuCommon
-	CemuConfig
 	CemuGui
-	CemuUtil
-	Boost::headers
-	Boost::program_options
-	glm::glm
-	pugixml::pugixml
 )
 
 if (ENABLE_HIDAPI)

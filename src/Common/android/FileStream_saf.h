@@ -1,37 +1,37 @@
 #pragma once
 
-#include "Common/FileStream.h"
-
 #include "FdStream.h"
 
-class FileStreamSAF : public FileStream
+class FileStreamSAF
 {
   public:
-	// size and seek
-	void SetPosition(uint64 pos) override;
+	static FileStreamSAF* OpenFile(const fs::path& path);
 
-	uint64 GetSize() override;
-	bool SetEndOfFile() override;
-	void extract(std::vector<uint8>& data) override;
+	// size and seek
+	void SetPosition(uint64 pos);
+
+	uint64 GetSize();
+	bool SetEndOfFile();
+	void extract(std::vector<uint8>& data);
 
 	// reading
-	uint32 readData(void* data, uint32 length) override;
-	bool readU64(uint64& v) override;
-	bool readU32(uint32& v) override;
-	bool readU8(uint8& v) override;
-	bool readLine(std::string& line) override;
+	uint32 readData(void* data, uint32 length);
+	bool readU64(uint64& v);
+	bool readU32(uint32& v);
+	bool readU8(uint8& v);
+	bool readLine(std::string& line);
 
 	// writing (not supported)
-	sint32 writeData(const void* data, sint32 length) override;
-	void writeU64(uint64 v) override;
-	void writeU32(uint32 v) override;
-	void writeU8(uint8 v) override;
-	void writeStringFmt(const char* format, ...) override;
-	void writeString(const char* str) override;
-	void writeLine(const char* str) override;
+	sint32 writeData(const void* data, sint32 length);
+	void writeU64(uint64 v);
+	void writeU32(uint32 v);
+	void writeU8(uint8 v);
+	void writeStringFmt(const char* format, ...);
+	void writeString(const char* str);
+	void writeLine(const char* str);
+	void Flush();
 
   private:
-	friend class FileStream;
 	FileStreamSAF(const fs::path& uri);
 	FdStream m_stream;
 	bool m_isValid = false;

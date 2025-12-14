@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AccountError.h"
+#include "Common/FileStream.h"
 
 #include <string>
 #include <string_view>
@@ -106,7 +107,7 @@ private:
 	Account(uint32 persistent_id);
 
 	[[nodiscard]] std::error_code CheckValid() const;
-	void ParseFile(class FileStream* file);
+	void ParseFile(FileStream* file);
 
 	uint32 m_persistent_id = 0;
 	uint64 m_transferable_id_base = 0;

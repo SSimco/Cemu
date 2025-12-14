@@ -22,6 +22,65 @@ fs::path findPathCI(const fs::path& path)
 	return parentPath / fName;
 }
 
+FileStreamUnix* FileStreamUnix::openFile(std::string_view path)
+{
+	return openFile2(path, false);
+}
+
+FileStreamUnix* FileStreamUnix::openFile(const wchar_t* path, bool allowWrite)
+{
+	return openFile2(path, allowWrite);
+}
+
+FileStreamUnix* FileStreamUnix::openFile2(const fs::path& path, bool allowWrite)
+{
+	FileStreamUnix* fs = new FileStreamUnix(path, true, allowWrite);
+	if (fs->m_isValid)
+		return fs;
+	delete fs;
+	return nullptr;
+}
+
+FileStreamUnix* FileStreamUnix::createFile(const wchar_t* path)
+{
+	return createFile2(path);
+}
+
+FileStreamUnix* FileStreamUnix::createFile(std::string_view path)
+{
+	return createFile2(path);
+}
+
+FileStreamUnix* FileStreamUnix::createFile2(const fs::path& path)
+{
+	FileStreamUnix* fs = new FileStreamUnix(path, false, false);
+	if (fs->m_isValid)
+		return fs;
+	delete fs;
+	return nullptr;
+}
+
+std::optional<std::vector<uint8>> FileStreamUnix::LoadIntoMemory(const fs::path& path)
+{
+	FileStreamUnix* fs = openFile2(path);
+	if (!fs)
+		return std::nullopt;
+	uint64 fileSize = fs->GetSize();
+	if (fileSize > 0xFFFFFFFFull)
+	{
+		delete fs;
+		return std::nullopt;
+	}
+	std::optional<std::vector<uint8>> v(fileSize);
+	if (fs->readData(v->data(), (uint32)fileSize) != (uint32)fileSize)
+	{
+		delete fs;
+		return std::nullopt;
+	}
+	delete fs;
+	return v;
+}
+
 void FileStreamUnix::SetPosition(uint64 pos)
 {
 	cemu_assert(m_isValid);
@@ -55,6 +114,11 @@ void FileStreamUnix::extract(std::vector<uint8>& data)
 	SetPosition(0);
 	data.resize(fileSize);
 	readData(data.data(), fileSize);
+}
+
+void FileStreamUnix::Flush()
+{
+    m_fileStream.flush();
 }
 
 uint32 FileStreamUnix::readData(void* data, uint32 length)
