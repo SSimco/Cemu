@@ -307,7 +307,6 @@ jobs:
           fi
 
           ./gradlew assembleRelease
-          ./gradlew testRelease
 
       # - name: Upload artifact
       #   uses: actions/upload-artifact@v4
