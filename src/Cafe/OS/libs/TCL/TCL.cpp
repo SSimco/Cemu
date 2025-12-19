@@ -6,7 +6,7 @@
 namespace TCL
 {
 	SysAllocator<coreinit::OSEvent> s_updateRetirementEvent;
-	std::atomic<uint64> s_currentRetireMarker = 0;
+	uint64 s_currentRetireMarker = 0;
 
 	struct TCLStatePPC // mapped into PPC space
 	{
@@ -66,29 +66,26 @@ namespace TCL
 
 	std::atomic<uint32> tclRingBufferA[TCL_RING_BUFFER_SIZE];
 	std::atomic<uint32> tclRingBufferA_readIndex{0};
-	std::atomic<uint32> tclRingBufferA_writeIndex{0};
+	uint32 tclRingBufferA_writeIndex{0};
 
 	// GPU code calls this to grab the next command word
 	bool TCLGPUReadRBWord(uint32& cmdWord)
 	{
-		uint32 readIndex = tclRingBufferA_readIndex.load(std::memory_order::relaxed);
-		if (readIndex == tclRingBufferA_writeIndex)
+		if (tclRingBufferA_readIndex == tclRingBufferA_writeIndex)
 			return false;
-		cmdWord = tclRingBufferA[readIndex];
-		tclRingBufferA_readIndex.store((readIndex + 1) % TCL_RING_BUFFER_SIZE, std::memory_order::release);
+		cmdWord = tclRingBufferA[tclRingBufferA_readIndex];
+		tclRingBufferA_readIndex = (tclRingBufferA_readIndex+1) % TCL_RING_BUFFER_SIZE;
 		return true;
 	}
 
 	void TCLWaitForRBSpace(uint32be numU32s)
 	{
-		while (true)
+		while ( true )
 		{
-			uint32 readIndex = tclRingBufferA_readIndex.load(std::memory_order::acquire);
-			uint32 writeIndex = tclRingBufferA_writeIndex.load(std::memory_order::acquire);
-			uint32 distance = (readIndex + TCL_RING_BUFFER_SIZE - writeIndex) & (TCL_RING_BUFFER_SIZE - 1);
-			if (writeIndex == readIndex) // buffer completely empty
+			uint32 distance = (tclRingBufferA_readIndex + TCL_RING_BUFFER_SIZE - tclRingBufferA_writeIndex) & (TCL_RING_BUFFER_SIZE - 1);
+			if (tclRingBufferA_writeIndex == tclRingBufferA_readIndex) // buffer completely empty
 				distance = TCL_RING_BUFFER_SIZE;
-			if (distance >= numU32s + 1) // assume distance minus one, because we are never allowed to completely wrap around
+			if (distance >= numU32s+1) // assume distance minus one, because we are never allowed to completely wrap around
 				break;
 			_mm_pause();
 		}
@@ -97,25 +94,21 @@ namespace TCL
 	// this function assumes that TCLWaitForRBSpace was called and that there is enough space
 	void TCLWriteCmd(uint32be* cmd, uint32 cmdLen)
 	{
-		uint32 writeIndex = tclRingBufferA_writeIndex.load(std::memory_order::acquire);
-
 		while (cmdLen > 0)
 		{
-			tclRingBufferA[writeIndex] = *cmd;
-			writeIndex++;
-			writeIndex &= (TCL_RING_BUFFER_SIZE - 1);
+			tclRingBufferA[tclRingBufferA_writeIndex] = *cmd;
+			tclRingBufferA_writeIndex++;
+			tclRingBufferA_writeIndex &= (TCL_RING_BUFFER_SIZE - 1);
 			cmd++;
 			cmdLen--;
 		}
-
-		tclRingBufferA_writeIndex.store(writeIndex, std::memory_order::release);
 	}
 
 	#define EVENT_TYPE_TS		5
 
-	uint64 TCLSubmitRetireMarker(bool triggerEventInterrupt)
+	void TCLSubmitRetireMarker(bool triggerEventInterrupt)
 	{
-		uint64 currentRetireMarker = ++s_currentRetireMarker;
+		s_currentRetireMarker++;
 		uint32be cmd[6];
 		cmd[0] = pm4HeaderType3(IT_EVENT_WRITE_EOP, 5);
 		cmd[1] = (4 | (EVENT_TYPE_TS << 8)); // event type (bits 8-15) and event index (bits 0-7).
@@ -123,10 +116,9 @@ namespace TCL
 		cmd[3] = 0x40000000; // select 64bit write, lower 16 bits are the upper bits of the address
 		if (triggerEventInterrupt)
 			cmd[3] |= 0x2000000; // trigger interrupt after value has been written
-		cmd[4] = (uint32)currentRetireMarker; // data lower 32 bits
-		cmd[5] = (uint32)(currentRetireMarker >> 32); // data higher 32 bits
+		cmd[4] = (uint32)s_currentRetireMarker; // data lower 32 bits
+		cmd[5] = (uint32)(s_currentRetireMarker>>32); // data higher 32 bits
 		TCLWriteCmd(cmd, 6);
-		return currentRetireMarker;
 	}
 
 	int TCLSubmitToRing(uint32be* cmd, uint32 cmdLen, betype<TCLSubmissionFlag>* controlFlags, uint64be* timestampValueOut)
@@ -146,8 +138,8 @@ namespace TCL
 		// create new marker timestamp and tell GPU to write it to our variable after its done processing the command
 		if ((HAS_FLAG(flags, TCLSubmissionFlag::USE_RETIRED_MARKER)))
 		{
-			uint64 currentRetireMarker = TCLSubmitRetireMarker(!HAS_FLAG(flags, TCLSubmissionFlag::NO_MARKER_INTERRUPT));
-			*timestampValueOut = currentRetireMarker; // incremented before each submit
+			TCLSubmitRetireMarker(!HAS_FLAG(flags, TCLSubmissionFlag::NO_MARKER_INTERRUPT));
+			*timestampValueOut = s_currentRetireMarker; // incremented before each submit
 		}
 		else
 		{
