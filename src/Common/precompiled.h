@@ -412,7 +412,7 @@ FORCE_INLINE int BSF(uint32 v) // returns index of first bit set, counting from 
 
 inline void _mm_pause()
 {
-    asm volatile("yield");
+    asm volatile("isb sy");
 }
 
 inline uint64 __rdtsc()
