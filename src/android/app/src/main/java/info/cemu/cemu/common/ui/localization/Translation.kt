@@ -2,15 +2,18 @@
 
 package info.cemu.cemu.common.ui.localization
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import android.view.View.LAYOUT_DIRECTION_RTL
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.text.layoutDirection
 import info.cemu.cemu.nativeinterface.NativeLocalization
 import name.kropp.kotlinx.gettext.Gettext
 import name.kropp.kotlinx.gettext.Locale
@@ -59,12 +62,9 @@ fun getAvailableLanguages() =
 fun setLanguage(languageCode: String, context: Context) {
     val translation = Translations.firstOrNull { it.locale.language == languageCode } ?: return
     translation.load(context)
-    CurrentLanguage = translation.locale.language
+    CurrentLocale = translation.locale
 }
 
-fun getCurrentLocale() = I18n.locale
-
-@SuppressLint("NewApi")
 fun setTranslations(context: Context) {
     val assetTranslations = context.assets.list(TRANSLATIONS_FOLDER)?.filter { language ->
         if (language == DEFAULT_LANGUAGE) return@filter false
@@ -87,12 +87,21 @@ fun tr(text: String) = I18n.tr(text)
 
 fun tr(text: String, vararg args: Any): String = MessageFormat.format(I18n.tr(text), *args)
 
-private var CurrentLanguage by mutableStateOf(DEFAULT_LANGUAGE)
-private val LocalAppLanguage = staticCompositionLocalOf { DEFAULT_LANGUAGE }
+private var CurrentLocale by mutableStateOf(DefaultTranslation.locale)
+val LocalLocale = staticCompositionLocalOf { Locale("en") }
 
 @Composable
 fun TranslatableContent(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalAppLanguage provides CurrentLanguage) {
+    val currentLocale = CurrentLocale
+    val layoutDirection = when (currentLocale.layoutDirection) {
+        LAYOUT_DIRECTION_RTL -> LayoutDirection.Rtl
+        else -> LayoutDirection.Ltr
+    }
+
+    CompositionLocalProvider(
+        LocalLocale provides currentLocale,
+        LocalLayoutDirection provides layoutDirection
+    ) {
         content()
     }
 }

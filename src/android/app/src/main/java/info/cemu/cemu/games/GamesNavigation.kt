@@ -1,7 +1,6 @@
 package info.cemu.cemu.games
 
 import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,15 +51,18 @@ private inline fun <reified T : Any> NavGraphBuilder.composableGameScreen(
 fun NavGraphBuilder.gamesNavigation(
     navController: NavHostController,
     startGame: (NativeGameTitles.Game) -> Unit,
-    createShortcut: (NativeGameTitles.Game) -> Unit,
-    gameListToolBarActions: @Composable (RowScope.() -> Unit),
+    tryCreateShortcut: (NativeGameTitles.Game) -> Boolean,
+    goToSettings: () -> Unit,
+    goToTitleManager: () -> Unit,
+    goToGraphicPacks: () -> Unit,
+    goToAboutCemu: () -> Unit,
 ) {
     navigation<GameListRoute>(startDestination = GameListRoutes.GamesRoute) {
         composable<GameListRoutes.GamesRoute> { backStackEntry ->
             val gameViewModel: GameViewModel = viewModel(backStackEntry)
             GamesListScreen(
                 startGame = startGame,
-                createShortcut = createShortcut,
+                tryCreateShortcut = tryCreateShortcut,
                 goToGameEditProfile = { game ->
                     gameViewModel.game = game
                     navController.navigate(GameListRoutes.GameProfileEditRoute)
@@ -69,7 +71,10 @@ fun NavGraphBuilder.gamesNavigation(
                     gameViewModel.game = game
                     navController.navigate(GameListRoutes.GameDetailsRoute)
                 },
-                toolbarActions = gameListToolBarActions
+                goToSettings = goToSettings,
+                goToTitleManager = goToTitleManager,
+                goToGraphicPacks = goToGraphicPacks,
+                goToAboutCemu = goToAboutCemu,
             )
         }
         composableGameScreen<GameListRoutes.GameDetailsRoute>(navController) { game ->

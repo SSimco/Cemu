@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.MutableCreationExtras
@@ -14,6 +15,7 @@ import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.components.SingleSelection
 import info.cemu.cemu.common.ui.components.Toggle
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.nativeinterface.NativeEmulation
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.DriverSettingMode
 
@@ -28,6 +30,8 @@ fun GameProfileEditScreen(
         },
     ),
 ) {
+    val supportsLoadingCustomDrivers = remember { NativeEmulation.supportsLoadingCustomDriver() }
+
     val driverSettingChoices by viewModel.driverSettingChoices.collectAsState()
     val selectedDriverSetting by viewModel.selectedDriverSetting.collectAsState()
 
@@ -87,14 +91,15 @@ fun GameProfileEditScreen(
             onChoiceChanged = { threadQuantum ->
                 NativeGameTitles.setThreadQuantumForTitle(titleId, threadQuantum)
             })
-        SingleSelection(
-            label = tr("Custom driver"),
-            choice = selectedDriverSetting,
-            choices = driverSettingChoices,
-            choiceToString = ::customDriverSettingChoiceToString,
-            onChoiceChanged = { driverSetting ->
-                viewModel.setSelectedDriverSetting(driverSetting = driverSetting)
-            })
+        if (supportsLoadingCustomDrivers) {
+            SingleSelection(
+                label = tr("Custom driver"),
+                choice = selectedDriverSetting,
+                choices = driverSettingChoices,
+                choiceToString = ::customDriverSettingChoiceToString,
+                onChoiceChanged = viewModel::setSelectedDriverSetting,
+            )
+        }
     }
 }
 

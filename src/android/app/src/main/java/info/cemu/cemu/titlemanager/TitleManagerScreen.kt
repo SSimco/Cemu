@@ -60,7 +60,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
 import info.cemu.cemu.common.ui.components.ScreenContentLazy
-import info.cemu.cemu.common.ui.components.formatBytes
+import info.cemu.cemu.common.ui.extensions.formatBytes
 import info.cemu.cemu.common.ui.localization.regionToString
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles

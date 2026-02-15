@@ -92,6 +92,6 @@ fun InputOverlaySettingsScreen(
         VisibleInputToggle(tr("Left joystick"), OverlayInputConfig.JOYSTICK_LEFT)
         VisibleInputToggle(tr("Right joystick"), OverlayInputConfig.JOYSTICK_RIGHT)
 
-        VisibleInputToggle(tr("DPad"), OverlayInputConfig.DPAD)
+        VisibleInputToggle(tr("D-pad"), OverlayInputConfig.DPAD)
     }
 }

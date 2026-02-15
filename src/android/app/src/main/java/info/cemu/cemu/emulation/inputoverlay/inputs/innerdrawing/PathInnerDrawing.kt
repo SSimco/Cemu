@@ -18,7 +18,9 @@ abstract class PathInnerDrawing : ButtonInnerDrawing {
     }
 
     protected abstract val canvasSize: Float
-    protected abstract val originalPath: Path
+    protected val originalPath: Path by lazy(LazyThreadSafetyMode.NONE) { createOriginalPath() }
+
+    protected abstract fun createOriginalPath(): Path
 
     override fun configure(boundingRect: Rect, alpha: Int) {
         activeColor = Colors.activeStroke(alpha)

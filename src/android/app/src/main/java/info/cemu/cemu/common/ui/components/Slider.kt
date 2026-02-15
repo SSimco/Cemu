@@ -1,6 +1,10 @@
 package info.cemu.cemu.common.ui.components
 
 import androidx.annotation.IntRange
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -8,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,8 +33,15 @@ fun Slider(
     onValueChange: (Int) -> Unit,
 ) {
     var sliderValue by rememberSaveable(value) { mutableFloatStateOf(value.toFloat()) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = LocalIndication.current
 
-    Column(modifier = Modifier.padding(8.dp)) {
+    Column(
+        modifier = Modifier
+            .focusable(interactionSource = interactionSource)
+            .indication(interactionSource, indication)
+            .padding(8.dp)
+    ) {
         Text(
             modifier = Modifier.padding(bottom = 8.dp),
             text = label,
@@ -48,6 +60,7 @@ fun Slider(
             value = sliderValue,
             onValueChangeFinished = { onValueChange(sliderValue.roundToInt()) },
             onValueChange = { sliderValue = it },
+            interactionSource = interactionSource,
         )
     }
 }

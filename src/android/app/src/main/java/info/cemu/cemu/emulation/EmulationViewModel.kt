@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import info.cemu.cemu.common.result.failure
-import info.cemu.cemu.common.result.then
-import info.cemu.cemu.common.result.thenRun
+import info.cemu.cemu.common.either.Either
+import info.cemu.cemu.common.either.Error
+import info.cemu.cemu.common.either.Success
+import info.cemu.cemu.common.either.attemptWithContext
+import info.cemu.cemu.common.either.bind
 import info.cemu.cemu.common.settings.AppSettings
 import info.cemu.cemu.common.settings.AppSettingsStore
 import info.cemu.cemu.common.settings.GamePadPosition
@@ -25,7 +27,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -181,34 +182,34 @@ class EmulationViewModel(
     val mainHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(true)
     val padHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(false)
 
-    private suspend fun initializeSystems() {
-        return withContext(Dispatchers.IO) {
+    private suspend fun initializeSystems(): Either<Unit, String> {
+        return attemptWithContext(Dispatchers.IO) {
             NativeEmulation.initializeSystems()
         }
     }
 
-    private suspend fun initializeRenderer(): Result<Unit> {
+    private suspend fun initializeRenderer(): Either<Unit, String> {
         return withContext(Dispatchers.IO) {
             try {
                 NativeEmulation.initializeRenderer()
 
                 NativeEmulation.initializeSurface(isMainCanvas = true)
 
-                return@withContext Result.success(Unit)
+                return@withContext Success(Unit)
 
             } catch (exception: NativeException) {
                 val errorMessage = tr("Failed creating renderer: {0}", exception.message!!)
-                return@withContext Result.failure(errorMessage)
+                return@withContext Error(errorMessage)
             }
         }
     }
 
-    private suspend fun prepareTitle(): Result<Unit> {
+    private suspend fun prepareTitle(): Either<Unit, String> {
         return withContext(Dispatchers.IO) {
             val result = NativeEmulation.prepareTitle(launchPath)
 
             if (result == NativeEmulation.PrepareTitleResult.SUCCESSFUL) {
-                return@withContext Result.success(Unit)
+                return@withContext Success(Unit)
             }
 
             val errorMessage = when (result) {
@@ -218,13 +219,13 @@ class EmulationViewModel(
                 else -> tr("Unable to launch game\nPath: {0}", launchPath)
             }
 
-            return@withContext Result.failure(errorMessage)
+            return@withContext Error(errorMessage)
         }
     }
 
 
-    private suspend fun launchTitle() {
-        return withContext(Dispatchers.IO) {
+    private suspend fun launchTitle(): Either<Unit, String> {
+        return attemptWithContext(Dispatchers.IO) {
             NativeEmulation.launchTitle()
         }
     }
@@ -239,10 +240,10 @@ class EmulationViewModel(
 
         emulationInitializationJob = viewModelScope.launch {
             prepareTitle()
-                .thenRun { initializeSystems() }
-                .then { initializeRenderer() }
-                .thenRun { launchTitle() }
-                .onFailure { _emulationError.value = it.message }
+                .bind { initializeSystems() }
+                .bind { initializeRenderer() }
+                .bind { launchTitle() }
+                .onError { _emulationError.value = it }
 
             _isEmulationInitialized.value = true
         }

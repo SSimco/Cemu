@@ -1,7 +1,7 @@
 package info.cemu.cemu.settings.graphics
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import info.cemu.cemu.common.ui.components.Button
 import info.cemu.cemu.common.ui.components.ScreenContent
 import info.cemu.cemu.common.ui.components.SingleSelection
@@ -19,8 +19,7 @@ private val ScalingFilterChoices = listOf(
 
 @Composable
 fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: () -> Unit) {
-    val supportsLoadingCustomDrivers =
-        rememberSaveable { NativeEmulation.supportsLoadingCustomDriver() }
+    val supportsLoadingCustomDrivers = remember { NativeEmulation.supportsLoadingCustomDriver() }
 
     ScreenContent(
         appBarText = tr("Graphics settings"),

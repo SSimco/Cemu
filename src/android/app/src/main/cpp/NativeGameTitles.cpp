@@ -384,9 +384,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_checkIfTitleExists(JNIEnv* 
 
 	fs::path target_location = ActiveSettings::GetMlcPath(titleInfo.GetInstallPath());
 
-	auto createTitleExistsStatus = [&](jobject existsError = nullptr) {
-		if (existsError == nullptr)
-			existsError = JNIUtils::newObject(env, "info/cemu/cemu/nativeinterface/NativeGameTitles$TitleExistsError$None");
+	auto createTitleExistsStatus = [&](jobject existsError) {
 		return JNIUtils::newObject(
 			env,
 			"info/cemu/cemu/nativeinterface/NativeGameTitles$TitleExistsStatus",
@@ -398,7 +396,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_checkIfTitleExists(JNIEnv* 
 	std::error_code ec;
 	if (!fs::exists(target_location, ec))
 	{
-		return createTitleExistsStatus();
+		return createTitleExistsStatus(JNIUtils::newObject(env, "info/cemu/cemu/nativeinterface/NativeGameTitles$TitleExistsError$None"));
 	}
 
 	try
@@ -407,7 +405,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_checkIfTitleExists(JNIEnv* 
 		if (!tmp.IsValid())
 		{
 			// does not exist / is not valid. We allow to overwrite it
-			return createTitleExistsStatus();
+			return createTitleExistsStatus(JNIUtils::newObject(env, "info/cemu/cemu/nativeinterface/NativeGameTitles$TitleExistsError$None"));
 		}
 
 		TitleIdParser tip(titleInfo.GetAppTitleId());
@@ -440,7 +438,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_checkIfTitleExists(JNIEnv* 
 		cemuLog_log(LogType::Force, "exist-error: {} at {}", ex.what(), _pathToUtf8(target_location));
 	}
 
-	return createTitleExistsStatus();
+	return createTitleExistsStatus(JNIUtils::newObject(env, "info/cemu/cemu/nativeinterface/NativeGameTitles$TitleExistsError$None"));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL

@@ -6,7 +6,6 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.view.MotionEvent
-import androidx.core.graphics.PathParser
 import info.cemu.cemu.emulation.inputoverlay.OverlayDpad
 import info.cemu.cemu.emulation.inputoverlay.Colors
 import info.cemu.cemu.emulation.inputoverlay.LineBounds
@@ -24,7 +23,7 @@ class DPad(
 ) : Input(rect) {
     private var backgroundFillColor: Int = 0
     private var backgroundStrokeColor: Int = 0
-    
+
     private val markerPaint = Paint().apply { strokeWidth = MARKER_WIDTH }
     private val upMarker = LineBounds()
     private val downMarker = LineBounds()
@@ -197,9 +196,23 @@ class DPad(
 
     companion object {
         private const val CROSS_PATH_CANVAS_SIZE = 100F
-        private const val PATH_DATA =
-            "M 0,-65 H 35 V -100 h 30 v 35 h 35 V -35 H 65 v 35 H 35 V -35 H 0 Z"
-        private val OriginalCrossPath by lazy { PathParser.createPathFromPathData(PATH_DATA) }
+        private val OriginalCrossPath by lazy(LazyThreadSafetyMode.NONE) {
+            Path().apply {
+                moveTo(0f, -65f)
+                lineTo(35f, -65f)
+                lineTo(35f, -100f)
+                rLineTo(30f, 0f)
+                rLineTo(0f, 35f)
+                rLineTo(35f, 0f)
+                lineTo(100f, -35f)
+                lineTo(65f, -35f)
+                rLineTo(0f, 35f)
+                lineTo(35f, 0f)
+                lineTo(35f, -35f)
+                lineTo(0f, -35f)
+                close()
+            }
+        }
         private const val MARKER_WIDTH = 15f
         private const val NONE = 0
         private const val UP = 1 shl 0

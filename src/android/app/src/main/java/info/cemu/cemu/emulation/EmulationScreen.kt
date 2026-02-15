@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -36,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,14 +46,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
-import info.cemu.cemu.common.settings.GamePadPosition
+import info.cemu.cemu.common.ui.extensions.showMessage
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurface
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
@@ -83,13 +85,6 @@ fun EmulationScreen(
     val isInputOverlayVisible by viewModel.isInputOverlayVisible.collectAsState()
     val inputOverlaySettings by viewModel.inputOverlaySettings.collectAsState()
     var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
-
-    fun snackbarMessage(message: String) {
-        scope.launch {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(message)
-        }
-    }
 
     fun closeDrawer() {
         scope.launch { drawerState.close() }
@@ -123,7 +118,7 @@ fun EmulationScreen(
                             closeDrawer()
                         },
                         onEditInputOverlay = {
-                            snackbarMessage(tr("Edit input positions"))
+                            snackbarHostState.showMessage(scope, tr("Edit input positions"))
                             inputOverlayInputMode = EDIT_POSITION
                             closeDrawer()
                         },
@@ -140,36 +135,41 @@ fun EmulationScreen(
             }
         },
     ) {
-        Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { contentPadding ->
-            Box(Modifier.padding(contentPadding)) {
-                EmulationSurfaces(viewModel)
+        EmulationSurfaces(viewModel)
 
-                InputOverlaySurface(
-                    isVisible = isInputOverlayVisible,
-                    inputOverlaySettings = inputOverlaySettings,
-                    inputMode = inputOverlayInputMode,
-                    onEditFinished = { viewModel.saveInputOverlayRectangles(it) },
-                )
+        InputOverlaySurface(
+            isVisible = isInputOverlayVisible,
+            inputOverlaySettings = inputOverlaySettings,
+            inputMode = inputOverlayInputMode,
+            onEditFinished = { viewModel.saveInputOverlayRectangles(it) },
+        )
 
-                if (inputOverlayInputMode != DEFAULT) {
-                    EditInputsLayout(
-                        inputMode = inputOverlayInputMode,
-                        onFinishClick = {
-                            snackbarMessage(tr("Exited input edit mode"))
-                            inputOverlayInputMode = DEFAULT
-                        },
-                        onMoveClick = {
-                            snackbarMessage(tr("Edit input positions"))
-                            inputOverlayInputMode = EDIT_POSITION
-                        },
-                        onResizeClick = {
-                            snackbarMessage(tr("Edit input size"))
-                            inputOverlayInputMode = EDIT_SIZE
-                        },
-                    )
-                }
-            }
+        if (inputOverlayInputMode != DEFAULT) {
+            EditInputsLayout(
+                inputMode = inputOverlayInputMode,
+                onFinishClick = {
+                    snackbarHostState.showMessage(scope, tr("Exited input edit mode"))
+                    inputOverlayInputMode = DEFAULT
+                },
+                onMoveClick = {
+                    snackbarHostState.showMessage(scope, tr("Edit input positions"))
+                    inputOverlayInputMode = EDIT_POSITION
+                },
+                onResizeClick = {
+                    snackbarHostState.showMessage(scope, tr("Edit input size"))
+                    inputOverlayInputMode = EDIT_SIZE
+                },
+            )
         }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
     }
 
     emulationError?.let {
@@ -339,20 +339,61 @@ private fun EmulationSurfaces(viewModel: EmulationViewModel) {
     val sideMenuState by viewModel.sideMenuState.collectAsState()
     val gamePadPosition by viewModel.gamePadPosition.collectAsState()
 
-    LinearLayout(gamePadPosition) { itemModifier ->
+    val isVertical = gamePadPosition.isVertical()
+    val appearsAfterTV = gamePadPosition.appearsAfterTV()
+    val isPadVisible = sideMenuState.isPadVisible
+
+    @Composable
+    fun MainSurface(modifier: Modifier) {
         EmulationSurface(
-            modifier = itemModifier,
+            modifier = modifier,
             isTV = true,
             holderCallback = viewModel.mainHolderCallback,
             afterInit = { viewModel.initializeEmulation() },
         )
+    }
 
-        if (sideMenuState.isPadVisible) {
+    @Composable
+    fun PadSurface(modifier: Modifier) {
+        if (isPadVisible) {
             EmulationSurface(
-                modifier = itemModifier,
+                modifier = modifier,
                 isTV = false,
                 holderCallback = viewModel.padHolderCallback,
             )
+        }
+    }
+
+    @Composable
+    fun SurfacesInOrder(itemModifier: Modifier) {
+        if (appearsAfterTV) {
+            MainSurface(itemModifier)
+            PadSurface(itemModifier)
+        } else {
+            PadSurface(itemModifier)
+            MainSurface(itemModifier)
+        }
+    }
+
+    LinearLayout(isVertical) { itemModifier ->
+        SurfacesInOrder(itemModifier)
+    }
+}
+
+@Composable
+private fun LinearLayout(
+    isVertical: Boolean,
+    content: @Composable (Modifier) -> Unit,
+) {
+    if (isVertical) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            content(Modifier.weight(1f))
+        }
+    } else {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                content(Modifier.weight(1f))
+            }
         }
     }
 }
@@ -366,7 +407,8 @@ private fun EmulationSurface(
     afterInit: () -> Unit = {}
 ) {
     AndroidView(
-        modifier = modifier, factory = { context ->
+        modifier = modifier,
+        factory = { context ->
             SurfaceView(context).apply {
                 var firstChange = true
 
@@ -390,33 +432,6 @@ private fun EmulationSurface(
                 })
             }
         })
-}
-
-@Composable
-private fun LinearLayout(
-    gamePadPosition: GamePadPosition,
-    content: @Composable (itemModifier: Modifier) -> Unit,
-) {
-    if (gamePadPosition.isVertical()) {
-        val arrangement =
-            if (gamePadPosition.appearsAfterTV()) Arrangement.Top else Arrangement.Bottom
-
-        Column(
-            modifier = Modifier.fillMaxSize(), verticalArrangement = arrangement
-        ) {
-            content(Modifier.weight(1f))
-        }
-    } else {
-        val arrangement =
-            if (gamePadPosition.appearsAfterTV()) Arrangement.Start else Arrangement.End
-
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = arrangement,
-        ) {
-            content(Modifier.weight(1f))
-        }
-    }
 }
 
 @Composable

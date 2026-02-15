@@ -19,14 +19,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import info.cemu.cemu.R
-import info.cemu.cemu.common.ui.localization.getCurrentLocale
+import info.cemu.cemu.common.ui.localization.LocalLocale
 import info.cemu.cemu.common.ui.localization.tr
 import java.text.SimpleDateFormat
 import java.util.Date
-
 
 @Composable
 fun DateField(
@@ -84,7 +84,9 @@ private fun DatePickerModal(
     }
 }
 
+@Composable
 private fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("yyyy-MM-dd", getCurrentLocale())
+    val locale = LocalLocale.current
+    val formatter = SimpleDateFormat("yyyy-MM-dd", locale)
     return formatter.format(Date(millis))
 }
