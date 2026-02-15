@@ -35,6 +35,10 @@
       "name": "boost-stacktrace",
       "platform": "android"
     },
+    {
+      "name": "boost-context",
+      "platform": "android"
+    },
     "boost-random",
     "fmt",
     {

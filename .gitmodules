@@ -29,7 +29,3 @@
 	path = dependencies/libadrenotools
 	url = https://github.com/bylaws/libadrenotools
 	shallow = true
-[submodule "dependencies/libucontext/libucontext"]
-	path = dependencies/libucontext/src
-	url = https://github.com/kaniini/libucontext
-	shallow = true

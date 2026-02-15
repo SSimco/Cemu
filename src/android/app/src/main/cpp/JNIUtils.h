@@ -209,9 +209,9 @@ namespace JNIUtils
 
 	inline void fiberSafeJNICall(const std::function<void(JNIEnv*)>& func)
 	{
-		std::thread([&]() {
+		std::jthread([&]() {
 			ScopedJNIENV env;
 			func(*env);
-		}).join();
+		});
 	}
 } // namespace JNIUtils
