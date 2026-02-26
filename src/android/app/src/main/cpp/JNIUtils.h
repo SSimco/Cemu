@@ -2,6 +2,7 @@
 
 #include <android/native_window_jni.h>
 #include <jni.h>
+#include "util/Fiber/FiberFContext.h"
 
 namespace JNIUtils
 {
@@ -207,9 +208,9 @@ namespace JNIUtils
 		return obj;
 	}
 
-	inline void fiberSafeJNICall(const std::function<void(JNIEnv*)>& func)
+	inline void fiberSafeJNICall(std::function<void(JNIEnv*)> func)
 	{
-		std::jthread([&]() {
+		Fiber::RunOnMainFiber([&]() {
 			ScopedJNIENV env;
 			func(*env);
 		});
