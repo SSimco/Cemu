@@ -56,7 +56,7 @@ fun AudioSettingsScreen(navigateBack: () -> Unit) {
             label = tr("Gamepad"),
             description = tr("Enable audio output for the Wii U Gamepad"),
             initialCheckedState = { NativeSettings.getAudioDeviceEnabled(false) },
-            onCheckedChanged = { NativeSettings.setAudioDeviceEnabled(false, it) }
+            onCheckedChanged = { NativeSettings.setAudioDeviceEnabled(it, false) }
         )
         SingleSelection(
             label = tr("Gamepad channels"),
