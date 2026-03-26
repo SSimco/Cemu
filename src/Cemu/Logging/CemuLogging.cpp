@@ -120,19 +120,6 @@ const std::map<LogType, std::string> g_logging_window_mapping
 	{LogType::VulkanValidation,   "Vulkan validation layer"},
 };
 
-LogCallbacks* g_logCallbacks = nullptr;
-
-void cemuLog_registerLogCallbacks(LogCallbacks* logCallbacks)
-{
-	g_logCallbacks = logCallbacks;
-}
-
-void cemuLog_unregisterLogCallbacks()
-{
-	g_logCallbacks = nullptr;
-}
-
-
 bool cemuLog_advancedPPCLoggingEnabled()
 {
 	return GetConfig().advanced_ppc_logging;

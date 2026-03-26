@@ -78,7 +78,7 @@ bool cemuLog_log(LogType type, std::string_view text);
 bool cemuLog_log(LogType type, std::u8string_view text);
 void cemuLog_waitForFlush(); // wait until all log lines are written
 
-template<typename ... TArgs>
+template<typename... TArgs>
 bool cemuLog_log(LogType type, fmt::format_string<TArgs...> formatStr, TArgs&&... args)
 {
 	if (!cemuLog_isLoggingEnabled(type))
@@ -110,16 +110,6 @@ inline bool cemuLog_logDebug(LogType type, std::string_view message)
 	return false;
 #endif
 }
-
-class LogCallbacks
-{
-public:
-	virtual void Log(std::string_view filter, std::string_view message) = 0;
-	virtual void Log(std::string_view filter, std::wstring_view message) = 0;
-};
-
-void cemuLog_registerLogCallbacks(LogCallbacks* logCallbacks);
-void cemuLog_unregisterLogCallbacks();
 
 #define cemuLog_logDebugOnce(...) { static bool _not_first_call = false; if (!_not_first_call) { _not_first_call = true; cemuLog_logDebug(__VA_ARGS__); } }
 
