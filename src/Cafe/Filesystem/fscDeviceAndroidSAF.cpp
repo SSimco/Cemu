@@ -1,8 +1,5 @@
 #include "Cafe/Filesystem/fscDeviceAndroidSAF.h"
 
-#include <memory>
-#include <stdexcept>
-
 #include "Cafe/Filesystem/fsc.h"
 #include "Common/FileStream.h"
 #include "Common/android/FilesystemAndroid.h"
@@ -53,7 +50,7 @@ uint64 FSCVirtualFile_AndroidSAF::fscQueryValueU64(uint32 id)
 
 uint32 FSCVirtualFile_AndroidSAF::fscWriteData(void* buffer, uint32 size)
 {
-	throw std::logic_error("write not supported with SAF");
+	cemu_assert_error();
 	return 0;
 }
 
@@ -154,10 +151,9 @@ FSCVirtualFile* FSCVirtualFile_AndroidSAF::OpenFile(const fs::path& path, FSC_AC
 {
 	if (!HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_FILE) && !HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_DIR))
 		cemu_assert_debug(false); // not allowed. At least one of both flags must be set
-	if (HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::WRITE_PERMISSION) ||
-		HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::FILE_ALLOW_CREATE) ||
-		HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::FILE_ALWAYS_CREATE))
-		throw std::logic_error("writing and creating a file is not supported with SAF");
+
+	cemu_assert_debug(!HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::WRITE_PERMISSION)); // writing not supported with SAF
+
 	// attempt to open as file
 	if (HAS_FLAG(accessFlags, FSC_ACCESS_FLAG::OPEN_FILE))
 	{
@@ -200,22 +196,6 @@ class fscDeviceAndroidSAFFSC : public fscDeviceC
 		FSCVirtualFile* vf = FSCVirtualFile_AndroidSAF::OpenFile(_utf8ToPath(path), accessFlags, *fscStatus);
 		cemu_assert_debug((bool)vf == (*fscStatus == FSC_STATUS_OK));
 		return vf;
-	}
-
-	bool fscDeviceCreateDir(std::string_view path, void* ctx, sint32* fscStatus) override
-	{
-		throw std::runtime_error("creating a directory is not supported with SAF");
-	}
-
-	bool fscDeviceRemoveFileOrDir(std::string_view path, void* ctx, sint32* fscStatus) override
-	{		
-		throw std::runtime_error("removing a file or dir is not supported with SAF");
-        return false;
-	}
-
-	bool fscDeviceRename(std::string_view srcPath, std::string_view dstPath, void* ctx, sint32* fscStatus) override
-	{
-		throw std::runtime_error("renaming not supported with SAF");
 	}
 
 	// singleton

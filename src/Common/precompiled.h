@@ -86,7 +86,7 @@
 namespace fs = std::filesystem;
 #if BOOST_PLAT_ANDROID
 #include "Common/android/FilesystemAndroid.h"
-#endif // __ANDROID
+#endif // BOOST_PLAT_ANDROID
 
 namespace cemu::fs
 {

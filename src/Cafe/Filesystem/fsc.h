@@ -221,7 +221,7 @@ bool FSCDeviceAndroidSAF_Mount(std::string_view mountPath, std::string_view host
 inline bool FSCDeviceHost_Mount(std::string_view mountPath, std::string_view hostTargetPath, sint32 priority)
 {
 #if BOOST_PLAT_ANDROID
-	if (FilesystemAndroid::IsContentUri(std::string(hostTargetPath)))
+	if (FilesystemAndroid::IsContentUri(hostTargetPath))
 		return FSCDeviceAndroidSAF_Mount(mountPath, hostTargetPath, priority);
 #endif
 	return FSCDeviceHostFS_Mount(mountPath, hostTargetPath, priority);

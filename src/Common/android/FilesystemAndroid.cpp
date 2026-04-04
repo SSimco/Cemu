@@ -9,9 +9,9 @@ namespace FilesystemAndroid
 {
 std::shared_ptr<FilesystemCallbacks> g_filesystemCallbacks = nullptr;
 
-void SetFilesystemCallbacks(const std::shared_ptr<FilesystemCallbacks> &filesystemCallbacks)
+void SetFilesystemCallbacks(std::shared_ptr<FilesystemCallbacks> filesystemCallbacks)
 {
-    g_filesystemCallbacks = filesystemCallbacks;
+    g_filesystemCallbacks = std::move(filesystemCallbacks);
 }
 
 int OpenContentUri(const fs::path &uri)
@@ -49,7 +49,7 @@ bool Exists(const fs::path &uri)
     return false;
 }
 
-bool IsContentUri(const std::string &uri)
+bool IsContentUri(std::string_view uri)
 {
     static constexpr auto content = "content://";
     return uri.starts_with(content);
