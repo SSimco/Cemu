@@ -11,7 +11,6 @@
 #include "input/api/Keyboard/KeyboardController.h"
 #include "input/api/DSU/DSUController.h"
 #include "input/api/GameCube/GameCubeController.h"
-#include "input/api/Device/DeviceController.h"
 
 #if BOOST_OS_WINDOWS
 #include "input/api/XInput/XInputController.h"
@@ -24,6 +23,7 @@
 
 #if BOOST_PLAT_ANDROID
 #include "input/api/Android/AndroidController.h"
+#include "input/api/Device/DeviceController.h"
 #endif
 
 ControllerPtr ControllerFactory::CreateController(InputAPI::Type api, std::string_view uuid,
@@ -189,9 +189,9 @@ ControllerProviderPtr ControllerFactory::CreateControllerProvider(InputAPI::Type
 #if BOOST_PLAT_ANDROID
 	case InputAPI::Android:
 		return std::make_shared<AndroidControllerProvider>();
-#endif
 	case InputAPI::Device:
 		return std::make_shared<DeviceControllerProvider>();
+#endif
 	default:
 		cemu_assert_debug(false);
 		return {};

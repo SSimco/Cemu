@@ -1,5 +1,4 @@
 #include "DeviceController.h"
-#include <algorithm>
 
 DeviceController::DeviceController() : base_type("device", "device")
 {
