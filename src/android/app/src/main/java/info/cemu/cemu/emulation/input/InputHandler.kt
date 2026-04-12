@@ -1,23 +1,20 @@
-package info.cemu.cemu.emulation
+package info.cemu.cemu.emulation.input
 
 import android.view.KeyEvent
 import android.view.MotionEvent
 import info.cemu.cemu.common.android.inputevent.isFromPhysicalController
-import info.cemu.cemu.common.input.GamepadInputHandler
-import info.cemu.cemu.nativeinterface.NativeInput.onNativeAxis
-import info.cemu.cemu.nativeinterface.NativeInput.onNativeKey
+import info.cemu.cemu.nativeinterface.NativeInput
 
-object InputHandler : GamepadInputHandler {
-    override fun onKeyEvent(event: KeyEvent): Boolean {
+object InputHandler {
+    fun onKeyEvent(event: KeyEvent): Boolean {
         if (!event.isFromPhysicalController()) {
             return false
         }
 
         val device = event.device
 
-        onNativeKey(
+        NativeInput.onControllerKey(
             device.descriptor,
-            device.name,
             event.keyCode,
             event.action == KeyEvent.ACTION_DOWN
         )
@@ -25,7 +22,7 @@ object InputHandler : GamepadInputHandler {
         return true
     }
 
-    override fun onMotionEvent(event: MotionEvent): Boolean {
+    fun onMotionEvent(event: MotionEvent): Boolean {
         if (!event.isFromPhysicalController()) {
             return false
         }
@@ -35,7 +32,7 @@ object InputHandler : GamepadInputHandler {
         for (motionRange in device.motionRanges) {
             val axisValue = event.getAxisValue(motionRange.axis, actionPointerIndex)
             val axis = motionRange.axis
-            onNativeAxis(device.descriptor, device.name, axis, axisValue)
+            NativeInput.onControllerAxis(device.descriptor, axis, axisValue)
         }
 
         return true

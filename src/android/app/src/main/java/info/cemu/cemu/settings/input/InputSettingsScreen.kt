@@ -9,13 +9,13 @@ import info.cemu.cemu.common.ui.localization.controllerTypeToString
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 
-data class InputSettingsScreenActions(
-    val goToInputOverlaySettings: () -> Unit,
-    val goToControllerSettings: (controllerIndex: Int) -> Unit,
-)
-
 @Composable
-fun InputSettingsScreen(navigateBack: () -> Unit, actions: InputSettingsScreenActions) {
+fun InputSettingsScreen(
+    navigateBack: () -> Unit,
+    goToInputOverlaySettings: () -> Unit,
+    goToControllerSettings: (controllerIndex: Int) -> Unit,
+    goToHostInputSettings: () -> Unit,
+) {
     val controllers = remember {
         (0..<NativeInput.MAX_CONTROLLERS).map { controllerIndex ->
             controllerIndex to getControllerType(controllerIndex)
@@ -27,22 +27,25 @@ fun InputSettingsScreen(navigateBack: () -> Unit, actions: InputSettingsScreenAc
     ) {
         Button(
             label = tr("Input overlay settings"),
-            onClick = dropUnlessResumed { actions.goToInputOverlaySettings() },
+            onClick = dropUnlessResumed { goToInputOverlaySettings() },
+        )
+        Button(
+            label = tr("Device settings"),
+            onClick = dropUnlessResumed { goToHostInputSettings() },
         )
         controllers.forEach { (controllerIndex, controllerEmulatedType) ->
             Button(
                 label = tr("Controller {0}", controllerIndex + 1),
                 description = tr(
                     "Emulated controller: {0}",
-                    controllerTypeToString(controllerEmulatedType)
+                    controllerTypeToString(controllerEmulatedType),
                 ),
-                onClick = dropUnlessResumed { actions.goToControllerSettings(controllerIndex) },
+                onClick = dropUnlessResumed { goToControllerSettings(controllerIndex) },
             )
         }
     }
 }
 
 fun getControllerType(index: Int): Int =
-    if (NativeInput.isControllerDisabled(index))
-        NativeInput.EmulatedControllerType.DISABLED
+    if (NativeInput.isControllerDisabled(index)) NativeInput.EmulatedControllerType.DISABLED
     else NativeInput.getControllerType(index)

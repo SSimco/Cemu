@@ -37,9 +37,9 @@ fun SingleSelection(
     label: String,
     choice: String,
     choices: Collection<String>,
+    modifier: Modifier = Modifier,
     isChoiceEnabled: (String) -> Boolean = { true },
     enabled: Boolean = true,
-    modifier: Modifier = Modifier,
     onChoiceChanged: (String) -> Unit,
 ) {
     SingleSelection(

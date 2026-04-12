@@ -239,10 +239,9 @@ void VPADController::update_touch(VPADStatus_t& status)
 void VPADController::update_motion(VPADStatus_t& status)
 {
 	auto& input_manager = InputManager::instance();
-	bool has_device_motion = input_manager.m_device_motion.m_device_motion_enabled;
-	if (has_motion() || has_device_motion)
+	if (has_motion())
 	{
-		MotionSample motionSample = has_device_motion ? input_manager.get_device_motion_sample() : get_motion_data();
+		MotionSample motionSample = get_motion_data();
 		glm::vec3 acc;
 		motionSample.getVPADAccelerometer(&acc[0]);
 		//const auto& acc = motionSample.getVPADAccelerometer();

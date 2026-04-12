@@ -12,8 +12,8 @@ import info.cemu.cemu.settings.gamespath.GamePathsScreen
 import info.cemu.cemu.settings.general.GeneralSettingsScreen
 import info.cemu.cemu.settings.graphics.GraphicsSettingsScreen
 import info.cemu.cemu.settings.input.ControllerInputSettingsScreen
+import info.cemu.cemu.settings.input.DeviceInputSettingsScreen
 import info.cemu.cemu.settings.input.InputSettingsScreen
-import info.cemu.cemu.settings.input.InputSettingsScreenActions
 import info.cemu.cemu.settings.inputoverlay.InputOverlaySettingsScreen
 import info.cemu.cemu.settings.overlay.OverlaySettingsScreen
 import kotlinx.serialization.Serializable
@@ -59,6 +59,9 @@ private object SettingsRoutes {
     object InputOverlaySettingsScreenRoute
 
     @Serializable
+    object DeviceInputSettingsScreenRoute
+
+    @Serializable
     object AccountSettingsScreenRoute
 }
 
@@ -67,14 +70,12 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
         composable<SettingsRoutes.SettingsHomeScreenRoute> {
             SettingsHomeScreen(
                 navigateBack = { navController.popBackStack() },
-                actions = SettingsHomeScreenActions(
-                    goToGeneralSettings = { navController.navigate(SettingsRoutes.GeneralSettings) },
-                    goToInputSettings = { navController.navigate(SettingsRoutes.InputSettingsRoute) },
-                    goToGraphicsSettings = { navController.navigate(SettingsRoutes.GraphicsSettingsScreenRoute) },
-                    goToAudioSettings = { navController.navigate(SettingsRoutes.AudioSettingsScreenRoute) },
-                    goToOverlaySettings = { navController.navigate(SettingsRoutes.OverlaySettingsScreenRoute) },
-                    goToAccountSettings = { navController.navigate(SettingsRoutes.AccountSettingsScreenRoute) }
-                )
+                goToGeneralSettings = { navController.navigate(SettingsRoutes.GeneralSettings) },
+                goToInputSettings = { navController.navigate(SettingsRoutes.InputSettingsRoute) },
+                goToGraphicsSettings = { navController.navigate(SettingsRoutes.GraphicsSettingsScreenRoute) },
+                goToAudioSettings = { navController.navigate(SettingsRoutes.AudioSettingsScreenRoute) },
+                goToOverlaySettings = { navController.navigate(SettingsRoutes.OverlaySettingsScreenRoute) },
+                goToAccountSettings = { navController.navigate(SettingsRoutes.AccountSettingsScreenRoute) },
             )
         }
         composable<SettingsRoutes.AudioSettingsScreenRoute> {
@@ -114,21 +115,29 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
                     navigateBack = { navController.popBackStack() }
                 )
             }
+
+            composable<SettingsRoutes.DeviceInputSettingsScreenRoute> {
+                DeviceInputSettingsScreen(
+                    navigateBack = { navController.popBackStack() }
+                )
+            }
+
             composable<SettingsRoutes.InputSettingsScreenRoute> {
                 InputSettingsScreen(
                     navigateBack = { navController.popBackStack() },
-                    actions = InputSettingsScreenActions(
-                        goToInputOverlaySettings = {
-                            navController.navigate(SettingsRoutes.InputOverlaySettingsScreenRoute)
-                        },
-                        goToControllerSettings = { controllerIndex ->
-                            navController.navigate(
-                                SettingsRoutes.ControllerInputSettingsScreenRoute(
-                                    controllerIndex
-                                )
+                    goToInputOverlaySettings = {
+                        navController.navigate(SettingsRoutes.InputOverlaySettingsScreenRoute)
+                    },
+                    goToControllerSettings = { controllerIndex ->
+                        navController.navigate(
+                            SettingsRoutes.ControllerInputSettingsScreenRoute(
+                                controllerIndex
                             )
-                        },
-                    )
+                        )
+                    },
+                    goToHostInputSettings = {
+                        navController.navigate(SettingsRoutes.DeviceInputSettingsScreenRoute)
+                    },
                 )
             }
         }

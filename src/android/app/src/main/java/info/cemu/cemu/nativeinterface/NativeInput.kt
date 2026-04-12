@@ -1,5 +1,7 @@
 package info.cemu.cemu.nativeinterface
 
+import androidx.annotation.Keep
+
 object NativeInput {
     object VPADButton {
         const val A: Int = 1
@@ -136,20 +138,42 @@ object NativeInput {
     const val MAX_WPAD_CONTROLLERS: Int = 7
 
     @JvmStatic
-    external fun onNativeKey(
-        deviceDescriptor: String?,
-        deviceName: String?,
+    external fun onControllerKey(
+        deviceDescriptor: String,
         key: Int,
         isPressed: Boolean,
     )
 
     @JvmStatic
-    external fun onNativeAxis(
-        deviceDescriptor: String?,
-        deviceName: String?,
+    external fun onControllerAxis(
+        deviceDescriptor: String,
         axis: Int,
         value: Float,
     )
+
+    @JvmStatic
+    external fun onControllerMotion(
+        deviceDescriptor: String,
+        timestamp: Long,
+        gyroX: Float,
+        gyroY: Float,
+        gyroZ: Float,
+        accelX: Float,
+        accelY: Float,
+        accelZ: Float,
+    )
+
+    @Keep
+    data class ControllerInfo(
+        val id: Int,
+        val descriptor: String,
+        val name: String,
+        val hasRumble: Boolean,
+        val hasMotion: Boolean,
+    )
+
+    @JvmStatic
+    external fun setControllers(controllers: Array<ControllerInfo>)
 
     @JvmStatic
     external fun setControllerType(index: Int, emulatedControllerType: Int)
@@ -160,13 +184,14 @@ object NativeInput {
     @JvmStatic
     external fun getControllerType(index: Int): Int
 
-    @JvmStatic
-    val WPADControllersCount: Int
-        external get
+    @Keep
+    data class ControllerCount(
+        val vpadCount: Int,
+        val wpadCount: Int,
+    )
 
     @JvmStatic
-    val VPADControllersCount: Int
-        external get
+    external fun getControllersCount(): ControllerCount
 
     @JvmStatic
     external fun setVPADScreenToggle(index: Int, enabled: Boolean)
@@ -202,7 +227,7 @@ object NativeInput {
     external fun onTouchUp(x: Int, y: Int, isTV: Boolean)
 
     @JvmStatic
-    external fun onMotion(
+    external fun onDeviceMotion(
         timestamp: Long,
         gyroX: Float,
         gyroY: Float,
@@ -213,11 +238,72 @@ object NativeInput {
     )
 
     @JvmStatic
-    external fun setMotionEnabled(motionEnabled: Boolean)
+    external fun setDeviceMotionEnabled(motionEnabled: Boolean)
+
+    @JvmStatic
+    external fun setDeviceRumble(rumble: Float)
+
+    @JvmStatic
+    external fun getDeviceRumble(): Float
+
+    @JvmStatic
+    external fun setDeviceControllerIndex(index: Int)
+
+    @JvmStatic
+    external fun getDeviceControllerIndex(): Int
 
     @JvmStatic
     external fun onOverlayButton(controllerIndex: Int, mappingId: Int, value: Boolean)
 
     @JvmStatic
     external fun onOverlayAxis(controllerIndex: Int, mappingId: Int, value: Float)
+
+    @Keep
+    interface ControllerCallbacks {
+        fun vibrateController(descriptor: String, milliseconds: Long, amplitude: Int)
+        fun cancelControllerVibration(descriptor: String)
+    }
+
+    @JvmStatic
+    external fun setControllerCallbacks(callbacks: ControllerCallbacks?)
+
+    @Keep
+    interface DeviceCallbacks {
+        fun vibrate(milliseconds: Long, amplitude: Int)
+        fun cancelVibration()
+    }
+
+    @JvmStatic
+    external fun setDeviceCallbacks(callbacks: DeviceCallbacks?)
+
+    @Keep
+    data class AxisSetting(
+        val deadzone: Float = 0.25f,
+        val range: Float = 1f,
+    )
+
+    @Keep
+    data class ControllerSettings(
+        val axis: AxisSetting = AxisSetting(),
+        val rotation: AxisSetting = AxisSetting(),
+        val trigger: AxisSetting = AxisSetting(),
+        val rumble: Float = 0f,
+        val motion: Boolean = false,
+    )
+
+    @JvmStatic
+    external fun getControllerSettings(
+        index: Int, descriptor: String, name: String
+    ): ControllerSettings?
+
+    @JvmStatic
+    external fun setControllerSettings(
+        index: Int, descriptor: String, name: String, controllerSettings: ControllerSettings
+    )
+
+    @JvmStatic
+    external fun getMotionEnabledControllerDescriptors(): Array<String>
+
+    @JvmStatic
+    external fun saveInputs()
 }

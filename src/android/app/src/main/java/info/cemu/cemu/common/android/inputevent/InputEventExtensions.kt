@@ -4,7 +4,7 @@ import android.view.InputDevice
 import android.view.InputEvent
 
 fun InputEvent.isFromPhysicalController(): Boolean {
-    if (deviceId < 0 || device.isVirtual) {
+    if (deviceId < 0 || device == null || device.isVirtual) {
         return false
     }
 

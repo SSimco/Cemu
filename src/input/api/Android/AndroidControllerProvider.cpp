@@ -1,74 +1,18 @@
 #include "input/api/Android/AndroidControllerProvider.h"
 
-#include <android/input.h>
-#include <android/keycodes.h>
+#include "ControllerManager.h"
+#include "AndroidController.h"
 
-#include "input/InputManager.h"
-#include "input/api/Android/AndroidController.h"
-#include "input/api/Controller.h"
-
-ControllerState& AndroidControllerProvider::get_controller_state(const std::string& deviceDescriptor)
+std::vector<std::shared_ptr<ControllerBase>> AndroidControllerProvider::get_controllers()
 {
-	if (auto it = m_controllersState.find(deviceDescriptor); it != m_controllersState.end())
-		return it->second;
-	m_controllersState[deviceDescriptor] = {};
-	return m_controllersState[deviceDescriptor];
-}
+	std::vector<std::shared_ptr<ControllerBase>> result;
+	auto controllers = ControllerManager::instance().get_controllers();
+	result.reserve(controllers.size());
 
-void AndroidControllerProvider::on_key_event(const std::string& deviceDescriptor, [[maybe_unused]] const std::string& deviceName, int nativeKeyCode, bool isPressed)
-{
-	auto& controllerState = get_controller_state(deviceDescriptor);
-	controllerState.buttons.SetButtonState(nativeKeyCode, isPressed);
-}
-
-void AndroidControllerProvider::on_axis_event(const std::string& deviceDescriptor, [[maybe_unused]] const std::string& deviceName, int nativeAxisCode, float value)
-{
-	auto& controllerState = get_controller_state(deviceDescriptor);
-	switch (nativeAxisCode)
+	for (const auto& controller : controllers)
 	{
-	case AMOTION_EVENT_AXIS_X:
-		controllerState.axis.x = value;
-		break;
-	case AMOTION_EVENT_AXIS_Y:
-		controllerState.axis.y = value;
-		break;
-	case AMOTION_EVENT_AXIS_RX:
-	case AMOTION_EVENT_AXIS_Z:
-		controllerState.rotation.x = value;
-		break;
-	case AMOTION_EVENT_AXIS_RY:
-	case AMOTION_EVENT_AXIS_RZ:
-		controllerState.rotation.y = value;
-		break;
-	case AMOTION_EVENT_AXIS_LTRIGGER:
-		controllerState.trigger.x = value;
-		break;
-	case AMOTION_EVENT_AXIS_RTRIGGER:
-		controllerState.trigger.y = value;
-		break;
-	case AMOTION_EVENT_AXIS_HAT_X:
-		if (value == 0.0f)
-		{
-			controllerState.buttons.SetButtonState(kButtonRight, false);
-			controllerState.buttons.SetButtonState(kButtonLeft, false);
-			return;
-		}
-		else if (value > 0.0f)
-			controllerState.buttons.SetButtonState(kButtonRight, true);
-		else
-			controllerState.buttons.SetButtonState(kButtonLeft, true);
-		break;
-	case AMOTION_EVENT_AXIS_HAT_Y:
-		if (value == 0.0f)
-		{
-			controllerState.buttons.SetButtonState(kButtonUp, false);
-			controllerState.buttons.SetButtonState(kButtonDown, false);
-			return;
-		}
-		else if (value > 0.0f)
-			controllerState.buttons.SetButtonState(kButtonDown, true);
-		else
-			controllerState.buttons.SetButtonState(kButtonUp, true);
-		break;
+		result.push_back(std::make_shared<AndroidController>(controller.descriptor, controller.name));
 	}
+
+	return result;
 }

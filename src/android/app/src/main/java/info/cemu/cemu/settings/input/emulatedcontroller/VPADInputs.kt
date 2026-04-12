@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.emulatedcontroller
 
 import androidx.compose.runtime.Composable
 import info.cemu.cemu.common.ui.components.Toggle
@@ -10,6 +10,7 @@ import info.cemu.cemu.nativeinterface.NativeInput.VPADButton
 fun VPADInputs(
     controllerIndex: Int,
     onInputClick: (String, Int) -> Unit,
+    onInputLongClick: (Int) -> Unit,
     controlsMapping: Map<Int, String>,
 ) {
     @Composable
@@ -22,6 +23,7 @@ fun VPADInputs(
             inputIds = inputIds,
             inputIdToString = { vpadButtonToString(it) },
             onInputClick = onInputClick,
+            onInputLongClick = onInputLongClick,
             controlsMapping = controlsMapping,
         )
     }
@@ -84,7 +86,6 @@ fun VPADInputs(
         onCheckedChanged = { NativeInput.setVPADScreenToggle(controllerIndex, it) }
     )
 }
-
 
 private fun vpadButtonToString(buttonId: Int) = when (buttonId) {
     VPADButton.A -> "A"

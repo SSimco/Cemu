@@ -3,10 +3,8 @@ package info.cemu.cemu.emulation.inputoverlay
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
-import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.os.VibratorManager
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.SurfaceView
@@ -17,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import info.cemu.cemu.R
+import info.cemu.cemu.common.android.context.getDeviceVibrator
 import info.cemu.cemu.common.settings.InputOverlayRect
 import info.cemu.cemu.common.settings.InputOverlaySettings
 import info.cemu.cemu.common.settings.OverlayInputConfig
@@ -53,7 +52,7 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
         { _, _, _, _, _ -> }
     private var overlyButtonToNativeButton: (OverlayInput) -> Int = { _ -> -1 }
     private var inputs: MutableList<Pair<OverlayInput, Input>> = mutableListOf()
-    private val vibrator: Vibrator = getVibrator(context)
+    private val vibrator: Vibrator = context.getDeviceVibrator()
     private val buttonTouchVibrationEffect =
         VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
     private val inputsMinSize: Int
@@ -122,17 +121,6 @@ class InputOverlaySurfaceView(context: Context) : SurfaceView(context), OnTouchL
             inputs.associate { it.first.toConfig() to it.second.getBoundingRectangle() }
 
         onEditFinishedListener?.invoke(inputsRectangles)
-    }
-
-    private fun getVibrator(context: Context): Vibrator {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager =
-                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            return vibratorManager.defaultVibrator
-        }
-
-        @Suppress("DEPRECATION")
-        return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
 
     private fun overlayButtonToVPADButton(button: OverlayInput): Int {

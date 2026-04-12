@@ -3,7 +3,6 @@ package info.cemu.cemu.settings.input
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
-import info.cemu.cemu.common.android.inputdevice.isGameController
 import info.cemu.cemu.common.android.inputevent.isFromPhysicalController
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.setControllerMapping
@@ -122,24 +121,6 @@ object InputMapper {
             mappingId,
             keyCode
         )
-    }
-
-    fun getGameControllers(): List<Pair<String, Int>> {
-        val gameControllers = mutableListOf<Pair<String, Int>>()
-
-        InputDevice.getDeviceIds().forEach { deviceId ->
-            val device = InputDevice.getDevice(deviceId) ?: return@forEach
-
-            if (gameControllers.any { (_, id) -> id == deviceId }) {
-                return@forEach
-            }
-
-            if (device.isGameController()) {
-                gameControllers.add(Pair(device.name, deviceId))
-            }
-        }
-
-        return gameControllers
     }
 
     fun mapAllInputs(deviceId: Int, controllerIndex: Int) {

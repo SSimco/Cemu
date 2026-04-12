@@ -1,5 +1,6 @@
 package info.cemu.cemu.emulation
 
+import android.content.Context
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -12,10 +13,51 @@ import androidx.core.view.WindowInsetsControllerCompat
 import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.common.ui.components.ActivityContent
 import info.cemu.cemu.common.ui.localization.TranslatableContent
+import info.cemu.cemu.emulation.input.ControllerCallbacks
+import info.cemu.cemu.emulation.input.ControllerMotionHandler
+import info.cemu.cemu.emulation.input.DeviceControllerCallbacks
+import info.cemu.cemu.emulation.input.DeviceMotionHandler
+import info.cemu.cemu.emulation.input.InputHandler
+import info.cemu.cemu.emulation.input.NativeInputDeviceListener
 import kotlin.system.exitProcess
 
+private class InputDelegateManager(context: Context) {
+    private val nativeInputDeviceListener = NativeInputDeviceListener(context)
+    private val controllerCallbacks = ControllerCallbacks(context)
+    private val controllerMotionHandler = ControllerMotionHandler(context)
+    private val deviceControllerCallbacks = DeviceControllerCallbacks(context)
+    private val deviceMotionHandler = DeviceMotionHandler(context)
+
+    fun setDeviceMotionEnabled(isListening: Boolean) = deviceMotionHandler.setIsListening(isListening)
+
+    fun registerAll() {
+        nativeInputDeviceListener.register()
+        controllerCallbacks.register()
+        controllerMotionHandler.register()
+        deviceControllerCallbacks.register()
+    }
+
+    fun unregisterAll() {
+        nativeInputDeviceListener.unregister()
+        controllerCallbacks.unregister()
+        controllerMotionHandler.unregister()
+        deviceControllerCallbacks.unregister()
+    }
+
+    fun onResume(rotation: Int) {
+        registerAll()
+        deviceMotionHandler.setDeviceRotation(rotation)
+        deviceMotionHandler.resumeListening()
+    }
+
+    fun onPause() {
+        unregisterAll()
+        deviceMotionHandler.pauseListening()
+    }
+}
+
 class EmulationActivity : AppCompatActivity() {
-    private lateinit var sensorManager: SensorManager
+    private lateinit var inputManager: InputDelegateManager
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (InputHandler.onMotionEvent(event)) {
@@ -55,8 +97,8 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sensorManager = SensorManager(this)
-        sensorManager.setDeviceRotationProvider { display.rotation }
+
+        inputManager = InputDelegateManager(this)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -69,7 +111,7 @@ class EmulationActivity : AppCompatActivity() {
                 ActivityContent {
                     EmulationScreen(
                         gamePath = gamePath,
-                        setMotionSensorEnabled = sensorManager::setIsListening,
+                        setMotionSensorEnabled = inputManager::setDeviceMotionEnabled,
                         onQuit = ::onQuit,
                     )
                 }
@@ -79,17 +121,14 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        sensorManager.pauseListening()
+
+        inputManager.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        sensorManager.resumeListening()
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        sensorManager.pauseListening()
+        inputManager.onResume(display.rotation)
     }
 
     private fun setFullscreen() {

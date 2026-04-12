@@ -2,10 +2,10 @@
 
 #include "input/api/ControllerProvider.h"
 
-class AndroidControllerProvider : public ControllerProviderBase
+class DeviceControllerProvider : public ControllerProviderBase
 {
   public:
-	inline static InputAPI::Type kAPIType = InputAPI::Android;
+	inline static InputAPI::Type kAPIType = InputAPI::Device;
 
 	InputAPI::Type api() const override
 	{

@@ -119,8 +119,8 @@ protected:
 		uint64 button;
 	};
 	std::unordered_map<uint64, Mapping> m_mappings;
-	std::unordered_map<uint64, bool> m_overridenButtonMappings;
-	std::unordered_map<uint64, float> m_overridenAxisMappings;
+	std::unordered_map<uint64, bool> m_overriddenButtonMappings;
+	std::unordered_map<uint64, float> m_overriddenAxisMappings;
  
 	bool m_homebutton_down = false;
 };

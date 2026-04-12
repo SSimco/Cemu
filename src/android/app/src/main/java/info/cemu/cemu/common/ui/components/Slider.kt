@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +29,8 @@ fun Slider(
     value: Int,
     valueFrom: Int,
     valueTo: Int,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     @IntRange(from = 0) steps: Int = (valueTo - valueFrom - 1).coerceAtLeast(0),
     labelFormatter: (Int) -> String,
     onValueChange: (Int) -> Unit,
@@ -37,10 +40,17 @@ fun Slider(
     val indication = LocalIndication.current
 
     Column(
-        modifier = Modifier
-            .focusable(interactionSource = interactionSource)
-            .indication(interactionSource, indication)
+        modifier = modifier
+            .focusable(
+                enabled = enabled,
+                interactionSource = interactionSource
+            )
+            .indication(
+                interactionSource = interactionSource,
+                indication = if (enabled) indication else null
+            )
             .padding(8.dp)
+            .alpha(if (enabled) 1f else 0.6f)
     ) {
         Text(
             modifier = Modifier.padding(bottom = 8.dp),
@@ -58,6 +68,7 @@ fun Slider(
             valueRange = valueFrom.toFloat()..valueTo.toFloat(),
             steps = steps,
             value = sliderValue,
+            enabled = enabled,
             onValueChangeFinished = { onValueChange(sliderValue.roundToInt()) },
             onValueChange = { sliderValue = it },
             interactionSource = interactionSource,
@@ -65,12 +76,15 @@ fun Slider(
     }
 }
 
+
 @Composable
 fun Slider(
     label: String,
     initialValue: () -> Int,
     valueFrom: Int,
     valueTo: Int,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     @IntRange(from = 0) steps: Int = (valueTo - valueFrom - 1).coerceAtLeast(0),
     labelFormatter: (Int) -> String,
     onValueChange: (Int) -> Unit,
@@ -82,6 +96,8 @@ fun Slider(
         value = value,
         valueFrom = valueFrom,
         valueTo = valueTo,
+        modifier = modifier,
+        enabled = enabled,
         steps = steps,
         labelFormatter = labelFormatter,
         onValueChange = onValueChange,

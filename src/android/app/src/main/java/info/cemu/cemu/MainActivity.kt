@@ -20,9 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import info.cemu.cemu.about.AboutCemuRoute
 import info.cemu.cemu.about.aboutCemuNavigation
-import info.cemu.cemu.common.input.GamepadInputHandler
-import info.cemu.cemu.common.input.GamepadInputManager
-import info.cemu.cemu.common.input.NullGamepadInputHandler
+import info.cemu.cemu.common.input.GamepadInputSource
 import info.cemu.cemu.common.ui.components.ActivityContent
 import info.cemu.cemu.common.ui.localization.TranslatableContent
 import info.cemu.cemu.emulation.EmulationActivity
@@ -37,19 +35,11 @@ import info.cemu.cemu.settings.settingsNavigation
 import info.cemu.cemu.titlemanager.TitleManagerRoute
 import info.cemu.cemu.titlemanager.titleManagerNavigation
 
-class MainActivity : GamepadInputManager, AppCompatActivity() {
-    private var handler: GamepadInputHandler = NullGamepadInputHandler
-
-    override fun setHandler(handler: GamepadInputHandler) {
-        this.handler = handler
-    }
-
-    override fun clearHandler() {
-        handler = NullGamepadInputHandler
-    }
-
+class MainActivity : AppCompatActivity() {
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        if (handler.onMotionEvent(event)) {
+        GamepadInputSource.emitMotion(event)
+
+        if (GamepadInputSource.hasMotionSubscribers) {
             return true
         }
 
@@ -57,7 +47,9 @@ class MainActivity : GamepadInputManager, AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (handler.onKeyEvent(event)) {
+        GamepadInputSource.emitKey(event)
+
+        if (GamepadInputSource.hasKeySubscribers) {
             return true
         }
 

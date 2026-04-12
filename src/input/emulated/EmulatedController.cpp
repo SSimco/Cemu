@@ -263,10 +263,10 @@ void EmulatedController::clear_controllers()
 
 float EmulatedController::get_axis_value(uint64 mapping) const
 {
-	const auto overridenAxisMappingIt = m_overridenAxisMappings.find(mapping);
-	if (overridenAxisMappingIt != m_overridenAxisMappings.cend() && overridenAxisMappingIt->second != 0.0f)
+	const auto overriddenAxisMappingIt = m_overriddenAxisMappings.find(mapping);
+	if (overriddenAxisMappingIt != m_overriddenAxisMappings.cend() && overriddenAxisMappingIt->second != 0.0f)
 	{
-		return overridenAxisMappingIt->second;
+		return overriddenAxisMappingIt->second;
 	}
 
 	const auto it = m_mappings.find(mapping);
@@ -283,19 +283,19 @@ float EmulatedController::get_axis_value(uint64 mapping) const
 void EmulatedController::setButtonValue(uint64 mapping, bool value)
 {
 	std::shared_lock lock(m_mutex);
-	m_overridenButtonMappings[mapping] = value;
+	m_overriddenButtonMappings[mapping] = value;
 
 }
 void EmulatedController::setAxisValue(uint64 mapping, float value)
 {
 	std::shared_lock lock(m_mutex);
-	m_overridenAxisMappings[mapping] = value;
+	m_overriddenAxisMappings[mapping] = value;
 }
 
 bool EmulatedController::is_mapping_down(uint64 mapping) const
 {
-	const auto overridenButtonMappingIt = m_overridenButtonMappings.find(mapping);
-	if (overridenButtonMappingIt != m_overridenButtonMappings.cend() && overridenButtonMappingIt->second)
+	const auto overriddenButtonMappingIt = m_overriddenButtonMappings.find(mapping);
+	if (overriddenButtonMappingIt != m_overriddenButtonMappings.cend() && overriddenButtonMappingIt->second)
 	{
 		return true;
 	}

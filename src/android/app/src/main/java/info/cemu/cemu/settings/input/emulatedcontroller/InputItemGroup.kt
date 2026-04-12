@@ -1,6 +1,6 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.emulatedcontroller
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +18,7 @@ fun InputItemsGroup(
     inputIds: List<Int>,
     inputIdToString: (Int) -> String,
     onInputClick: (String, Int) -> Unit,
+    onInputLongClick: (Int) -> Unit,
     controlsMapping: Map<Int, String>,
 ) {
     Header(groupName)
@@ -26,7 +27,8 @@ fun InputItemsGroup(
         InputItem(
             buttonName = buttonName,
             mapping = controlsMapping[it],
-            onClick = { onInputClick(buttonName, it) }
+            onClick = { onInputClick(buttonName, it) },
+            onLongClick = { onInputLongClick(it) },
         )
     }
 }
@@ -36,11 +38,15 @@ fun InputItem(
     buttonName: String,
     mapping: String?,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            )
             .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

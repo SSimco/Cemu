@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.emulatedcontroller
 
 import androidx.compose.runtime.Composable
 import info.cemu.cemu.common.ui.localization.tr
@@ -7,6 +7,7 @@ import info.cemu.cemu.nativeinterface.NativeInput.ProButton
 @Composable
 fun ProControllerInputs(
     onInputClick: (String, Int) -> Unit,
+    onInputLongClick: (Int) -> Unit,
     controlsMapping: Map<Int, String>,
 ) {
     @Composable
@@ -19,6 +20,7 @@ fun ProControllerInputs(
             inputIds = inputIds,
             inputIdToString = { proControllerButtonToString(it) },
             onInputClick = onInputClick,
+            onInputLongClick = onInputLongClick,
             controlsMapping = controlsMapping,
         )
     }

@@ -11,6 +11,7 @@
 #include "input/api/Keyboard/KeyboardController.h"
 #include "input/api/DSU/DSUController.h"
 #include "input/api/GameCube/GameCubeController.h"
+#include "input/api/Device/DeviceController.h"
 
 #if BOOST_OS_WINDOWS
 #include "input/api/XInput/XInputController.h"
@@ -111,6 +112,8 @@ ControllerPtr ControllerFactory::CreateController(InputAPI::Type api, std::strin
 #if BOOST_PLAT_ANDROID
 	case InputAPI::Android:
 		return std::make_shared<AndroidController>(uuid, display_name);
+	case InputAPI::Device:
+		return std::make_shared<DeviceController>();
 #endif
 	default:
 		throw std::invalid_argument(fmt::format("unhandled controller api: {}", api));
@@ -183,10 +186,12 @@ ControllerProviderPtr ControllerFactory::CreateControllerProvider(InputAPI::Type
 	case InputAPI::Wiimote:
 		return std::make_shared<WiimoteControllerProvider>();
 #endif
-#if __ANDROID
+#if BOOST_PLAT_ANDROID
 	case InputAPI::Android:
 		return std::make_shared<AndroidControllerProvider>();
 #endif
+	case InputAPI::Device:
+		return std::make_shared<DeviceControllerProvider>();
 	default:
 		cemu_assert_debug(false);
 		return {};

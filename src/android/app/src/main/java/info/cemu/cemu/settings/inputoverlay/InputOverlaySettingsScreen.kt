@@ -34,8 +34,7 @@ fun InputOverlaySettingsScreen(
     ScreenContent(
         appBarText = tr("Input overlay settings"),
         navigateBack = navigateBack
-    )
-    {
+    ) {
         Toggle(
             label = tr("Input overlay"),
             description = tr("Enable input overlay"),

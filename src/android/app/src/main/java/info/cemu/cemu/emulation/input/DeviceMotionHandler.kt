@@ -1,4 +1,4 @@
-package info.cemu.cemu.emulation
+package info.cemu.cemu.emulation.input
 
 import android.content.Context
 import android.hardware.Sensor
@@ -8,7 +8,10 @@ import android.hardware.SensorManager
 import android.view.Surface
 import info.cemu.cemu.nativeinterface.NativeInput
 
-class SensorManager(context: Context) : SensorEventListener {
+
+class DeviceMotionHandler(context: Context) : SensorEventListener {
+    private data class SensorValues(val x: Float, val y: Float, val z: Float)
+
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer =
@@ -16,11 +19,17 @@ class SensorManager(context: Context) : SensorEventListener {
     private val gyroscope =
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
-    private var deviceRotationProvider = { Surface.ROTATION_0 }
+    private var deviceRotation = Surface.ROTATION_0
+
+    fun setDeviceRotation(deviceRotation: Int) {
+        this.deviceRotation = deviceRotation
+    }
+
     private val hasMotionData = accelerometer != null && gyroscope != null
-    private var gyroX = 0f
-    private var gyroY = 0f
-    private var gyroZ = 0f
+    private var gyroValues = SensorValues(0f, 0f, 0f)
+    private var hasGyroData = false
+    private var accelValues = SensorValues(0f, 0f, 0f)
+    private var hasAccelData = false
     private var isListening = false
     private var isActive = false
 
@@ -52,13 +61,9 @@ class SensorManager(context: Context) : SensorEventListener {
 
         isActive = true
 
-        NativeInput.setMotionEnabled(true)
+        NativeInput.setDeviceMotionEnabled(true)
         sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME)
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
-    }
-
-    fun setDeviceRotationProvider(deviceRotationProvider: () -> Int) {
-        this.deviceRotationProvider = deviceRotationProvider
     }
 
     private fun stopListening() {
@@ -68,7 +73,7 @@ class SensorManager(context: Context) : SensorEventListener {
 
         isActive = false
 
-        NativeInput.setMotionEnabled(false)
+        NativeInput.setDeviceMotionEnabled(false)
         sensorManager.unregisterListener(this)
     }
 
@@ -76,50 +81,56 @@ class SensorManager(context: Context) : SensorEventListener {
         val values = event.values
 
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            val gyroValues = getSensorEventValues(values)
-            gyroX = gyroValues.first
-            gyroY = gyroValues.second
-            gyroZ = gyroValues.third
-            return
+            gyroValues = getSensorEventValues(values)
+            hasGyroData = true
+        } else if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+            accelValues = getSensorEventValues(values)
+            hasAccelData = true
         }
 
-        if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) {
-            return
+        if (hasAccelData && hasGyroData) {
+            hasAccelData = false
+            hasGyroData = false
+            NativeInput.onDeviceMotion(
+                event.timestamp,
+                gyroValues.x,
+                gyroValues.y,
+                gyroValues.z,
+                accelValues.x / SensorManager.GRAVITY_EARTH,
+                accelValues.y / SensorManager.GRAVITY_EARTH,
+                accelValues.z / SensorManager.GRAVITY_EARTH,
+            )
         }
-
-        val (accelX, accelY, accelZ) = getSensorEventValues(values)
-
-        NativeInput.onMotion(event.timestamp, gyroX, gyroY, gyroZ, accelX, accelY, -accelZ)
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
 
-    private fun getSensorEventValues(values: FloatArray): Triple<Float, Float, Float> {
+    private fun getSensorEventValues(values: FloatArray): SensorValues {
         val x: Float
         val y: Float
         val z = values[2]
-        val deviceRotation = deviceRotationProvider()
+
         when (deviceRotation) {
+            Surface.ROTATION_0 -> {
+                x = values[0]
+                y = values[1]
+            }
+
             Surface.ROTATION_90 -> {
                 x = -values[1]
-                y = -values[0]
-            }
-
-            Surface.ROTATION_180 -> {
-                x = values[0]
-                y = -values[1]
-            }
-
-            Surface.ROTATION_270 -> {
-                x = values[1]
                 y = values[0]
             }
 
-            else /*Surface.ROTATION_0*/ -> {
+            Surface.ROTATION_180 -> {
                 x = -values[0]
-                y = values[1]
+                y = -values[1]
+            }
+
+            else /*Surface.ROTATION_270*/ -> {
+                x = values[1]
+                y = -values[0]
             }
         }
-        return Triple(x, y, z)
+        return SensorValues(x, y, z)
     }
 }

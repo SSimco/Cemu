@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,16 +26,15 @@ fun Toggle(
     checked: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
     description: String? = null,
+    enabled: Boolean = true,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onCheckedChanged(!checked)
-            },
-    )
-    {
+            .clickable(enabled = enabled) { onCheckedChanged(!checked) }
+            .alpha(if (enabled) 1f else 0.6f),
+    ) {
         Column(
             modifier = Modifier
                 .weight(1.0f)
@@ -58,6 +58,7 @@ fun Toggle(
             modifier = Modifier.padding(end = 8.dp, top = 8.dp, bottom = 8.dp),
             checked = checked,
             onCheckedChange = null,
+            enabled = enabled,
         )
     }
 }
@@ -68,6 +69,7 @@ fun Toggle(
     initialCheckedState: () -> Boolean,
     onCheckedChanged: (Boolean) -> Unit,
     description: String? = null,
+    enabled: Boolean = true,
 ) {
     var checked by rememberSaveable { mutableStateOf(initialCheckedState()) }
 
@@ -79,5 +81,6 @@ fun Toggle(
             onCheckedChanged(it)
         },
         description = description,
+        enabled = enabled,
     )
 }

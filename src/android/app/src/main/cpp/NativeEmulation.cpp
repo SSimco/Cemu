@@ -1,97 +1,148 @@
-#include "WindowSystem.h"
-#include "JNIUtils.h"
-#include "AndroidAudio.h"
-#include "AndroidEmulatedController.h"
 #include "AndroidFilesystemCallbacks.h"
+#include "AndroidInputHelpers.h"
+#include "Cafe/CafeSystem.h"
 #include "Cafe/HW/Latte/Core/LatteOverlay.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
-#include "Cafe/CafeSystem.h"
-#include "GameTitleLoader.h"
-#include "input/ControllerFactory.h"
-#include "input/InputManager.h"
-#include "input/api/Android/AndroidController.h"
-#include "input/api/Android/AndroidControllerProvider.h"
-#include "config/ActiveSettings.h"
+#include "Cafe/OS/libs/snd_core/ax.h"
+#include "Cafe/TitleList/TitleId.h"
+#include "Cafe/TitleList/TitleList.h"
 #include "Cemu/ncrypto/ncrypto.h"
+#include "config/ActiveSettings.h"
+#include "input/InputManager.h"
+#include "JNIUtils.h"
+#include "WindowSystem.h"
+
+#if HAS_CUBEB
+#include "audio/CubebAPI.h"
+#endif // HAS_CUBEB
 
 // forward declaration from main.cpp
 void CemuCommonInit();
 
 namespace NativeEmulation
 {
+	void createAudioDevice(IAudioAPI::AudioAPI audioApi, AudioChannels channels, sint32 volume, bool isTV)
+	{
+		constexpr int AX_FRAMES_PER_GROUP = 4;
+		std::unique_lock lock(g_audioMutex);
+		auto& audioDevice = isTV ? g_tvAudio : g_padAudio;
+
+		switch (audioApi)
+		{
+#if HAS_CUBEB
+		case IAudioAPI::AudioAPI::Cubeb:
+		{
+			audioDevice.reset();
+			auto deviceDescriptionPtr = std::make_shared<CubebAPI::CubebDeviceDescription>(nullptr, std::string(), std::wstring());
+			audioDevice = IAudioAPI::CreateDevice(
+				IAudioAPI::AudioAPI::Cubeb,
+				deviceDescriptionPtr,
+				48000,
+				CemuConfig::AudioChannelsToNChannels(channels),
+				snd_core::AX_SAMPLES_PER_3MS_48KHZ * AX_FRAMES_PER_GROUP,
+				16);
+			audioDevice->SetVolume(volume);
+			break;
+		}
+#endif // HAS_CUBEB
+		default:
+			cemuLog_log(LogType::Force, "Invalid audio api: {}", audioApi);
+			break;
+		}
+	}
+
 	void initializeAudioDevices()
 	{
 		auto& config = GetConfig();
 		if (!config.tv_device.empty())
-			AndroidAudio::createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.tv_channels, config.tv_volume, true);
+			createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.tv_channels, config.tv_volume, true);
 
 		if (!config.pad_device.empty())
-			AndroidAudio::createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.pad_channels, config.pad_volume, false);
+			createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.pad_channels, config.pad_volume, false);
+	}
+
+	void setDefaultDeviceController()
+	{
+		for (size_t i = 0; i < InputManager::kMaxController; ++i)
+		{
+			auto emulatedController = InputManager::instance().get_controller(i);
+
+			if (!emulatedController)
+			{
+				continue;
+			}
+
+			for (const auto& controller : emulatedController->get_controllers())
+			{
+				if (controller->api() == InputAPI::Device)
+				{
+					return;
+				}
+			}
+		}
+
+		if (auto emulatedController = InputManager::instance().get_controller(0))
+		{
+			auto controller = CreateDefaultDeviceController();
+			emulatedController->add_controller(controller);
+		}
 	}
 
 	void createCemuDirectories()
 	{
-		std::wstring mlc = ActiveSettings::GetMlcPath().generic_wstring();
+		const auto mlc = ActiveSettings::GetMlcPath();
 
 		// create sys/usr folder in mlc01
-		const auto sysFolder = fs::path(mlc).append(L"sys");
+		const auto sysFolder = mlc / "sys";
 		fs::create_directories(sysFolder);
 
-		const auto usrFolder = fs::path(mlc).append(L"usr");
+		const auto usrFolder = mlc / "usr";
 		fs::create_directories(usrFolder);
-		fs::create_directories(fs::path(usrFolder).append("title/00050000")); // base
-		fs::create_directories(fs::path(usrFolder).append("title/0005000c")); // dlc
-		fs::create_directories(fs::path(usrFolder).append("title/0005000e")); // update
+		fs::create_directories(usrFolder / "title/00050000"); // base
+		fs::create_directories(usrFolder / "title/0005000c"); // dlc
+		fs::create_directories(usrFolder / "title/0005000e"); // update
 
 		// Mii Maker save folders {0x500101004A000, 0x500101004A100, 0x500101004A200},
-		fs::create_directories(fs::path(mlc).append(L"usr/save/00050010/1004a000/user/common/db"));
-		fs::create_directories(fs::path(mlc).append(L"usr/save/00050010/1004a100/user/common/db"));
-		fs::create_directories(fs::path(mlc).append(L"usr/save/00050010/1004a200/user/common/db"));
+		fs::create_directories(mlc / "usr/save/00050010/1004a100/user/common/db");
+		fs::create_directories(mlc / "usr/save/00050010/1004a000/user/common/db");
+		fs::create_directories(mlc / "usr/save/00050010/1004a200/user/common/db");
 
 		// lang files
-		auto langDir = fs::path(mlc).append(L"sys/title/0005001b/1005c000/content");
+		auto langDir = mlc / "sys/title/0005001b/1005c000/content";
 		fs::create_directories(langDir);
 
-		auto langFile = fs::path(langDir).append("language.txt");
+		auto langFile = langDir / "language.txt";
+
 		if (!fs::exists(langFile))
 		{
-			std::ofstream file(langFile);
-			if (file.is_open())
+			if (std::ofstream file{langFile})
 			{
-				const char* langStrings[] = {"ja", "en", "fr", "de", "it", "es", "zh", "ko", "nl", "pt", "ru", "zh"};
+				const auto langStrings = {"ja", "en", "fr", "de", "it", "es", "ko", "nl", "pt", "ru", "zh"};
 				for (const char* lang : langStrings)
-					file << fmt::format(R"("{}",)", lang) << std::endl;
-
-				file.flush();
-				file.close();
+					fmt::println(file, R"("{}",)", lang);
 			}
 		}
 
-		auto countryFile = fs::path(langDir).append("country.txt");
+		auto countryFile = langDir / "country.txt";
 		if (!fs::exists(countryFile))
 		{
-			std::ofstream file(countryFile);
-			for (sint32 i = 0; i < 201; i++)
+			if (std::ofstream file{countryFile})
 			{
-				const char* countryCode = NCrypto::GetCountryAsString(i);
-				if (boost::iequals(countryCode, "NN"))
-					file << "NULL," << std::endl;
-				else
-					file << fmt::format(R"("{}",)", countryCode) << std::endl;
+				for (sint32 i = 0; i < 201; i++)
+				{
+					const char* countryCode = NCrypto::GetCountryAsString(i);
+					if (boost::iequals(countryCode, "NN"))
+						fmt::println(file, "NULL,");
+					else
+						fmt::println(file, R"("{}",)", countryCode);
+				}
 			}
-			file.flush();
-			file.close();
 		}
 
 		// cemu directories
-		const auto controllerProfileFolder = ActiveSettings::GetConfigPath(L"controllerProfiles").generic_wstring();
-		if (!fs::exists(controllerProfileFolder))
-			fs::create_directories(controllerProfileFolder);
-
-		const auto memorySearcherFolder = ActiveSettings::GetUserDataPath(L"memorySearcher").generic_wstring();
-		if (!fs::exists(memorySearcherFolder))
-			fs::create_directories(memorySearcherFolder);
+		fs::create_directories(ActiveSettings::GetConfigPath("controllerProfiles"));
+		fs::create_directories(ActiveSettings::GetUserDataPath("memorySearcher"));
 	}
 
 	enum PrepareTitleResult : sint32
@@ -102,12 +153,6 @@ namespace NativeEmulation
 		ERROR_NO_TITLE_TIK = 3,
 		ERROR_UNKNOWN = 4,
 	};
-
-	std::shared_ptr<ANativeWindow> createANativeWindowFromSurface(JNIEnv* env, jobject surface)
-	{
-		ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
-		return {window, &ANativeWindow_release};
-	}
 
 	class TestSurface
 	{
@@ -217,7 +262,6 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_clearPadSurface([[maybe_unus
 	WindowSystem::GetWindowInfo().pad_open = false;
 }
 
-
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_supportsLoadingCustomDriver([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
@@ -225,10 +269,10 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_supportsLoadingCustomDriver(
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject surface, jboolean is_main_canvas)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject surface, jboolean isMainCanvas)
 {
 	JNIUtils::handleNativeException(env, [&]() {
-		auto& windowHandleInfo = is_main_canvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
+		auto& windowHandleInfo = isMainCanvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
 		auto oldWindow = windowHandleInfo.surface.load();
 		if (oldWindow != nullptr)
 			ANativeWindow_release(static_cast<ANativeWindow*>(oldWindow));
@@ -240,11 +284,11 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean is_main_canvas)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean isMainCanvas)
 {
 	JNIUtils::handleNativeException(env, [&]() {
 		int width, height;
-		if (is_main_canvas)
+		if (isMainCanvas)
 		{
 			WindowSystem::GetWindowPhysSize(width, height);
 		}
@@ -254,15 +298,15 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* en
 			WindowSystem::GetWindowInfo().pad_open = true;
 		}
 
-		VulkanRenderer::GetInstance()->InitializeSurface({width, height}, is_main_canvas);
+		VulkanRenderer::GetInstance()->InitializeSurface({width, height}, isMainCanvas);
 	});
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint width, jint height, jboolean is_main_canvas)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint width, jint height, jboolean isMainCanvas)
 {
 	auto& windowInfo = WindowSystem::GetWindowInfo();
-	if (is_main_canvas)
+	if (isMainCanvas)
 	{
 		windowInfo.width = windowInfo.phys_width = width;
 		windowInfo.height = windowInfo.phys_height = height;
@@ -277,14 +321,15 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unuse
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSystems([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
+	NativeEmulation::setDefaultDeviceController();
 	WindowSystem::GetWindowInfo().set_keystatesup();
 	NativeEmulation::initializeAudioDevices();
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeEmulation_prepareTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launch_path)
+Java_info_cemu_cemu_nativeinterface_NativeEmulation_prepareTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launchPathJava)
 {
-	fs::path launchPath = JNIUtils::toString(env, launch_path);
+	fs::path launchPath = JNIUtils::toString(env, launchPathJava);
 
 	TitleInfo launchTitle{launchPath};
 

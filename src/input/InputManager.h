@@ -18,6 +18,7 @@
 
 #if BOOST_PLAT_ANDROID
 #include "input/api/Android/AndroidControllerProvider.h"
+#include "input/api/Device/DeviceControllerProvider.h"
 #endif
 
 #include "input/emulated/VPADController.h"
@@ -98,15 +99,6 @@ public:
 	std::optional<glm::ivec2> get_right_down_mouse_info(bool* is_pad);
 
 	std::atomic<float> m_mouse_wheel;
-	struct DeviceMotion
-	{
-		mutable std::shared_mutex m_mutex;
-		MotionSample m_motion_sample;
-		bool m_device_motion_enabled;
-	} m_device_motion{};
-
-	MotionSample get_device_motion_sample() const;
-
 private:
 	void update_thread();
 
@@ -121,16 +113,14 @@ private:
 
 	std::array<bool, kMaxController> m_is_gameprofile_set{};
 
-	template <typename TProvider>
-	void create_provider() // lambda templates only work in c++20 -> define locally in ctor
+	template<std::derived_from<ControllerProviderBase> TProvider>
+	void create_provider()
 	{
-		static_assert(std::is_base_of_v<ControllerProviderBase, TProvider>);
 		try
 		{
 			auto controller = std::make_shared<TProvider>();
-			m_api_available[controller->api()] = std::vector<ControllerProviderPtr>{ controller };
-		}
-		catch (const std::exception& ex)
+			m_api_available[controller->api()] = std::vector<ControllerProviderPtr>{controller};
+		} catch (const std::exception& ex)
 		{
 			cemuLog_log(LogType::Force, ex.what());
 		}

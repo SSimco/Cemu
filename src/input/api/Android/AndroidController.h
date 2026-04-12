@@ -2,29 +2,40 @@
 
 #include "input/api/Android/AndroidControllerProvider.h"
 #include "input/api/Controller.h"
+#include "input/motion/MotionSample.h"
+#include "ControllerManager.h"
 
 class AndroidController : public Controller<AndroidControllerProvider>
 {
-    friend class AndroidControllerProvider;
+  public:
+	AndroidController(std::string_view device_descriptor, std::string_view device_name);
 
-   public:
-    AndroidController(std::string_view deviceDescriptor, std::string_view deviceName);
-    std::string_view api_name() const override
-    {
-        static_assert(to_string(InputAPI::Android) == "Android");
-        return to_string(InputAPI::Android);
-    }
+	std::string_view api_name() const override
+	{
+		static_assert(to_string(InputAPI::Android) == "Android");
+		return to_string(InputAPI::Android);
+	}
 
-    InputAPI::Type api() const override { return InputAPI::Android; }
+	InputAPI::Type api() const override
+	{
+		return InputAPI::Android;
+	}
 
-    bool is_connected() override { return true; }
+	bool is_connected() override;
 
-    bool has_axis() const override { return true; }
+	bool has_motion() override;
 
-    std::string get_button_name(uint64 button) const override;
+	MotionSample get_motion_sample() override;
 
-   protected:
-    std::string m_deviceDescriptor;
-    ControllerState m_controllerState{};
-    ControllerState raw_state() override;
+	bool has_rumble() override;
+
+	void start_rumble() override;
+	void stop_rumble() override;
+
+	std::string get_button_name(uint64 button) const override;
+
+	ControllerState raw_state() override;
+
+  private:
+	std::shared_ptr<ControllerManager::ControllerRuntimeState> m_state;
 };
