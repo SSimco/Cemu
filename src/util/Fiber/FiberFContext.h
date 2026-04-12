@@ -11,7 +11,6 @@ class Fiber
 	static Fiber* PrepareCurrentThread(void* privateData = nullptr);
 	static void Switch(Fiber& targetFiber);
 	static void* GetFiberPrivateData();
-	static void RunOnMainFiber(std::function<void()> f);
 
   private:
 	static void Start(boost::context::detail::transfer_t transfer);

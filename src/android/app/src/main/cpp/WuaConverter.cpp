@@ -18,7 +18,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 	m_workerThread = std::thread([callbacks(std::move(callbacks)), fd, this]() {
 	  if (fd == -1)
 	  {
-		  callbacks->onError();
+		  callbacks->OnError();
 		  return;
 	  }
 	  stdx::scope_exit fdCleanup([fd](){ close(fd); });
@@ -38,7 +38,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 
 	  if (titlesToConvert.empty())
 	  {
-		  callbacks->onError();
+		  callbacks->OnError();
 		  return;
 	  }
 
@@ -48,7 +48,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 	  m_writerContext.zaWriter = std::make_unique<ZArchiveWriter>(&ZArchiveWriterContext::NewOutputFile, &ZArchiveWriterContext::WriteOutputData, &m_writerContext);
 	  if (!m_writerContext.isValid)
 	  {
-		  callbacks->onError();
+		  callbacks->OnError();
 		  return;
 	  }
 
@@ -59,7 +59,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 
 	  if (!result)
 	  {
-		  callbacks->onError();
+		  callbacks->OnError();
 		  return;
 	  }
 
@@ -70,7 +70,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 	  ZArchiveReader* zreader = ZArchiveReader::OpenFromStream(std::make_unique<std::istream>(&stream));
 	  if (!zreader)
 	  {
-		  callbacks->onError();
+		  callbacks->OnError();
 		  return;
 	  }
 	  // todo - do a quick verification here
@@ -78,7 +78,7 @@ void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallback
 
 	  CafeTitleList::Refresh();
 
-	  callbacks->onFinished();
+	  callbacks->OnFinished();
 	});
 }
 

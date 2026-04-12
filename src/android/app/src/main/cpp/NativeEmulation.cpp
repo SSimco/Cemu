@@ -17,12 +17,15 @@
 #include "audio/CubebAPI.h"
 #endif // HAS_CUBEB
 
+#include <android/native_window_jni.h>
+
 // forward declaration from main.cpp
 void CemuCommonInit();
 
 namespace NativeEmulation
 {
-	void createAudioDevice(IAudioAPI::AudioAPI audioApi, AudioChannels channels, sint32 volume, bool isTV)
+
+	void CreateAudioDevice(IAudioAPI::AudioAPI audioApi, AudioChannels channels, sint32 volume, bool isTV)
 	{
 		constexpr int AX_FRAMES_PER_GROUP = 4;
 		std::unique_lock lock(g_audioMutex);
@@ -52,17 +55,17 @@ namespace NativeEmulation
 		}
 	}
 
-	void initializeAudioDevices()
+	void InitializeAudioDevices()
 	{
 		auto& config = GetConfig();
 		if (!config.tv_device.empty())
-			createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.tv_channels, config.tv_volume, true);
+			CreateAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.tv_channels, config.tv_volume, true);
 
 		if (!config.pad_device.empty())
-			createAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.pad_channels, config.pad_volume, false);
+			CreateAudioDevice(IAudioAPI::AudioAPI::Cubeb, config.pad_channels, config.pad_volume, false);
 	}
 
-	void setDefaultDeviceController()
+	void SetDefaultDeviceController()
 	{
 		for (size_t i = 0; i < InputManager::kMaxController; ++i)
 		{
@@ -89,7 +92,7 @@ namespace NativeEmulation
 		}
 	}
 
-	void createCemuDirectories()
+	void CreateCemuDirectories()
 	{
 		const auto mlc = ActiveSettings::GetMlcPath();
 
@@ -159,7 +162,7 @@ namespace NativeEmulation
 	  public:
 		TestSurface()
 		{
-			JNIUtils::ScopedJNIENV env;
+			JNIEnv* env = JNIUtils::GetEnv();
 
 			jclass surfaceTextureClass = env->FindClass("android/graphics/SurfaceTexture");
 			jmethodID ctorSurfaceTexture = env->GetMethodID(surfaceTextureClass, "<init>", "(I)V");
@@ -172,7 +175,7 @@ namespace NativeEmulation
 			m_surfaceTexture = env->NewGlobalRef(localSurfaceTexture);
 			m_surface = env->NewGlobalRef(localSurface);
 
-			m_window = ANativeWindow_fromSurface(*env, m_surface);
+			m_window = ANativeWindow_fromSurface(env, m_surface);
 			ANativeWindow_acquire(m_window);
 
 			env->DeleteLocalRef(localSurfaceTexture);
@@ -183,7 +186,7 @@ namespace NativeEmulation
 
 		~TestSurface()
 		{
-			JNIUtils::ScopedJNIENV env;
+			JNIEnv* env = JNIUtils::GetEnv();
 
 			ANativeWindow_release(m_window);
 
@@ -212,8 +215,6 @@ namespace NativeEmulation
 		jobject m_surface = nullptr;
 		jobject m_surfaceTexture = nullptr;
 	};
-
-	std::unique_ptr<TestSurface> g_testSurface;
 } // namespace NativeEmulation
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -228,7 +229,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeEmulation([[maybe_
 {
 	FilesystemAndroid::SetFilesystemCallbacks(std::make_shared<AndroidFilesystemCallbacks>());
 	GetConfigHandle().SetFilename(ActiveSettings::GetConfigPath("settings.xml").generic_wstring());
-	NativeEmulation::createCemuDirectories();
+	NativeEmulation::CreateCemuDirectories();
 	NetworkConfig::LoadOnce();
 	ActiveSettings::Init();
 	LatteOverlay_init();
@@ -238,11 +239,13 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeEmulation([[maybe_
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	InitializeGlobalVulkan();
-	JNIUtils::handleNativeException(env, [&]() {
-		NativeEmulation::g_testSurface = std::make_unique<NativeEmulation::TestSurface>();
+	static std::unique_ptr<NativeEmulation::TestSurface> testSurface;
 
-		WindowSystem::GetWindowInfo().window_main.surface = NativeEmulation::g_testSurface->getWindow();
+	InitializeGlobalVulkan();
+	JNIUtils::HandleNativeException(env, [&]() {
+		testSurface = std::make_unique<NativeEmulation::TestSurface>();
+
+		WindowSystem::GetWindowInfo().window_main.surface = testSurface->getWindow();
 
 		g_renderer = std::make_unique<VulkanRenderer>();
 	});
@@ -271,7 +274,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_supportsLoadingCustomDriver(
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject surface, jboolean isMainCanvas)
 {
-	JNIUtils::handleNativeException(env, [&]() {
+	JNIUtils::HandleNativeException(env, [&]() {
 		auto& windowHandleInfo = isMainCanvas ? WindowSystem::GetWindowInfo().canvas_main : WindowSystem::GetWindowInfo().canvas_pad;
 		auto oldWindow = windowHandleInfo.surface.load();
 		if (oldWindow != nullptr)
@@ -286,7 +289,7 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurface(JNIEnv* env, [[ma
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSurface(JNIEnv* env, [[maybe_unused]] jclass clazz, jboolean isMainCanvas)
 {
-	JNIUtils::handleNativeException(env, [&]() {
+	JNIUtils::HandleNativeException(env, [&]() {
 		int width, height;
 		if (isMainCanvas)
 		{
@@ -321,15 +324,15 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_setSurfaceSize([[maybe_unuse
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeSystems([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	NativeEmulation::setDefaultDeviceController();
+	NativeEmulation::SetDefaultDeviceController();
 	WindowSystem::GetWindowInfo().set_keystatesup();
-	NativeEmulation::initializeAudioDevices();
+	NativeEmulation::InitializeAudioDevices();
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulation_prepareTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jstring launchPathJava)
 {
-	fs::path launchPath = JNIUtils::toString(env, launchPathJava);
+	fs::path launchPath = JNIUtils::FromJString(env, launchPathJava);
 
 	TitleInfo launchTitle{launchPath};
 

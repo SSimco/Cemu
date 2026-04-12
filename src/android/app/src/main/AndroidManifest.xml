@@ -36,7 +36,6 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
-            android:process=":EmulationProcess"
             android:screenOrientation="userLandscape"
             tools:ignore="DiscouragedApi">
             <intent-filter>
@@ -54,10 +53,6 @@
                 <data android:pathPattern=".*\\.iso" />
                 <data android:pathPattern=".*\\.elf" />
                 <data android:pathPattern=".*\\.rpx" />
-                <!--
-                TODO?
-                <data android:pathPattern=".*/title.tmd" />
-                -->
             </intent-filter>
         </activity>
 

@@ -7,33 +7,33 @@
 
 Image::Image(Image&& image)
 {
-	this->m_colors = image.m_colors;
-	this->m_width = image.m_width;
-	this->m_height = image.m_height;
-	this->m_channels = image.m_channels;
-	image.m_colors = nullptr;
+	this->colors = image.colors;
+	this->width = image.width;
+	this->height = image.height;
+	this->channels = image.channels;
+	image.colors = nullptr;
 }
 
 Image::Image(const std::vector<uint8>& imageBytes)
 {
-	stbi_uc* stbImage = stbi_load_from_memory(imageBytes.data(), imageBytes.size(), &m_width, &m_height, &m_channels, STBI_rgb_alpha);
+	stbi_uc* stbImage = stbi_load_from_memory(imageBytes.data(), imageBytes.size(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!stbImage)
 		return;
-	for (size_t i = 0; i < m_width * m_height * 4; i += 4)
+	for (size_t i = 0; i < width * height * 4; i += 4)
 	{
-        // RGBA -> BGRA
-        std::swap(stbImage[i + 0], stbImage[i + 2]);
+		// RGBA -> BGRA
+		std::swap(stbImage[i + 0], stbImage[i + 2]);
 	}
-	m_colors = reinterpret_cast<sint32*>(stbImage);
+	colors = reinterpret_cast<sint32*>(stbImage);
 }
 
-bool Image::isOk() const
+bool Image::IsOk() const
 {
-	return m_colors != nullptr;
+	return colors != nullptr;
 }
 
 Image::~Image()
 {
-	if (m_colors)
-		stbi_image_free(m_colors);
+	if (colors)
+		stbi_image_free(colors);
 }

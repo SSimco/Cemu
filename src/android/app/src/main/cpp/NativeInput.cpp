@@ -8,93 +8,127 @@
 
 #include <android/sensor.h>
 
-class AndroidControllerCallbacks : public ControllerManager::ControllerCallbacks
+namespace NativeInput
 {
-  public:
-	AndroidControllerCallbacks(JNIEnv* env, jobject callbacks)
-		: m_callbacksObject(callbacks)
+
+	class AndroidControllerCallbacks : public ControllerManager::ControllerCallbacks
 	{
-		jclass controllerCallbacksClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeInput$ControllerCallbacks");
-		m_vibrateControllerMId = env->GetMethodID(controllerCallbacksClass, "vibrateController", "(Ljava/lang/String;JI)V");
-		m_cancelControllerVibrationMId = env->GetMethodID(controllerCallbacksClass, "cancelControllerVibration", "(Ljava/lang/String;)V");
-		env->DeleteLocalRef(controllerCallbacksClass);
+	  public:
+		AndroidControllerCallbacks(JNIEnv* env, jobject callbacks)
+			: m_callbacksObject(callbacks)
+		{
+			jclass controllerCallbacksClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeInput$ControllerCallbacks");
+			m_vibrateControllerMId = env->GetMethodID(controllerCallbacksClass, "vibrateController", "(Ljava/lang/String;JI)V");
+			m_cancelControllerVibrationMId = env->GetMethodID(controllerCallbacksClass, "cancelControllerVibration", "(Ljava/lang/String;)V");
+			env->DeleteLocalRef(controllerCallbacksClass);
+		}
+
+		void vibrate_controller(std::string_view deviceDescriptor, sint64 milliseconds, sint32 amplitude) override
+		{
+			JNIUtils::FiberSafeJNICall([&](JNIEnv* env) {
+				jstring deviceDescriptorJstring = JNIUtils::ToJString(env, deviceDescriptor);
+				env->CallVoidMethod(*m_callbacksObject, m_vibrateControllerMId, deviceDescriptorJstring, milliseconds, amplitude);
+				env->DeleteLocalRef(deviceDescriptorJstring);
+			});
+		}
+
+		void cancel_controller_vibration(std::string_view deviceDescriptor) override
+		{
+			JNIUtils::FiberSafeJNICall([&](JNIEnv* env) {
+				jstring deviceDescriptorJstring = JNIUtils::ToJString(env, deviceDescriptor);
+				env->CallVoidMethod(*m_callbacksObject, m_cancelControllerVibrationMId, deviceDescriptorJstring);
+				env->DeleteLocalRef(deviceDescriptorJstring);
+			});
+		}
+
+	  private:
+		jmethodID m_vibrateControllerMId;
+		jmethodID m_cancelControllerVibrationMId;
+		JNIUtils::Scopedjobject m_callbacksObject;
+	};
+
+	class DeviceControllerCallbacks : public DeviceController::ControllerCallbacks
+	{
+	  public:
+		DeviceControllerCallbacks(JNIEnv* env, jobject callbacks)
+			: m_callbacksObject(callbacks)
+		{
+			jclass controllerCallbacksClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeInput$DeviceCallbacks");
+			m_vibrateMId = env->GetMethodID(controllerCallbacksClass, "vibrate", "(JI)V");
+			m_cancelVibrationMId = env->GetMethodID(controllerCallbacksClass, "cancelVibration", "()V");
+			env->DeleteLocalRef(controllerCallbacksClass);
+		}
+
+		void start_rumble(sint64 milliseconds, float rumble) override
+		{
+			JNIUtils::FiberSafeJNICall([&](JNIEnv* env) {
+				env->CallVoidMethod(*m_callbacksObject, m_vibrateMId, milliseconds, static_cast<jint>(rumble * 255.0f));
+			});
+		}
+
+		void stop_rumble() override
+		{
+			JNIUtils::FiberSafeJNICall([&](JNIEnv* env) {
+				env->CallVoidMethod(*m_callbacksObject, m_cancelVibrationMId);
+			});
+		}
+
+	  private:
+		jmethodID m_vibrateMId;
+		jmethodID m_cancelVibrationMId;
+		JNIUtils::Scopedjobject m_callbacksObject;
+	};
+
+	void OnTouchEvent(sint32 x, sint32 y, bool isTV, bool status = true)
+	{
+		auto& instance = InputManager::instance();
+		auto& touchInfo = isTV ? instance.m_main_mouse : instance.m_pad_mouse;
+		std::scoped_lock lock(touchInfo.m_mutex);
+		touchInfo.position = {x, y};
+		touchInfo.left_down = touchInfo.left_down_toggle = status;
 	}
 
-	void vibrate_controller(std::string_view deviceDescriptor, sint64 milliseconds, sint32 amplitude) override
+	std::pair<EmulatedControllerPtr, ControllerPtr> GetDeviceControllerPair()
 	{
-		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
-			jstring deviceDescriptorJstring = JNIUtils::toJString(env, deviceDescriptor);
-			env->CallVoidMethod(*m_callbacksObject, m_vibrateControllerMId, deviceDescriptorJstring, milliseconds, amplitude);
-			env->DeleteLocalRef(deviceDescriptorJstring);
-		});
+		for (size_t i = 0; i < InputManager::kMaxController; ++i)
+		{
+			auto emulatedController = InputManager::instance().get_controller(i);
+
+			if (!emulatedController)
+			{
+				continue;
+			}
+
+			for (const auto& controller : emulatedController->get_controllers())
+			{
+				if (controller->api() == InputAPI::Device)
+				{
+					return {emulatedController, controller};
+				}
+			}
+		}
+
+		if (auto emulatedController = InputManager::instance().get_controller(0))
+		{
+			auto controller = CreateDefaultDeviceController();
+			emulatedController->add_controller(controller);
+			return {emulatedController, controller};
+		}
+
+		return {nullptr, nullptr};
 	}
-
-	void cancel_controller_vibration(std::string_view deviceDescriptor) override
-	{
-		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
-			jstring deviceDescriptorJstring = JNIUtils::toJString(env, deviceDescriptor);
-			env->CallVoidMethod(*m_callbacksObject, m_cancelControllerVibrationMId, deviceDescriptorJstring);
-			env->DeleteLocalRef(deviceDescriptorJstring);
-		});
-	}
-
-  private:
-	jmethodID m_vibrateControllerMId;
-	jmethodID m_cancelControllerVibrationMId;
-	JNIUtils::Scopedjobject m_callbacksObject;
-};
-
-class DeviceControllerCallbacks : public DeviceController::ControllerCallbacks
-{
-  public:
-	DeviceControllerCallbacks(JNIEnv* env, jobject callbacks)
-		: m_callbacksObject(callbacks)
-	{
-		jclass controllerCallbacksClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeInput$DeviceCallbacks");
-		m_vibrateMId = env->GetMethodID(controllerCallbacksClass, "vibrate", "(JI)V");
-		m_cancelVibrationMId = env->GetMethodID(controllerCallbacksClass, "cancelVibration", "()V");
-		env->DeleteLocalRef(controllerCallbacksClass);
-	}
-
-	void start_rumble(sint64 milliseconds, float rumble) override
-	{
-		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
-			env->CallVoidMethod(*m_callbacksObject, m_vibrateMId, milliseconds, static_cast<jint>(rumble * 255.0f));
-		});
-	}
-
-	void stop_rumble() override
-	{
-		JNIUtils::fiberSafeJNICall([&](JNIEnv* env) {
-			env->CallVoidMethod(*m_callbacksObject, m_cancelVibrationMId);
-		});
-	}
-
-  private:
-	jmethodID m_vibrateMId;
-	jmethodID m_cancelVibrationMId;
-	JNIUtils::Scopedjobject m_callbacksObject;
-};
-
-void OnTouchEvent(sint32 x, sint32 y, bool isTV, bool status = true)
-{
-	auto& instance = InputManager::instance();
-	auto& touchInfo = isTV ? instance.m_main_mouse : instance.m_pad_mouse;
-	std::scoped_lock lock(touchInfo.m_mutex);
-	touchInfo.position = {x, y};
-	touchInfo.left_down = touchInfo.left_down_toggle = status;
-}
+} // namespace NativeInput
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onControllerKey(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring deviceDescriptor, jint key, jboolean is_pressed)
 {
-	ControllerManager::instance().process_key_event(JNIUtils::toString(env, deviceDescriptor), key, is_pressed);
+	ControllerManager::instance().process_key_event(JNIUtils::FromJString(env, deviceDescriptor), key, is_pressed);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onControllerAxis(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring deviceDescriptor, jint axis, jfloat value)
 {
-	ControllerManager::instance().process_axis_event(JNIUtils::toString(env, deviceDescriptor), axis, value);
+	ControllerManager::instance().process_axis_event(JNIUtils::FromJString(env, deviceDescriptor), axis, value);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -111,7 +145,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_onControllerMotion(
 	jfloat accelZ)
 {
 	ControllerManager::instance().process_motion(
-		JNIUtils::toString(env, deviceDescriptor),
+		JNIUtils::FromJString(env, deviceDescriptor),
 		std::chrono::steady_clock::time_point{std::chrono::nanoseconds(timestamp)},
 		gyroX,
 		-gyroY,
@@ -141,8 +175,8 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_setControllers(JNIEnv* env, [[ma
 
 		ControllerManager::ControllerInfo controllerInfo{
 			.id = env->GetIntField(controllerObj, idFieldId),
-			.descriptor = JNIUtils::toString(env, static_cast<jstring>(env->GetObjectField(controllerObj, descriptorFieldId))),
-			.name = JNIUtils::toString(env, static_cast<jstring>(env->GetObjectField(controllerObj, nameFieldId))),
+			.descriptor = JNIUtils::FromJString(env, static_cast<jstring>(env->GetObjectField(controllerObj, descriptorFieldId))),
+			.name = JNIUtils::FromJString(env, static_cast<jstring>(env->GetObjectField(controllerObj, nameFieldId))),
 			.hasRumble = static_cast<bool>(env->GetBooleanField(controllerObj, hasRumbleFieldId)),
 			.hasMotion = static_cast<bool>(env->GetBooleanField(controllerObj, hasMotionFieldId)),
 		};
@@ -209,7 +243,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_isControllerDisabled([[maybe_unu
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setControllerMapping(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring deviceDescriptor, jstring deviceName, jint index, jint mappingId, jint buttonId)
 {
-	auto controller = ControllerFactory::CreateController(InputAPI::Android, JNIUtils::toString(env, deviceDescriptor), JNIUtils::toString(env, deviceName));
+	auto controller = ControllerFactory::CreateController(InputAPI::Android, JNIUtils::FromJString(env, deviceDescriptor), JNIUtils::FromJString(env, deviceName));
 	EmulatedControllerManager::GetController(index).SetMapping(mappingId, controller, buttonId);
 }
 
@@ -217,7 +251,7 @@ extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerMapping(JNIEnv* env, [[maybe_unused]] jclass clazz, jint index, jint mappingId)
 {
 	auto mapping = EmulatedControllerManager::GetController(index).GetMapping(mappingId);
-	return JNIUtils::toJString(env, mapping.value_or(""));
+	return JNIUtils::ToJString(env, mapping.value_or(""));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -240,7 +274,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerMappings(JNIEnv* en
 	for (const auto& pair : mappings)
 	{
 		jint key = static_cast<jint>(pair.first);
-		jstring buttonName = JNIUtils::toJString(env, pair.second);
+		jstring buttonName = JNIUtils::ToJString(env, pair.second);
 		jobject mappingId = env->NewObject(integerClass, integerConstructor, key);
 		env->CallObjectMethod(hashMapObj, hashMapPut, mappingId, buttonName);
 	}
@@ -251,19 +285,19 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerMappings(JNIEnv* en
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onTouchDown([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint x, jint y, jboolean isTV)
 {
-	OnTouchEvent(x, y, isTV, true);
+	NativeInput::OnTouchEvent(x, y, isTV, true);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onTouchUp([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint x, jint y, jboolean isTV)
 {
-	OnTouchEvent(x, y, isTV, false);
+	NativeInput::OnTouchEvent(x, y, isTV, false);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_onTouchMove([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint x, jint y, jboolean isTV)
 {
-	OnTouchEvent(x, y, isTV);
+	NativeInput::OnTouchEvent(x, y, isTV);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -300,13 +334,13 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_onOverlayAxis([[maybe_unused]] J
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setControllerCallbacks(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject callbacks)
 {
-	ControllerManager::instance().set_controller_callbacks(callbacks == nullptr ? nullptr : std::make_shared<AndroidControllerCallbacks>(env, callbacks));
+	ControllerManager::instance().set_controller_callbacks(callbacks == nullptr ? nullptr : std::make_shared<NativeInput::AndroidControllerCallbacks>(env, callbacks));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setDeviceCallbacks(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject callbacks)
 {
-	DeviceController::set_callbacks(callbacks == nullptr ? nullptr : std::make_shared<DeviceControllerCallbacks>(env, callbacks));
+	DeviceController::set_callbacks(callbacks == nullptr ? nullptr : std::make_shared<NativeInput::DeviceControllerCallbacks>(env, callbacks));
 }
 
 std::shared_ptr<ControllerBase> GetControllerForEmulatedController(uint32 index, std::string_view uuid, std::string_view name)
@@ -334,7 +368,7 @@ std::shared_ptr<ControllerBase> GetControllerForEmulatedController(uint32 index,
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jint index, jstring descriptor, jstring name)
 {
-	auto controller = GetControllerForEmulatedController(index, JNIUtils::toString(env, descriptor), JNIUtils::toString(env, name));
+	auto controller = GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
 
 	if (controller == nullptr)
 	{
@@ -364,7 +398,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerSettings(JNIEnv* en
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setControllerSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jint index, jstring descriptor, jstring name, jobject controllerSettings)
 {
-	auto controller = GetControllerForEmulatedController(index, JNIUtils::toString(env, descriptor), JNIUtils::toString(env, name));
+	auto controller = GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
 
 	if (controller == nullptr)
 	{
@@ -434,7 +468,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getMotionEnabledControllerDescri
 		env->SetObjectArrayElement(
 			controllersIdsJava,
 			index,
-			JNIUtils::toJString(env, uuid));
+			JNIUtils::ToJString(env, uuid));
 
 		++index;
 	}
@@ -445,7 +479,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getMotionEnabledControllerDescri
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setDeviceRumble([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jfloat rumble)
 {
-	auto [emulatedController, controller] = GetDeviceControllerPair();
+	auto [emulatedController, controller] = NativeInput::GetDeviceControllerPair();
 
 	if (controller)
 	{
@@ -456,7 +490,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_setDeviceRumble([[maybe_unused]]
 extern "C" [[maybe_unused]] JNIEXPORT jfloat JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getDeviceRumble([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	auto [emulatedController, controller] = GetDeviceControllerPair();
+	auto [emulatedController, controller] = NativeInput::GetDeviceControllerPair();
 
 	if (controller)
 	{
@@ -469,7 +503,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getDeviceRumble([[maybe_unused]]
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getDeviceControllerIndex([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	auto [emulatedController, controller] = GetDeviceControllerPair();
+	auto [emulatedController, controller] = NativeInput::GetDeviceControllerPair();
 
 	if (emulatedController)
 	{
@@ -479,40 +513,10 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getDeviceControllerIndex([[maybe
 	return 0;
 }
 
-std::pair<EmulatedControllerPtr, ControllerPtr> GetDeviceControllerPair()
-{
-	for (size_t i = 0; i < InputManager::kMaxController; ++i)
-	{
-		auto emulatedController = InputManager::instance().get_controller(i);
-
-		if (!emulatedController)
-		{
-			continue;
-		}
-
-		for (const auto& controller : emulatedController->get_controllers())
-		{
-			if (controller->api() == InputAPI::Device)
-			{
-				return {emulatedController, controller};
-			}
-		}
-	}
-
-	if (auto emulatedController = InputManager::instance().get_controller(0))
-	{
-		auto controller = CreateDefaultDeviceController();
-		emulatedController->add_controller(controller);
-		return {emulatedController, controller};
-	}
-
-	return {nullptr, nullptr};
-}
-
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setDeviceControllerIndex([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint index)
 {
-	auto [emulatedController, controller] = GetDeviceControllerPair();
+	auto [emulatedController, controller] = NativeInput::GetDeviceControllerPair();
 
 	if (controller && emulatedController)
 	{

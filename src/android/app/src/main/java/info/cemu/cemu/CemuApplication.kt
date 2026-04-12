@@ -123,7 +123,7 @@ class CemuApplication : Application() {
             crashLog(stacktrace)
             DefaultUncaughtExceptionHandler!!.uncaughtException(
                 thread,
-                exception
+                exception,
             )
         }
     }
@@ -133,6 +133,7 @@ class CemuApplication : Application() {
         setDPI(displayMetrics.density)
         initializeActiveSettings(
             userDataPath = internalCemuUserFolder,
+            configPath = internalCemuUserFolder,
             dataPath = internalCemuDataFolder,
             cachePath = internalCemuUserFolder,
         )

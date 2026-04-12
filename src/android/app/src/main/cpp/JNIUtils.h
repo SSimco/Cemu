@@ -1,14 +1,12 @@
 #pragma once
 
-#include <android/native_window_jni.h>
 #include <jni.h>
-#include "util/Fiber/FiberFContext.h"
 
 namespace JNIUtils
 {
-	extern JavaVM* g_jvm;
+	void SetJavaVM(JavaVM* jvm);
 
-	inline std::string toString(JNIEnv* env, jstring jstr)
+	inline std::string FromJString(JNIEnv* env, jstring jstr)
 	{
 		if (jstr == nullptr)
 			return {};
@@ -18,120 +16,59 @@ namespace JNIUtils
 		return str;
 	}
 
-	inline jstring toJString(JNIEnv* env, const std::string& str)
+	inline jstring ToJString(JNIEnv* env, const std::string& str)
 	{
 		return env->NewStringUTF(str.c_str());
 	}
 
-	inline jstring toJString(JNIEnv* env, std::string_view str)
+	inline jstring ToJString(JNIEnv* env, std::string_view str)
 	{
-		return toJString(env, std::string(str));
+		return ToJString(env, std::string(str));
 	}
 
-	inline jstring toJString(JNIEnv* env, std::wstring_view str)
+	inline jstring ToJString(JNIEnv* env, std::wstring_view str)
 	{
-		return toJString(env, boost::nowide::narrow(str));
+		return ToJString(env, boost::nowide::narrow(str));
 	}
 
-	jobject createJavaStringArrayList(JNIEnv* env, const std::vector<std::string>& stringList);
+	jobject CreateJavaStringArrayList(JNIEnv* env, const std::vector<std::string>& stringList);
 
-	jobject createJavaStringArrayList(JNIEnv* env, const std::vector<std::wstring>& stringList);
+	jobject CreateJavaStringArrayList(JNIEnv* env, const std::vector<std::wstring>& stringList);
 
-	void handleNativeException(JNIEnv* env, const std::function<void()>& fn);
-
-	class ScopedJNIENV
+	inline void HandleNativeException(JNIEnv* env, std::invocable auto fn)
 	{
-	  public:
-		ScopedJNIENV()
+		try
 		{
-			jint result = g_jvm->GetEnv((void**)&m_env, JNI_VERSION_1_6);
-
-			if (result != JNI_EDETACHED)
-				return;
-
-			JavaVMAttachArgs args;
-			args.version = JNI_VERSION_1_6;
-			args.name = nullptr;
-			args.group = nullptr;
-			result = g_jvm->AttachCurrentThread(&m_env, &args);
-			if (result == JNI_OK)
-				m_threadWasAttached = true;
-		}
-
-		JNIEnv*& operator*()
+			fn();
+		} catch (const std::exception& exception)
 		{
-			return m_env;
-		}
-
-		JNIEnv* operator->()
+			jclass exceptionClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeException");
+			env->ThrowNew(exceptionClass, exception.what());
+		} catch (...)
 		{
-			return m_env;
+			jclass exceptionClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeException");
+			env->ThrowNew(exceptionClass, "Unknown native exception");
 		}
+	}
 
-		operator JNIEnv*() const
-		{
-			return m_env;
-		}
-
-		~ScopedJNIENV()
-		{
-			if (m_threadWasAttached)
-				g_jvm->DetachCurrentThread();
-		}
-
-	  private:
-		JNIEnv* m_env = nullptr;
-		bool m_threadWasAttached = false;
-	};
+	JNIEnv* GetEnv();
 
 	class Scopedjobject
 	{
 	  public:
 		Scopedjobject() = default;
 
-		Scopedjobject(Scopedjobject&& other) noexcept
-		{
-			this->m_jobject = other.m_jobject;
-			other.m_jobject = nullptr;
-		}
-		void deleteRef()
-		{
-			if (m_jobject)
-			{
-				ScopedJNIENV()->DeleteGlobalRef(m_jobject);
-				m_jobject = nullptr;
-			}
-		}
-		Scopedjobject& operator=(Scopedjobject&& other) noexcept
-		{
-			if (this != &other)
-			{
-				deleteRef();
-				m_jobject = other.m_jobject;
-				other.m_jobject = nullptr;
-			}
-			return *this;
-		}
-		const jobject& operator*() const
-		{
-			return m_jobject;
-		}
+		Scopedjobject(Scopedjobject&& other) noexcept;
 
-		explicit Scopedjobject(jobject obj)
-		{
-			if (obj)
-				m_jobject = ScopedJNIENV()->NewGlobalRef(obj);
-		}
+		void DeleteReference();
 
-		~Scopedjobject()
-		{
-			deleteRef();
-		}
+		Scopedjobject& operator=(Scopedjobject&& other) noexcept;
 
-		bool isValid() const
-		{
-			return m_jobject;
-		}
+		jobject operator*() const;
+
+		explicit Scopedjobject(jobject obj);
+
+		~Scopedjobject();
 
 	  private:
 		jobject m_jobject = nullptr;
@@ -142,77 +79,42 @@ namespace JNIUtils
 	  public:
 		Scopedjclass() = default;
 
-		Scopedjclass(Scopedjclass&& other) noexcept
-		{
-			this->m_jclass = other.m_jclass;
-			other.m_jclass = nullptr;
-		}
+		Scopedjclass(Scopedjclass&& other) noexcept;
 
-		explicit Scopedjclass(jclass javaClass)
-		{
-			if (javaClass)
-				m_jclass = static_cast<jclass>(ScopedJNIENV()->NewGlobalRef(javaClass));
-		}
+		explicit Scopedjclass(jclass javaClass);
 
-		Scopedjclass& operator=(Scopedjclass&& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (m_jclass)
-					ScopedJNIENV()->DeleteGlobalRef(m_jclass);
-				m_jclass = other.m_jclass;
-				other.m_jclass = nullptr;
-			}
-			return *this;
-		}
+		Scopedjclass& operator=(Scopedjclass&& other) noexcept;
 
-		explicit Scopedjclass(const std::string& className)
-		{
-			ScopedJNIENV scopedEnv;
-			jclass tempObj = scopedEnv->FindClass(className.c_str());
-			m_jclass = static_cast<jclass>(scopedEnv->NewGlobalRef(tempObj));
-			scopedEnv->DeleteLocalRef(tempObj);
-		}
+		explicit Scopedjclass(const char* className);
 
-		~Scopedjclass()
-		{
-			if (m_jclass)
-				ScopedJNIENV()->DeleteGlobalRef(m_jclass);
-		}
+		~Scopedjclass();
 
-		bool isValid() const
-		{
-			return m_jclass != nullptr;
-		}
-
-		const jclass& operator*() const
-		{
-			return m_jclass;
-		}
+		jclass operator*() const;
 
 	  private:
 		jclass m_jclass = nullptr;
 	};
 
-	Scopedjobject getEnumValue(JNIEnv* env, const std::string& enumClassName, const std::string& enumName);
-	jobject createArrayList(JNIEnv* env, const std::vector<jobject>& objects);
-	jobject createJavaLongArrayList(JNIEnv* env, const std::vector<uint64_t>& values);
+	Scopedjobject GetEnumValue(JNIEnv* env, const std::string& enumClassName, const std::string& enumName);
+
+	jobject CreateArrayList(JNIEnv* env, const std::vector<jobject>& objects);
+
+	jobject CreateJavaLongArrayList(JNIEnv* env, const std::vector<uint64_t>& values);
 
 	template<typename... TArgs>
-	jobject newObject(JNIEnv* env, const std::string& className, const std::string& ctrSig = "()V", TArgs&&... args)
+	jobject NewObject(JNIEnv* env, const char* className, const std::string& ctrSig = "()V", TArgs&&... args)
 	{
-		jclass javaClass = env->FindClass(className.c_str());
+		jclass javaClass = env->FindClass(className);
 		jmethodID ctrId = env->GetMethodID(javaClass, "<init>", ctrSig.c_str());
 		jobject obj = env->NewObject(javaClass, ctrId, std::forward<TArgs>(args)...);
 		env->DeleteLocalRef(javaClass);
 		return obj;
 	}
 
-	inline void fiberSafeJNICall(std::function<void(JNIEnv*)> func)
+	inline void FiberSafeJNICall(std::invocable<JNIEnv*> auto func)
 	{
-		Fiber::RunOnMainFiber([&]() {
-			ScopedJNIENV env;
-			func(*env);
+		std::jthread([&]() {
+			func(GetEnv());
 		});
 	}
 } // namespace JNIUtils

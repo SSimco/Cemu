@@ -11,7 +11,7 @@ class CompressTitleCallbacks
   public:
 	explicit CompressTitleCallbacks(jobject compressTitleCallbacks);
 
-	void onFinished();
+	void OnFinished();
 
-	void onError();
+	void OnError();
 };

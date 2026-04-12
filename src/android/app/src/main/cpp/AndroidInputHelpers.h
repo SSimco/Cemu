@@ -5,8 +5,6 @@
 
 ControllerPtr CreateDefaultDeviceController();
 
-std::pair<EmulatedControllerPtr, ControllerPtr> GetDeviceControllerPair();
-
 class EmulatedControllerManager
 {
   private:

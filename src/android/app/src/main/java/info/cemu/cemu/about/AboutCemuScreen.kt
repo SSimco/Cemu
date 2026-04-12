@@ -41,7 +41,6 @@ import info.cemu.cemu.BuildConfig
 import info.cemu.cemu.R
 import info.cemu.cemu.common.ui.components.ScreenContentLazy
 import info.cemu.cemu.common.ui.localization.tr
-import kotlinx.collections.immutable.persistentListOf
 
 typealias AboutLibrary = com.mikepenz.aboutlibraries.entity.Library
 
@@ -135,7 +134,7 @@ private fun LazyListScope.kotlinLibrariesSection(
     libraries: Libs?,
     onOpenLicense: (AboutLibrary) -> Unit,
 ) {
-    val libs = libraries?.libraries ?: persistentListOf()
+    val libs = libraries?.libraries ?: listOf()
     item {
         Text(
             modifier = Modifier.padding(horizontal = 8.dp),

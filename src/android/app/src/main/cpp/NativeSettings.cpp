@@ -175,7 +175,7 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_addGamesPath(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring uri)
 {
 	auto& gamePaths = GetConfig().game_paths;
-	auto gamePath = JNIUtils::toString(env, uri);
+	auto gamePath = JNIUtils::FromJString(env, uri);
 	if (std::any_of(gamePaths.begin(), gamePaths.end(), [&](const auto& path) { return path == gamePath; }))
 		return;
 	gamePaths.push_back(gamePath);
@@ -184,7 +184,7 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_addGamesPath(JNIEnv* env, [[m
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_removeGamesPath(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring uri)
 {
-	auto gamePath = JNIUtils::toString(env, uri);
+	auto gamePath = JNIUtils::FromJString(env, uri);
 	auto& gamePaths = GetConfig().game_paths;
 	std::erase_if(gamePaths, [&](const auto& path) { return path == gamePath; });
 }
@@ -192,7 +192,7 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_removeGamesPath(JNIEnv* env, 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_getGamesPaths(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	return JNIUtils::createJavaStringArrayList(env, GetConfig().game_paths);
+	return JNIUtils::CreateJavaStringArrayList(env, GetConfig().game_paths);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
@@ -344,13 +344,13 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_getCustomDriverPath(JNIEnv* e
 	std::string customDriverPath = GetConfig().custom_driver_path;
 	if (customDriverPath.empty())
 		return nullptr;
-	return JNIUtils::toJString(env, customDriverPath);
+	return JNIUtils::ToJString(env, customDriverPath);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_setCustomDriverPath(JNIEnv* env, [[maybe_unused]] jclass clazz, jstring custom_driver_path)
 {
-	GetConfig().custom_driver_path = JNIUtils::toString(env, custom_driver_path);
+	GetConfig().custom_driver_path = JNIUtils::FromJString(env, custom_driver_path);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL

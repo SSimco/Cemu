@@ -1,4 +1,5 @@
 add_library(CemuAndroid SHARED
+        AndroidFilesystemCallbacks.cpp
         AndroidInputHelpers.cpp
         CompressTitleCallbacks.cpp
         GameTitleLoader.cpp

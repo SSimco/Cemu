@@ -2,16 +2,16 @@
 
 struct Image
 {
-	sint32* m_colors = nullptr;
-	int m_width = 0;
-	int m_height = 0;
-	int m_channels = 0;
+	sint32* colors = nullptr;
+	int width = 0;
+	int height = 0;
+	int channels = 0;
 
 	Image(Image&& image);
 
 	Image(const std::vector<uint8>& imageBytes);
 
-	bool isOk() const;
+	bool IsOk() const;
 
 	~Image();
 };

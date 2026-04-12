@@ -1,10 +1,10 @@
 [versions]
-aboutlibraries = "14.0.0-b02"
+aboutlibraries = "14.0.1"
 agp = "9.1.0"
 androidx-activity-compose = "1.13.0"
-androidx-compose-bom = "2026.03.00"
+androidx-compose-bom = "2026.03.01"
 androidx-compose-material3 = "1.4.0"
-androidx-compose-ui = "1.10.5"
+androidx-compose-ui = "1.10.6"
 androidx-core-ktx = "1.18.0"
 androidx-datastore = "1.2.1"
 androidx-documentfile = "1.1.0"
@@ -15,10 +15,10 @@ archunit-junit4 = "1.4.1"
 espresso-core = "3.7.0"
 google-android-material = "1.13.0"
 junit = "4.13.2"
-kotlin = "2.3.10"
+kotlin = "2.3.20"
 kotlinx-gettext = "0.7.0"
-kotlinx-serialization-json = "1.10.0"
-ktor = "3.4.1"
+kotlinx-serialization-json = "1.11.0"
+ktor = "3.4.2"
 
 [libraries]
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }

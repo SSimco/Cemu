@@ -32,9 +32,9 @@ Java_info_cemu_cemu_nativeinterface_NativeLocalization_setTranslations(JNIEnv* e
 	for (jint i = 0; i < size; i++)
 	{
 		auto keyJava = static_cast<jstring>(env->GetObjectArrayElement(keyArray, i));
-		std::string key = JNIUtils::toString(env, keyJava);
+		std::string key = JNIUtils::FromJString(env, keyJava);
 		auto translationJava = static_cast<jstring>(env->CallObjectMethod(translations, getMethodId, keyJava));
-		std::string translation = JNIUtils::toString(env, translationJava);
+		std::string translation = JNIUtils::FromJString(env, translationJava);
 		NativeLocalization::g_messages[key] = translation;
 	}
 

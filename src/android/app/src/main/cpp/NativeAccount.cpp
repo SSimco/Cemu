@@ -1,35 +1,19 @@
 #include <util/helpers/SystemException.h>
-#include "WindowSystem.h"
 #include "JNIUtils.h"
-#include "AndroidAudio.h"
-#include "AndroidEmulatedController.h"
-#include "AndroidFilesystemCallbacks.h"
-#include "Cafe/HW/Latte/Core/LatteOverlay.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
-#include "Cafe/HW/Latte/Renderer/Vulkan/VulkanRenderer.h"
-#include "Cafe/CafeSystem.h"
-#include "GameTitleLoader.h"
-#include "input/ControllerFactory.h"
-#include "input/InputManager.h"
-#include "input/api/Android/AndroidController.h"
-#include "input/api/Android/AndroidControllerProvider.h"
-#include "config/ActiveSettings.h"
 #include "Cemu/ncrypto/ncrypto.h"
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeAccount_createAccount(JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id, jstring mii_name)
+Java_info_cemu_cemu_nativeinterface_NativeAccount_createAccount(JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistentId, jstring miiName)
 {
-	uint32 persistentId = static_cast<uint32>(persistent_id);
-	std::string miiName = JNIUtils::toString(env, mii_name);
-	Account account(persistentId, boost::nowide::widen(miiName));
+	Account account(persistentId, boost::nowide::widen(JNIUtils::FromJString(env, miiName)));
 	account.Save();
 	Account::RefreshAccounts();
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeAccount_deleteAccount([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id)
+Java_info_cemu_cemu_nativeinterface_NativeAccount_deleteAccount([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistentId)
 {
-	uint32 persistentId = static_cast<uint32>(persistent_id);
 	const auto& account = Account::GetAccount(persistentId);
 
 	if (account.GetPersistentId() != persistentId)
@@ -50,13 +34,13 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_deleteAccount([[maybe_unused]]
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeAccount_saveAccount(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject account_java)
+Java_info_cemu_cemu_nativeinterface_NativeAccount_saveAccount(JNIEnv* env, [[maybe_unused]] jclass clazz, jobject accountJava)
 {
 	using namespace std::chrono;
 
 	jclass accountClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeAccount$Account");
 	auto getAccountField = [&](const char* fieldName, const char* sig, auto getFieldFn) -> auto {
-		auto getField = std::bind(getFieldFn, env, account_java, std::placeholders::_1);
+		auto getField = std::bind(getFieldFn, env, accountJava, std::placeholders::_1);
 		return getField(env->GetFieldID(accountClass, fieldName, sig));
 	};
 	uint32 persistentId = getAccountField("persistentId", "I", &JNIEnv::GetIntField);
@@ -68,11 +52,11 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_saveAccount(JNIEnv* env, [[may
 	}
 
 	jstring miiNameJava = static_cast<jstring>(getAccountField("miiName", "Ljava/lang/String;", &JNIEnv::GetObjectField));
-	account.SetMiiName(boost::nowide::widen(JNIUtils::toString(env, miiNameJava)));
+	account.SetMiiName(boost::nowide::widen(JNIUtils::FromJString(env, miiNameJava)));
 	account.SetCountry(getAccountField("country", "I", &JNIEnv::GetIntField));
 	account.SetGender(getAccountField("gender", "B", &JNIEnv::GetByteField));
 	jstring emailJava = static_cast<jstring>(getAccountField("email", "Ljava/lang/String;", &JNIEnv::GetObjectField));
-	account.SetEmail(JNIUtils::toString(env, emailJava));
+	account.SetEmail(JNIUtils::FromJString(env, emailJava));
 	auto birthdayMillis = milliseconds(getAccountField("birthday", "J", &JNIEnv::GetLongField));
 	system_clock::time_point birthdayTimePoint(birthdayMillis);
 	year_month_day birthdayYMD(floor<days>(time_point(birthdayTimePoint)));
@@ -112,10 +96,10 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccounts(JNIEnv* env, [[may
 	{
 		const auto& account = accounts[i];
 		jint persistentId = static_cast<jint>(account.GetPersistentId());
-		jstring miiName = JNIUtils::toJString(env, account.GetMiiName());
+		jstring miiName = JNIUtils::ToJString(env, account.GetMiiName());
 		jlong birthday = toUnixTimestampMillis(year_month_day(year(account.GetBirthYear()), month(account.GetBirthMonth()), day(account.GetBirthDay())));
 		jbyte gender = static_cast<jbyte>(account.GetGender());
-		jstring email = JNIUtils::toJString(env, account.GetEmail());
+		jstring email = JNIUtils::ToJString(env, account.GetEmail());
 		jint country = static_cast<jint>(account.GetCountry());
 		jboolean isValid = account.IsValidOnlineAccount();
 
@@ -172,7 +156,7 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccountCountries(JNIEnv* en
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccountValidationErrors(JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistent_id)
+Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccountValidationErrors(JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistentId)
 {
 	using ErrorType = std::pair<jclass, jmethodID>;
 	auto getErrorType = [&](const char* className, const char* ctrSig = "()V") -> ErrorType {
@@ -192,7 +176,6 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccountValidationErrors(JNI
 	auto accountError = getErrorType("info/cemu/cemu/nativeinterface/NativeAccount$AccountError", "(I)V");
 	auto baseErrorType = env->FindClass("info/cemu/cemu/nativeinterface/NativeAccount$OnlineValidationError");
 
-	uint32 persistentId = persistent_id;
 	auto account = Account::GetAccount(persistentId);
 	const auto validator = account.ValidateOnlineFiles();
 
@@ -218,7 +201,7 @@ Java_info_cemu_cemu_nativeinterface_NativeAccount_getAccountValidationErrors(JNI
 		int counter = 0;
 		for (const auto& missingFile : validator.missing_files)
 		{
-			errors.push_back(newError(missingFileError, JNIUtils::toJString(env, missingFile)));
+			errors.push_back(newError(missingFileError, JNIUtils::ToJString(env, missingFile)));
 
 			++counter;
 			if (counter > 10)

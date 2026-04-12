@@ -1,8 +1,6 @@
 #include "FiberFContext.h"
 
 thread_local Fiber* sCurrentFiber = nullptr;
-thread_local Fiber* sThreadFiber = nullptr;
-thread_local bool sMainFiberCallbackPending = false;
 
 using namespace boost::context::detail;
 
@@ -33,23 +31,9 @@ Fiber::~Fiber()
 		free(m_stackPtr);
 }
 
-void Fiber::RunOnMainFiber(std::function<void()> f)
-{
-	if (sCurrentFiber == sThreadFiber || sCurrentFiber == nullptr)
-	{
-		f();
-		return;
-	}
-
-	sMainFiberCallbackPending = true;
-	transfer_t transfer = jump_fcontext(sThreadFiber->m_context, &f);
-	sMainFiberCallbackPending = false;
-}
-
 Fiber* Fiber::PrepareCurrentThread(void* privateData)
 {
 	sCurrentFiber = new Fiber(privateData);
-	sThreadFiber = sCurrentFiber;
 	return sCurrentFiber;
 }
 
@@ -62,14 +46,6 @@ void Fiber::Switch(Fiber& targetFiber)
 	sCurrentFiber = &targetFiber;
 	targetFiber.m_prevFiber = thisFiber;
 	transfer_t transfer = jump_fcontext(targetFiber.m_context, &targetFiber);
-
-	while (sMainFiberCallbackPending)
-	{
-		auto f = static_cast<std::function<void()>*>(transfer.data);
-		(*f)();
-		transfer = jump_fcontext(transfer.fctx, nullptr);
-	}
-
 	thisFiber->m_prevFiber->m_context = transfer.fctx;
 }
 

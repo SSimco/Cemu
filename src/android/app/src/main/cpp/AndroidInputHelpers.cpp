@@ -57,7 +57,6 @@ void EmulatedControllerManager::SetType(EmulatedController::Type type)
 	}
 
 	m_emulatedController = InputManager::instance().set_controller(m_index, type);
-	InputManager::instance().save(m_index);
 }
 
 void EmulatedControllerManager::SetMapping(uint64 mappingId, ControllerPtr controller, uint64 buttonId)
@@ -74,7 +73,6 @@ void EmulatedControllerManager::SetMapping(uint64 mappingId, ControllerPtr contr
 	else
 		controller = *controllerIt;
 	m_emulatedController->set_mapping(mappingId, controller, buttonId);
-	InputManager::instance().save(m_index);
 }
 
 std::optional<std::string> EmulatedControllerManager::GetMapping(uint64 mapping) const
