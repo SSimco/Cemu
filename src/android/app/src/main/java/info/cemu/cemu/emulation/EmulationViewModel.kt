@@ -119,7 +119,7 @@ class EmulationViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            GamePadPosition.RIGHT,
+            null,
         )
 
     val destroyedSurfaces = ConditionFlags()

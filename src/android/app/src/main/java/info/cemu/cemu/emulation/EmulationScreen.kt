@@ -370,7 +370,9 @@ private fun TextButtonItem(
 @Composable
 private fun EmulationSurfaces(viewModel: EmulationViewModel) {
     val sideMenuState by viewModel.sideMenuState.collectAsState()
-    val gamePadPosition by viewModel.gamePadPosition.collectAsState()
+    val gamePadPositionState = viewModel.gamePadPosition.collectAsState()
+
+    val gamePadPosition = gamePadPositionState.value ?: return
 
     val isVertical = gamePadPosition.isVertical()
     val appearsAfterTV = gamePadPosition.appearsAfterTV()
