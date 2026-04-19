@@ -185,8 +185,10 @@ private fun HotkeyBindingDialog(
                         modifier = Modifier.padding(end = 16.dp),
                     )
 
-                    for (key in pressedKeys) {
-                        KeyChip(key)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        pressedKeys.forEach { key ->
+                            KeyChip(key)
+                        }
                     }
                 }
 
