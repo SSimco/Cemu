@@ -11,8 +11,9 @@ import info.cemu.cemu.settings.customdrivers.CustomDriversScreen
 import info.cemu.cemu.settings.gamespath.GamePathsScreen
 import info.cemu.cemu.settings.general.GeneralSettingsScreen
 import info.cemu.cemu.settings.graphics.GraphicsSettingsScreen
-import info.cemu.cemu.settings.input.ControllerInputSettingsScreen
-import info.cemu.cemu.settings.input.DeviceInputSettingsScreen
+import info.cemu.cemu.settings.input.controller.ControllerInputSettingsScreen
+import info.cemu.cemu.settings.input.device.DeviceInputSettingsScreen
+import info.cemu.cemu.settings.input.hotkeys.HotkeySettingsScreen
 import info.cemu.cemu.settings.input.InputSettingsScreen
 import info.cemu.cemu.settings.inputoverlay.InputOverlaySettingsScreen
 import info.cemu.cemu.settings.overlay.OverlaySettingsScreen
@@ -60,6 +61,9 @@ private object SettingsRoutes {
 
     @Serializable
     object DeviceInputSettingsScreenRoute
+
+    @Serializable
+    object HotkeySettingsScreenRoute
 
     @Serializable
     object AccountSettingsScreenRoute
@@ -110,6 +114,13 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
                     controllerIndex = controllerIndex,
                 )
             }
+
+            composable<SettingsRoutes.HotkeySettingsScreenRoute> {
+                HotkeySettingsScreen(
+                    navigateBack = { navController.popBackStack() }
+                )
+            }
+
             composable<SettingsRoutes.InputOverlaySettingsScreenRoute> {
                 InputOverlaySettingsScreen(
                     navigateBack = { navController.popBackStack() }
@@ -125,6 +136,9 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
             composable<SettingsRoutes.InputSettingsScreenRoute> {
                 InputSettingsScreen(
                     navigateBack = { navController.popBackStack() },
+                    goToHotkeySettings = {
+                        navController.navigate(SettingsRoutes.HotkeySettingsScreenRoute)
+                    },
                     goToInputOverlaySettings = {
                         navController.navigate(SettingsRoutes.InputOverlaySettingsScreenRoute)
                     },

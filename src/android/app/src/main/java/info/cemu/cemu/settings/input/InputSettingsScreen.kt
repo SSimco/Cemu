@@ -15,6 +15,7 @@ fun InputSettingsScreen(
     goToInputOverlaySettings: () -> Unit,
     goToControllerSettings: (controllerIndex: Int) -> Unit,
     goToHostInputSettings: () -> Unit,
+    goToHotkeySettings: () -> Unit,
 ) {
     val controllers = remember {
         (0..<NativeInput.MAX_CONTROLLERS).map { controllerIndex ->
@@ -32,6 +33,10 @@ fun InputSettingsScreen(
         Button(
             label = tr("Device settings"),
             onClick = dropUnlessResumed { goToHostInputSettings() },
+        )
+        Button(
+            label = tr("Hotkey settings"),
+            onClick = dropUnlessResumed { goToHotkeySettings() },
         )
         controllers.forEach { (controllerIndex, controllerEmulatedType) ->
             Button(

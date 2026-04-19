@@ -25,6 +25,7 @@ class NativeInputDeviceListener(private val context: Context) {
 
     fun register() {
         inputManager?.registerInputDeviceListener(listener, null)
+        refreshControllers()
     }
 
     fun unregister() {

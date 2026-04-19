@@ -10,15 +10,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import info.cemu.cemu.BuildConfig
+import info.cemu.cemu.common.android.inputevent.isFromPhysicalController
+import info.cemu.cemu.common.settings.AppSettingsStore
 import info.cemu.cemu.common.ui.components.ActivityContent
 import info.cemu.cemu.common.ui.localization.TranslatableContent
 import info.cemu.cemu.emulation.input.ControllerCallbacks
 import info.cemu.cemu.emulation.input.ControllerMotionHandler
 import info.cemu.cemu.emulation.input.DeviceControllerCallbacks
 import info.cemu.cemu.emulation.input.DeviceMotionHandler
+import info.cemu.cemu.emulation.input.HotkeyManager
 import info.cemu.cemu.emulation.input.InputHandler
 import info.cemu.cemu.emulation.input.NativeInputDeviceListener
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 private class InputDelegateManager(context: Context) {
@@ -28,7 +37,8 @@ private class InputDelegateManager(context: Context) {
     private val deviceControllerCallbacks = DeviceControllerCallbacks(context)
     private val deviceMotionHandler = DeviceMotionHandler(context)
 
-    fun setDeviceMotionEnabled(isListening: Boolean) = deviceMotionHandler.setIsListening(isListening)
+    fun setDeviceMotionEnabled(isListening: Boolean) =
+        deviceMotionHandler.setIsListening(isListening)
 
     fun registerAll() {
         nativeInputDeviceListener.register()
@@ -58,9 +68,10 @@ private class InputDelegateManager(context: Context) {
 
 class EmulationActivity : AppCompatActivity() {
     private lateinit var inputManager: InputDelegateManager
+    private var processInputEvents = true
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-        if (InputHandler.onMotionEvent(event)) {
+        if (processInputEvents && InputHandler.onMotionEvent(event)) {
             return true
         }
 
@@ -68,7 +79,13 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (InputHandler.onKeyEvent(event)) {
+        HotkeyManager.onKeyEvent(event)
+
+        if (processInputEvents && InputHandler.onKeyEvent(event)) {
+            return true
+        }
+
+        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE && event.isFromPhysicalController()) {
             return true
         }
 
@@ -100,6 +117,8 @@ class EmulationActivity : AppCompatActivity() {
 
         inputManager = InputDelegateManager(this)
 
+        setupHotkeys()
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setFullscreen()
@@ -113,6 +132,7 @@ class EmulationActivity : AppCompatActivity() {
                         gamePath = gamePath,
                         setMotionSensorEnabled = inputManager::setDeviceMotionEnabled,
                         onQuit = ::onQuit,
+                        setInputListeningEnabled = { processInputEvents = it },
                     )
                 }
             }
@@ -129,6 +149,16 @@ class EmulationActivity : AppCompatActivity() {
         super.onResume()
 
         inputManager.onResume(display.rotation)
+    }
+
+    private fun setupHotkeys() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AppSettingsStore.dataStore.data.map { it.hotkeySettings }
+                    .distinctUntilChanged()
+                    .collect { HotkeyManager.setHotkeyMappings(it) }
+            }
+        }
     }
 
     private fun setFullscreen() {

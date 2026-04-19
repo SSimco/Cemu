@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input.emulatedcontroller
+package info.cemu.cemu.settings.input.controller.emulatedcontroller
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement

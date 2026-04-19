@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,20 +57,24 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
+import info.cemu.cemu.common.settings.HotkeyAction
 import info.cemu.cemu.common.ui.extensions.showMessage
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.emulation.input.HotkeyManager
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurface
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.DEFAULT
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.EDIT_POSITION
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.EDIT_SIZE
 import info.cemu.cemu.nativeinterface.NativeEmulation
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 @Composable
 fun EmulationScreen(
     gamePath: String,
     setMotionSensorEnabled: (Boolean) -> Unit,
+    setInputListeningEnabled: (Boolean) -> Unit,
     onQuit: () -> Unit,
     viewModel: EmulationViewModel = viewModel(
         factory = EmulationViewModel.Factory, extras = MutableCreationExtras().apply {
@@ -87,13 +93,40 @@ fun EmulationScreen(
     var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
 
     fun closeDrawer() {
-        scope.launch { drawerState.close() }
+        scope.launch {
+            drawerState.close()
+        }
+    }
+
+    suspend fun toggleMenu() {
+        drawerState.apply {
+            if (isClosed) {
+                open()
+            } else {
+                close()
+            }
+        }
     }
 
     BackHandler {
+        if (drawerState.isAnimationRunning) {
+            return@BackHandler
+        }
+
         scope.launch {
-            drawerState.apply {
-                if (isClosed) open() else close()
+            toggleMenu()
+        }
+    }
+
+    LaunchedEffect(drawerState.isClosed) {
+        setInputListeningEnabled(drawerState.isClosed)
+    }
+
+    LaunchedEffect(Unit) {
+        HotkeyManager.actions.collect { action ->
+            when (action) {
+                HotkeyAction.QUIT -> showQuitConfirmationDialog = true
+                HotkeyAction.TOGGLE_MENU -> toggleMenu()
             }
         }
     }

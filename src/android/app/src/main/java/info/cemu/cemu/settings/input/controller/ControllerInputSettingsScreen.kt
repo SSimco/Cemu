@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.controller
 
 import android.os.VibrationEffect
 import android.view.InputDevice
@@ -67,10 +67,10 @@ import info.cemu.cemu.common.ui.localization.controllerTypeToString
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeInput
 import info.cemu.cemu.nativeinterface.NativeInput.EmulatedControllerType
-import info.cemu.cemu.settings.input.emulatedcontroller.ClassicControllerInputs
-import info.cemu.cemu.settings.input.emulatedcontroller.ProControllerInputs
-import info.cemu.cemu.settings.input.emulatedcontroller.VPADInputs
-import info.cemu.cemu.settings.input.emulatedcontroller.WiimoteControllerInputs
+import info.cemu.cemu.settings.input.controller.emulatedcontroller.ClassicControllerInputs
+import info.cemu.cemu.settings.input.controller.emulatedcontroller.ProControllerInputs
+import info.cemu.cemu.settings.input.controller.emulatedcontroller.VPADInputs
+import info.cemu.cemu.settings.input.controller.emulatedcontroller.WiimoteControllerInputs
 
 @Composable
 fun ControllerInputSettingsScreen(

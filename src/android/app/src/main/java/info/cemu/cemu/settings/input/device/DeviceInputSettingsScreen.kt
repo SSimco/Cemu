@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.device
 
 import android.os.VibrationEffect
 import androidx.compose.foundation.layout.Row

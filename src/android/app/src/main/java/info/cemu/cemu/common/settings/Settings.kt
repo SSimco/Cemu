@@ -44,6 +44,7 @@ data class AppSettings(
     val guiSettings: GuiSettings = GuiSettings(),
     val emulationSettings: EmulationSettings = EmulationSettings(),
     val inputOverlaySettings: InputOverlaySettings = InputOverlaySettings(),
+    val hotkeySettings: Map<HotkeyAction, HotkeyCombo> = emptyMap(),
 )
 
 object AppSettingsSerializer : Serializer<AppSettings> {

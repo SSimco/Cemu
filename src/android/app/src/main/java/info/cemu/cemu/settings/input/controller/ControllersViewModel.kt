@@ -1,4 +1,4 @@
-package info.cemu.cemu.settings.input
+package info.cemu.cemu.settings.input.controller
 
 import android.view.KeyEvent
 import android.view.MotionEvent
