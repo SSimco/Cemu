@@ -3,6 +3,8 @@ add_library(CemuAndroidGui
     AndroidWindowSystem.h
 )
 
+cemu_use_precompiled_header(CemuAndroidGui)
+
 target_link_libraries(CemuAndroidGui PRIVATE
 	CemuAudio
 	CemuCafe

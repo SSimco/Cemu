@@ -205,7 +205,6 @@ fs::path getTitleSavePath()
 
 void InfoLog_TitleLoaded()
 {
-	cemuLog_createLogFile(false);
 	uint64 titleId = CafeSystem::GetForegroundTitleId();
 	cemuLog_log(LogType::Force, "------- Loaded title -------");
 	cemuLog_log(LogType::Force, "TitleId: {:08x}-{:08x}", (uint32)(titleId >> 32), (uint32)(titleId & 0xFFFFFFFF));
@@ -256,6 +255,7 @@ void InfoLog_PrintActiveSettings()
 		if (!GetConfig().vk_accurate_barriers.GetValue())
 			cemuLog_log(LogType::Force, "Accurate barriers are disabled!");
 	}
+#if ENABLE_METAL
 	else if (ActiveSettings::GetGraphicsAPI() == GraphicAPI::kMetal)
 	{
 	    cemuLog_log(LogType::Force, "Async compile: {}", GetConfig().async_compile.GetValue() ? "true" : "false");
@@ -266,6 +266,7 @@ void InfoLog_PrintActiveSettings()
 		if (!GetConfig().vk_accurate_barriers.GetValue())
 			cemuLog_log(LogType::Force, "Accurate barriers are disabled!");
 	}
+#endif
 	cemuLog_log(LogType::Force, "Console language: {}", stdx::to_underlying(config.console_language.GetValue()));
 }
 
@@ -369,10 +370,9 @@ uint32 LoadSharedData()
 void cemu_initForGame()
 {
 	WindowSystem::UpdateWindowTitles(false, true, 0.0);
+	cemuLog_createLogFile(false);
 	// input manager apply game profile
 	InputManager::instance().apply_game_profile();
-	// log info for launched title
-	InfoLog_TitleLoaded();
 	// determine cycle offset since 1.1.2000
 	uint64 secondsSince2000_UTC = (uint64)(time(NULL) - 946684800);
 	ppcCyclesSince2000_UTC = secondsSince2000_UTC * (uint64)ESPRESSO_CORE_CLOCK;
@@ -388,8 +388,11 @@ void cemu_initForGame()
 	ppcCyclesSince2000 = theTime * (uint64)ESPRESSO_CORE_CLOCK;
 	ppcCyclesSince2000TimerClock = ppcCyclesSince2000 / 20ULL;
 	PPCTimer_start();
-	// this must happen after the RPX/RPL files are mapped to memory (coreinit sets up heaps so that they don't overwrite RPX/RPL data)
-	osLib_load();
+	// coreinit is bootstrapped first and then the main game executable is loaded
+	RPLLoader_LoadCoreinit();
+	LoadMainExecutable();
+	// log info for launched title
+	InfoLog_TitleLoaded();
 	// link all modules
 	uint32 linkTimeStart = GetTickCount();
 	RPLLoader_UpdateDependencies();
@@ -428,10 +431,8 @@ void cemu_initForGame()
 	cemuLog_log(LogType::Force, "------- Run title -------");
 	// wait till GPU thread is initialized
 	while (g_isGPUInitFinished == false) std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	// init initial thread
-	OSThread_t* initialThread = coreinit::OSGetDefaultThread(1);
-	coreinit::OSSetThreadPriority(initialThread, 16);
-	coreinit::OSRunThread(initialThread, PPCInterpreter_makeCallableExportDepr(coreinit_start), 0, nullptr);
+	// run coreinit rpl_entry
+	RPLLoader_CallCoreinitEntrypoint();
 	// init AX and start AX I/O thread
 	snd_core::AXOut_init();
 }
@@ -561,7 +562,23 @@ namespace CafeSystem
 		else
 			platform = "Linux";
 		#elif BOOST_OS_MACOS
-		platform = "MacOS";
+		char productVersion[256]{};
+		size_t productVersionSize = sizeof(productVersion);
+		const int productVersionResult = sysctlbyname("kern.osproductversion", productVersion, &productVersionSize, nullptr, 0);
+
+		char buildVersion[256]{};
+		size_t buildVersionSize = sizeof(buildVersion);
+		const int buildVersionResult = sysctlbyname("kern.osversion", buildVersion, &buildVersionSize, nullptr, 0);
+
+		if (productVersionResult == 0 && buildVersionResult == 0)
+			buffer = fmt::format("macOS {} ({})", productVersion, buildVersion);
+		else if (productVersionResult == 0)
+			buffer = fmt::format("macOS {}", productVersion);
+		else
+			buffer = "macOS";
+
+		platform = buffer.c_str();
+		
 		#elif BOOST_OS_BSD
 		#if defined(__FreeBSD__)
 		platform = "FreeBSD";
@@ -625,21 +642,6 @@ namespace CafeSystem
 		iosu::iosuAcp_init();
 		iosu::nim::Initialize();
 		iosu::odm::Initialize();
-		// init Cafe OS
-		avm::Initialize();
-		drmapp::Initialize();
-		TCL::Initialize();
-		nn::cmpt::Initialize();
-		nn::ccr::Initialize();
-		nn::temp::Initialize();
-		nn::aoc::Initialize();
-		nn::pdm::Initialize();
-		snd::user::Initialize();
-		H264::Initialize();
-		snd_core::Initialize();
-		mic::Initialize();
-		nfc::Initialize();
-		ntag::Initialize();
 		// init hardware register interfaces
 		HW_SI::Initialize();
 	}
@@ -770,7 +772,7 @@ namespace CafeSystem
         }
     }
 
-	PREPARE_STATUS_CODE SetupExecutable()
+	PREPARE_STATUS_CODE PrepareExecutable()
 	{
 		// set rpx path from cos.xml if available
 		_pathToBaseExecutable = _pathToExecutable;
@@ -801,7 +803,6 @@ namespace CafeSystem
 				}
 			}
 		}
-		LoadMainExecutable();
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
 
@@ -834,7 +835,7 @@ namespace CafeSystem
 		// setup memory space and PPC recompiler
         SetupMemorySpace();
         PPCRecompiler_init();
-		r = SetupExecutable(); // load RPX
+		r = PrepareExecutable(); // load RPX
 		if (r != PREPARE_STATUS_CODE::SUCCESS)
 			return r;
 		InitVirtualMlcStorage();
@@ -879,7 +880,7 @@ namespace CafeSystem
         SetupMemorySpace();
         PPCRecompiler_init();
         // load executable
-        SetupExecutable();
+        PrepareExecutable();
 		InitVirtualMlcStorage();
 		return PREPARE_STATUS_CODE::SUCCESS;
 	}
@@ -1065,7 +1066,7 @@ namespace CafeSystem
         GX2::_GX2DriverReset();
         nn::save::ResetToDefaultState();
         coreinit::__OSDeleteAllActivePPCThreads();
-        RPLLoader_ResetState();
+        RPLLoader_UnloadAll();
 		for(auto it = s_iosuModules.rbegin(); it != s_iosuModules.rend(); ++it)
 			(*it)->TitleStop();
         // reset Cemu subsystems

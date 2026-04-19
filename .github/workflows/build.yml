@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -70,7 +70,7 @@ jobs:
         run: mv bin/Cemu_release bin/Cemu
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu-bin-linux-${{ matrix.arch }}
           path: ./bin/Cemu
@@ -90,9 +90,9 @@ jobs:
     needs: build-ubuntu
     steps:
       - name: Checkout Upstream Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: cemu-bin-linux-${{ matrix.arch }}
           path: bin
@@ -109,7 +109,7 @@ jobs:
           dist/linux/appimage.sh ${{ runner.arch }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu-appimage-${{ matrix.arch }}
           path: artifacts
@@ -118,7 +118,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
 
@@ -172,20 +172,27 @@ jobs:
           name: cemu-bin-windows-x64
           path: ./bin/Cemu.exe
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cemu-bin-windows-x64
+          path: ./bin/Cemu.exe
+
       - name: Upload NSIS Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu-installer-windows-x64
-          path: ./src/resource/cemu-${{ inputs.next_version_major }}.${{ inputs.next_version_minor }}-windows-x64-installer.exe
+          path: ./src/resource/cemu-${{ inputs.next_version_major }}.${{
+            inputs.next_version_minor }}-windows-x64-installer.exe
 
   build-macos:
     runs-on: macos-14
     strategy:
       matrix:
-        arch: [x86_64, arm64]
+        arch: [ x86_64, arm64 ]
     steps:
       - name: "Checkout repo"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
 
@@ -204,7 +211,7 @@ jobs:
       - name: "Install system dependencies"
         run: |
           brew update
-          brew install ninja nasm automake libtool
+          brew install nasm automake libtool
 
       - name: "Install molten-vk"
         run: |
@@ -249,8 +256,21 @@ jobs:
           hdiutil convert ./bin/tmp.dmg -format UDZO -o bin/Cemu.dmg
           rm bin/tmp.dmg
 
+      - name: Prepare artifact
+        run: |
+          mkdir bin/Cemu_app
+          mv bin/Cemu_release.app bin/Cemu_app/Cemu.app
+          mv bin/Cemu_app/Cemu.app/Contents/MacOS/Cemu_release bin/Cemu_app/Cemu.app/Contents/MacOS/Cemu
+          sed -i '' 's/Cemu_release/Cemu/g' bin/Cemu_app/Cemu.app/Contents/Info.plist
+          chmod a+x bin/Cemu_app/Cemu.app/Contents/MacOS/{Cemu,update.sh}
+          codesign --entitlements ${{github.workspace}}/src/resource/cemu.macos.entitlements --force --deep --preserve-metadata=entitlements,requirements,flags,runtime --sign - --timestamp --options runtime bin/Cemu_app/Cemu.app/Contents/MacOS/Cemu
+          ln -s /Applications bin/Cemu_app/Applications
+          hdiutil create ./bin/tmp.dmg -ov -volname "Cemu" -fs HFS+ -srcfolder "./bin/Cemu_app"
+          hdiutil convert ./bin/tmp.dmg -format UDZO -o bin/Cemu.dmg
+          rm bin/tmp.dmg
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cemu-bin-macos-${{ matrix.arch }}
           path: ./bin/Cemu.dmg
@@ -260,7 +280,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
           fetch-depth: 0
@@ -307,7 +327,6 @@ jobs:
           fi
 
           ./gradlew assembleRelease
-
       # - name: Upload artifact
       #   uses: actions/upload-artifact@v4
       #   with:

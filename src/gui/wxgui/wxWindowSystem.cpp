@@ -62,8 +62,8 @@ void WindowSystem::ShowErrorDialog(std::string_view message, std::string_view ti
 	if (title.empty())
 		caption = wxASCII_STR(wxMessageBoxCaptionStr);
 	else
-		caption = to_wxString(title);
-	wxMessageBox(to_wxString(message), caption, wxOK | wxCENTRE | wxICON_ERROR);
+		caption = wxString::FromUTF8(title);
+	wxMessageBox(wxString::FromUTF8(message), caption, wxOK | wxCENTRE | wxICON_ERROR);
 }
 
 WindowSystem::WindowInfo& WindowSystem::GetWindowInfo()
@@ -84,7 +84,7 @@ void WindowSystem::UpdateWindowTitles(bool isIdle, bool isLoading, double fps)
 	}
 	if (isLoading)
 	{
-		windowText.append(" - loading...");
+		windowText.append(" - Loading...");
 		if (g_mainFrame)
 			g_mainFrame->AsyncSetTitle(windowText);
 		return;
@@ -101,6 +101,11 @@ void WindowSystem::UpdateWindowTitles(bool isIdle, bool isLoading, double fps)
 		case RendererAPI::Vulkan:
 			renderer = "[Vulkan]";
 			break;
+#if ENABLE_METAL
+		case RendererAPI::Metal:
+			renderer = "[Metal]";
+			break;
+#endif
 		default:;
 		}
 	}

@@ -41,6 +41,15 @@ add_compile_definitions(VK_NO_PROTOTYPES)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# on msvc we can reuse the PCH from CemuCommon, on other platforms it's not straight forward to reuse the PCH so we opt out of it
+function(cemu_use_precompiled_header target_name)
+	if(MSVC)
+		target_precompile_headers(${target_name} REUSE_FROM CemuCommon)
+	else()
+		target_precompile_headers(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/src/Common/precompiled.h")
+	endif()
+endfunction()
+
 add_subdirectory(Common)
 add_subdirectory(gui)
 add_subdirectory(Cafe)
@@ -57,12 +66,17 @@ if(ANDROID)
         main.cpp
         mainLLE.cpp
     )
+
+	cemu_use_precompiled_header(CemuBin)
+
     add_subdirectory(android/app/src/main/cpp)
 else()
 	add_executable(CemuBin
 		main.cpp
 		mainLLE.cpp
 	)
+
+	cemu_use_precompiled_header(CemuBin)
 
 	if(MSVC AND MSVC_VERSION EQUAL 1940)
 		# workaround for an msvc issue on VS 17.10 where generated ILK files are too large
@@ -76,6 +90,8 @@ else()
 	../dist/windows/cemu.manifest
 	)
 	endif()
+
+string(TIMESTAMP CURRENT_YEAR "%Y" UTC)
 	set_property(TARGET CemuBin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	set_property(TARGET CemuBin PROPERTY WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>)
 	set(OUTPUT_NAME "Cemu_$<LOWER_CASE:$<CONFIG>>")
@@ -92,10 +108,10 @@ if (MACOS_BUNDLE)
 	set(MACOSX_BUNDLE_BUNDLE_NAME "Cemu")
 	set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${EMULATOR_VERSION_MAJOR}.${EMULATOR_VERSION_MINOR}.${EMULATOR_VERSION_PATCH}")
 	set(MACOSX_BUNDLE_BUNDLE_VERSION "${EMULATOR_VERSION_MAJOR}.${EMULATOR_VERSION_MINOR}.${EMULATOR_VERSION_PATCH}")
-	set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2024 Cemu Project")
+	set(MACOSX_BUNDLE_COPYRIGHT "Copyright © ${CURRENT_YEAR} Cemu Project")
 
 	set(MACOSX_BUNDLE_CATEGORY "public.app-category.games")
- 	set(MACOSX_MINIMUM_SYSTEM_VERSION "12.0")
+ 	set(MACOSX_MINIMUM_SYSTEM_VERSION "13.4")
   	set(MACOSX_BUNDLE_TYPE_EXTENSION "wua")
 
 	set_target_properties(CemuBin PROPERTIES
@@ -128,7 +144,24 @@ if (MACOS_BUNDLE)
 		COMMAND ${CMAKE_COMMAND} ARGS -E copy "${LIBUSB_PATH}" "${CMAKE_SOURCE_DIR}/bin/${OUTPUT_NAME}.app/Contents/Frameworks/libusb-1.0.0.dylib"
 		COMMAND ${CMAKE_COMMAND} ARGS -E copy "${CMAKE_SOURCE_DIR}/src/resource/update.sh" "${CMAKE_SOURCE_DIR}/bin/${OUTPUT_NAME}.app/Contents/MacOS/update.sh"
 		COMMAND bash -c "install_name_tool -add_rpath @executable_path/../Frameworks ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_NAME}.app/Contents/MacOS/${OUTPUT_NAME}"
-		COMMAND bash -c "install_name_tool -change ${LIBUSB_PATH} @executable_path/../Frameworks/libusb-1.0.0.dylib ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_NAME}.app/Contents/MacOS/${OUTPUT_NAME}")
+		COMMAND install_name_tool -change @rpath/libusb-1.0.0.dylib @executable_path/../Frameworks/libusb-1.0.0.dylib ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_NAME}.app/Contents/MacOS/${OUTPUT_NAME})
+else()
+    if(APPLE)
+        find_library(MOLTENVK_LIBRARY
+            NAMES MoltenVK moltenvk libMoltenVK.dylib
+            PATHS /usr/local/lib /opt/homebrew/lib
+        )
+        if(MOLTENVK_LIBRARY)
+            message(STATUS "Found MoltenVK: ${MOLTENVK_LIBRARY}")
+            target_link_libraries(CemuBin PRIVATE ${MOLTENVK_LIBRARY})
+        else()
+            message(WARNING "libMoltenVK.dylib not found")
+        endif()
+        set_target_properties(CemuBin PROPERTIES
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH "/usr/local/lib;/opt/homebrew/lib"
+        )
+    endif()
 endif()
 
 set_target_properties(CemuBin PROPERTIES
@@ -142,9 +175,9 @@ target_link_libraries(CemuBin PRIVATE
 	CemuAudio
 	CemuCafe
 	CemuCommon
-	CemuGui
 	CemuComponents
 	CemuConfig
+	CemuGui
 	CemuInput
 	CemuUtil
 )

@@ -11,7 +11,7 @@ struct fmt::formatter<wxString> : formatter<string_view>
 	template <typename FormatContext>
 	auto format(const wxString& str, FormatContext& ctx) const
 	{
-		return formatter<string_view>::format(str.c_str().AsChar(), ctx);
+		return formatter<string_view>::format(str.ToStdString(), ctx);
 	}
 };
 
@@ -73,12 +73,6 @@ private:
 
 void wxAutosizeColumn(wxListCtrlBase* ctrl, int col);
 void wxAutosizeColumns(wxListCtrlBase* ctrl, int col_start, int col_end);
-
-// creates wxString from utf8 string
-inline wxString to_wxString(std::string_view str)
-{
-	return wxString::FromUTF8(str.data(), str.size());
-}
 
 template <typename T>
 T get_next_sibling(const T element)

@@ -1,18 +1,18 @@
 #include "Cafe/GraphicPack/GraphicPack2.h"
+#include "Cafe/Filesystem/fsc.h"
 #include "config/CemuConfig.h"
 #include "config/ActiveSettings.h"
 #include "openssl/sha.h"
-#include "Cafe/HW/Latte/Renderer/RendererOuputShader.h"
-#include "Cafe/Filesystem/fsc.h"
 #include "boost/algorithm/string.hpp"
 #include "util/helpers/MapAdaptor.h"
 #include "util/helpers/StringParser.h"
-#include "Cafe/HW/Latte/Core/LatteTiming.h"
-#include "util/IniParser/IniParser.h"
 #include "util/helpers/StringHelpers.h"
+#include "util/IniParser/IniParser.h"
 #include "Cafe/CafeSystem.h"
 #include "HW/Espresso/Debugger/Debugger.h"
-
+#include "Cafe/HW/Latte/Core/LatteTiming.h"
+#include "Cafe/HW/Latte/Renderer/Renderer.h"
+#include "Cafe/HW/Latte/Renderer/RendererOuputShader.h"
 #include <cinttypes>
 
 std::vector<GraphicPackPtr> GraphicPack2::s_graphic_packs;
@@ -20,6 +20,37 @@ std::vector<GraphicPackPtr> GraphicPack2::s_active_graphic_packs;
 std::atomic_bool GraphicPack2::s_isReady;
 
 #define GP_LEGACY_VERSION		(2)
+
+template<typename T>
+bool ParseRule(const ExpressionParser& parser, IniParser& iniParser, const char* option_name, T* valueOut)
+{
+	auto optionValue = iniParser.FindOption(option_name);
+	if (optionValue)
+	{
+		*valueOut = parser.Evaluate<T>(*optionValue);
+		return true;
+	}
+	return false;
+}
+
+template<typename T>
+std::vector<T> ParseList(const ExpressionParser& parser, IniParser& iniParser, const char* optionName)
+{
+	std::vector<T> result;
+	auto optionText = iniParser.FindOption(optionName);
+	if (!optionText)
+		return result;
+	for (auto& token : Tokenize(*optionText, ','))
+	{
+		try
+		{
+			result.emplace_back(parser.Evaluate<T>(token));
+		} 
+		catch (const std::invalid_argument&)
+		{}
+	}
+	return result;
+}
 
 void GraphicPack2::LoadGraphicPack(fs::path graphicPackPath)
 {
@@ -328,7 +359,7 @@ GraphicPack2::GraphicPack2(fs::path rulesPath, IniParser& rules)
 	}
 
 	m_title_ids = ParseTitleIds(rules, "titleIds");
-	if(m_title_ids.empty())
+	if(m_title_ids.empty() && !m_universal)
 		throw std::exception();
 
 	auto option_fsPriority = rules.FindOption("fsPriority");
@@ -532,6 +563,9 @@ std::string GraphicPack2::GetNormalizedPathString() const
 
 bool GraphicPack2::ContainsTitleId(uint64_t title_id) const
 {
+	if (m_universal)
+		return true;
+
 	const auto it = std::find_if(m_title_ids.begin(), m_title_ids.end(), [title_id](uint64 id) { return id == title_id; });
 	return it != m_title_ids.end();
 }
@@ -1188,13 +1222,19 @@ std::vector<GraphicPack2::PresetPtr> GraphicPack2::GetActivePresets() const
 	return result;
 }
 
-std::vector<uint64> GraphicPack2::ParseTitleIds(IniParser& rules, const char* option_name) const
+std::vector<uint64> GraphicPack2::ParseTitleIds(IniParser& rules, const char* option_name)
 {
 	std::vector<uint64> result;
 
 	auto option_text = rules.FindOption(option_name);
 	if (!option_text)
 		return result;
+
+	if (*option_text == "*")
+	{
+		m_universal = true;
+		return result;
+	}
 
 	for (auto& token : TokenizeView(*option_text, ','))
 	{

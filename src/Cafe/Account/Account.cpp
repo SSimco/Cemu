@@ -1,6 +1,6 @@
 #include "Account.h"
+#include "AccountError.h"
 #include "util/helpers/helpers.h"
-#include "util/helpers/SystemException.h"
 #include "util/helpers/StringHelpers.h"
 #include "config/ActiveSettings.h"
 #include "Cafe/IOSU/legacy/iosu_crypto.h"
@@ -524,6 +524,10 @@ void Account::ParseFile(FileStream* file)
 			m_country = ConvertString<uint32>(value, 16);
 		else if (key == "SimpleAddressId")
 			m_simple_address_id = ConvertString<uint32>(value, 16);
+		else if (key == "TimeZoneId")
+			m_timezone_id = value;
+		else if (key == "UtcOffset")
+			m_utc_offset = ConvertString<uint64>(value, 16);
 		else if (key == "PrincipalId")
 			m_principal_id = ConvertString<uint32>(value, 16);
 		else if (key == "IsPasswordCacheEnabled")

@@ -6,10 +6,9 @@
 #include "Cafe/HW/Latte/Core/LattePerformanceMonitor.h"
 #include "Cafe/OS/libs/gx2/GX2.h"
 #include "config/ActiveSettings.h"
+#include "util/helpers/helpers.h"
 #include "util/helpers/Serializer.h"
 #include "Cafe/HW/Latte/Common/RegisterSerializer.h"
-
-std::mutex s_nvidiaWorkaround;
 
 /* rects emulation */
 
@@ -923,7 +922,6 @@ bool PipelineCompiler::InitFromCurrentGPUState(PipelineInfo* pipelineInfo, const
 	if (result != VK_SUCCESS)
 	{
 		cemuLog_log(LogType::Force, "Failed to create pipeline layout: {}", result);
-		s_nvidiaWorkaround.unlock();
 		return false;
 	}
 
@@ -941,7 +939,7 @@ bool PipelineCompiler::InitFromCurrentGPUState(PipelineInfo* pipelineInfo, const
 
 	// increment ref counter for vkrObjPipeline and renderpass object to make sure they dont get released while we are using them
 	m_vkrObjPipeline->incRef();
-	renderPassObj->incRef();
+	m_renderPassObj->incRef();
 	return true;
 }
 
@@ -1003,15 +1001,14 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 
 	VkPipelineCreationFeedbackCreateInfoEXT creationFeedbackInfo;
 	VkPipelineCreationFeedbackEXT creationFeedback;
-	std::vector<VkPipelineCreationFeedbackEXT> creationStageFeedback(0);
+	boost::container::static_vector<VkPipelineCreationFeedbackEXT, 3> creationStageFeedback;
 	if (vkRenderer->m_featureControl.deviceExtensions.pipeline_feedback)
 	{
 		creationFeedback = {};
 		creationFeedback.flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT_EXT;
 
-		creationStageFeedback.reserve(pipelineInfo.stageCount);
 		for (uint32_t i = 0; i < pipelineInfo.stageCount; ++i)
-			creationStageFeedback.data()[i] = { VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT_EXT, 0 };
+			creationStageFeedback.push_back({VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT_EXT, 0});
 
 		creationFeedbackInfo = {};
 		creationFeedbackInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATION_FEEDBACK_CREATE_INFO_EXT;
@@ -1121,4 +1118,72 @@ bool PipelineCompiler::CalcRobustBufferAccessRequirement(LatteDecompilerShader* 
 		requiresRobustBufferAcces |= pixelShader->uniformMode == LATTE_DECOMPILER_UNIFORM_MODE_FULL_CBANK;
 	}
 	return requiresRobustBufferAcces;
+}
+
+static std::vector<std::thread> s_compileThreads;
+static std::atomic_bool s_compileThreadsShutdownSignal{};
+static ConcurrentQueue<PipelineCompiler*> s_pipelineCompileRequests;
+
+static void compilePipeline_thread(sint32 threadIndex)
+{
+	SetThreadName("compilePl");
+#ifdef _WIN32
+	// to avoid starving the main cpu and render threads the pipeline compile threads run at lower priority
+	// except for one thread which we always run at normal priority to prevent the opposite scenario where all compile threads are starved
+	if(threadIndex != 0)
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+#endif
+	while (!s_compileThreadsShutdownSignal)
+	{
+		PipelineCompiler* request = s_pipelineCompileRequests.pop();
+		if (!request)
+			continue;
+		request->Compile(true, false, true);
+		delete request;
+	}
+}
+
+void PipelineCompiler::CompileThreadPool_Start()
+{
+	cemu_assert_debug(s_compileThreads.empty());
+	s_compileThreadsShutdownSignal = false;
+	uint32 numCompileThreads;
+
+	uint32 cpuCoreCount = GetPhysicalCoreCount();
+	if (cpuCoreCount <= 2)
+		numCompileThreads = 1;
+	else
+		numCompileThreads = 2 + (cpuCoreCount - 3); // 2 plus one additionally for every extra core above 3
+
+	numCompileThreads = std::min(numCompileThreads, 8u); // cap at 8
+
+	for (uint32_t i = 0; i < numCompileThreads; i++)
+	{
+		s_compileThreads.emplace_back(compilePipeline_thread, i);
+	}
+}
+
+void PipelineCompiler::CompileThreadPool_Stop()
+{
+	s_compileThreadsShutdownSignal = true;
+	{
+		// push one empty workload for each thread
+		// this way we can make sure that each waiting thread is woken up to see the shutdown signal
+		for (auto& thread : s_compileThreads)
+			s_pipelineCompileRequests.push(nullptr);
+	}
+	for (auto& thread : s_compileThreads)
+		thread.join();
+	while (!s_pipelineCompileRequests.empty())
+	{
+		PipelineCompiler* pipelineCompiler = s_pipelineCompileRequests.pop();
+		if (pipelineCompiler)
+			delete pipelineCompiler;
+	}
+	s_compileThreads.clear();
+}
+
+void PipelineCompiler::CompileThreadPool_QueueCompilation(PipelineCompiler* v)
+{
+	s_pipelineCompileRequests.push(v);
 }

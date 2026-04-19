@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config/CemuConfig.h"
 #include "config/XMLConfig.h"
 #include "util/math/vector2.h"
 
@@ -127,6 +126,10 @@ struct wxCemuConfig
 		sHotkeyCfg exitFullscreen;
 		sHotkeyCfg takeScreenshot;
 		sHotkeyCfg toggleFastForward;
+		sHotkeyCfg exitApplication;
+#ifdef CEMU_DEBUG_ASSERT
+		sHotkeyCfg endEmulation;
+#endif
 	} hotkeys{};
 
 	void AddRecentlyLaunchedFile(std::string_view file);

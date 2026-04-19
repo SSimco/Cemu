@@ -6,10 +6,10 @@
 #include "util/helpers/Serializer.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cemu/PPCAssembler/ppcAssembler.h"
-#include <variant>
-#include "Cafe/HW/Latte/Renderer/Renderer.h"
 #include "GraphicPack2Patches.h"
-#include "util/IniParser/IniParser.h"
+
+enum class RendererAPI;
+enum class GfxVendor;
 
 class GraphicPack2
 {
@@ -26,6 +26,7 @@ public:
 		GFXPACK_VERSION_5 = 5,
 		GFXPACK_VERSION_6 = 6, // added memory extensions
 		GFXPACK_VERSION_7 = 7, // added fine-grained origin control in patch format (no more forced 4 byte alignment), .string directive (an alias to .byte) and support for more than one constant per data directive
+		GFXPACK_VERSION_8 = 8, // (Cemu 2.7) added: titleId and rpx hash wildcards (*), added .callback entry <symbol> to call a function when the main entrypoint is reached
 	};
 
 	struct TextureRule
@@ -98,7 +99,7 @@ public:
 	};
 	using PresetPtr = std::shared_ptr<Preset>;
 
-	GraphicPack2(fs::path rulesPath, IniParser& rules);
+	GraphicPack2(fs::path rulesPath, class IniParser& rules);
 
 	bool IsEnabled() const { return m_enabled; }
 	bool IsActivated() const { return m_activated; }
@@ -109,6 +110,7 @@ public:
 	bool Reload();
 
 	bool HasName() const { return !m_name.empty();  }
+	bool IsUniversal() const { return m_universal; }
 
 	const std::string& GetName() const { return m_name.empty() ? m_virtualPath : m_name; }
 	const std::string& GetVirtualPath() const { return m_virtualPath; } // returns the path in the gfx tree hierarchy
@@ -122,6 +124,8 @@ public:
 	const std::vector<uint64_t>& GetTitleIds() const { return m_title_ids; }
 	bool HasCustomVSyncFrequency() const { return m_vsync_frequency >= 1; }
 	sint32 GetCustomVSyncFrequency() const { return m_vsync_frequency; }
+	
+	const std::vector<std::pair<MPTR, GPCallbackType>>& GetCallbacks() const { return m_callbacks; }
 
 	// texture rules
 	const std::vector<TextureRule>& GetTextureRules() const { return m_texture_rules; }
@@ -229,6 +233,7 @@ private:
 	bool m_activated = false; // set if the graphic pack is currently used by the running game
 	std::vector<uint64_t> m_title_ids;
 	bool m_patchedFilesLoaded = false; // set to true once patched files are loaded
+	bool m_universal = false; // set if this pack applies to every title id
 
 	sint32 m_vsync_frequency = -1;
 	sint32 m_fs_priority = 100;
@@ -248,15 +253,9 @@ private:
 	std::string m_output_shader_source, m_upscaling_shader_source, m_downscaling_shader_source;
 	std::unique_ptr<RendererOutputShader> m_output_shader, m_upscaling_shader, m_downscaling_shader, m_output_shader_ud, m_upscaling_shader_ud, m_downscaling_shader_ud;
 
-	template<typename T>
-	bool ParseRule(const ExpressionParser& parser, IniParser& iniParser, const char* option_name, T* value_out) const;
-
-	template<typename T>
-	std::vector<T> ParseList(const ExpressionParser& parser, IniParser& iniParser, const char* option_name) const;
-
 	std::unordered_map<std::string, PresetVar> ParsePresetVars(IniParser& rules) const;
 
-	std::vector<uint64> ParseTitleIds(IniParser& rules, const char* option_name) const;
+	std::vector<uint64> ParseTitleIds(IniParser& rules, const char* option_name);
 
 	CustomShader LoadShader(const fs::path& path, uint64 shader_base_hash, uint64 shader_aux_hash, GP_SHADER_TYPE shader_type, bool isMetalShader) const;
 	void ApplyShaderPresets(std::string& shader_source) const;
@@ -282,6 +281,8 @@ private:
 	void LogPatchesSyntaxError(sint32 lineNumber, std::string_view errorMsg);
 
 	std::vector<PatchGroup*> list_patchGroups;
+	
+	std::vector<std::pair<MPTR, GPCallbackType>> m_callbacks;
 
 	static std::recursive_mutex mtx_patches;
 	static std::vector<const RPLModule*> list_modules;
@@ -300,37 +301,3 @@ public:
 };
 
 using GraphicPackPtr = std::shared_ptr<GraphicPack2>;
-
-template <typename T>
-bool GraphicPack2::ParseRule(const ExpressionParser& parser, IniParser& iniParser, const char* option_name, T* value_out) const
-{
-	auto option_value = iniParser.FindOption(option_name);
-	if (option_value)
-	{
-		*value_out = parser.Evaluate<T>(*option_value);
-		return true;
-	}
-
-	return false;
-}
-
-template <typename T>
-std::vector<T> GraphicPack2::ParseList(const ExpressionParser& parser, IniParser& iniParser, const char* option_name) const
-{
-	std::vector<T> result;
-
-	auto option_text = iniParser.FindOption(option_name);
-	if (!option_text)
-		return result;
-
-	for(auto& token : Tokenize(*option_text, ','))
-	{
-		try
-		{
-			result.emplace_back(parser.Evaluate<T>(token));
-		}
-		catch (const std::invalid_argument&) {}
-	}
-
-	return result;
-}

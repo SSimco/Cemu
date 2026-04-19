@@ -1,7 +1,8 @@
-#include <util/helpers/SystemException.h>
+#include "util/helpers/SystemException.h"
 #include "JNIUtils.h"
 #include "Cafe/HW/Latte/Renderer/Vulkan/VulkanAPI.h"
 #include "Cemu/ncrypto/ncrypto.h"
+#include "Cafe/Account/Account.h"
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeAccount_createAccount(JNIEnv* env, [[maybe_unused]] jclass clazz, jint persistentId, jstring miiName)

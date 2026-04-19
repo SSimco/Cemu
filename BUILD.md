@@ -150,44 +150,50 @@ If you are getting a different error than any of the errors listed above, you ma
 
 To compile Cemu, a recent enough compiler and STL with C++20 support is required! LLVM 13 and below
 don't support the C++20 feature set required, so either install LLVM from Homebrew or make sure that
-you have a recent enough version of Xcode. Xcode 15 is known to work. The OpenGL graphics API isn't
-supported on macOS, so Vulkan must be used through the Molten-VK compatibility layer.
+you have a recent enough version of Xcode. Xcode 15 is known to work.
 
 ### Installing brew
 
+To install the dependencies required to build Cemu, you will need to install Homebrew package manager first. You can do this by running the following command in your terminal:
+
 1. `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 2. Set up the Homebrew shell environment:
-   1. **On an Intel Mac:** `eval "$(/usr/local/Homebrew/bin/brew shellenv)"`
-   2. **On an Apple Silicon Mac:** eval `"$(/opt/homebrew/bin/brew shellenv)"`
+   - **On an Apple Silicon Mac:** eval `"$(/opt/homebrew/bin/brew shellenv)"`
+   - **On an Intel Mac:** `eval "$(/usr/local/Homebrew/bin/brew shellenv)"`
 
-### Installing Tool Dependencies
+### Dependencies
 
-The native versions of these can be used regardless of what type of Mac you have.
+The following dependencies are required. You can install them using Homebrew with the following command:
 
-`brew install git cmake ninja nasm automake libtool`
+`brew install git cmake ninja nasm automake libtool boost`
 
-### Installing Library Dependencies
+### MoltenVK
 
-**On Apple Silicon Macs, Rosetta 2 and the x86_64 version of Homebrew must be used to install these dependencies:**
-1. `softwareupdate --install-rosetta` # Install Rosetta 2 if you don't have it. This only has to be done once
-2. `arch -x86_64 zsh` # run an x64 shell
-3. `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-4. `eval "$(/usr/local/Homebrew/bin/brew shellenv)"`
+Cemu uses the MoltenVK library to provide Vulkan support on macOS. While available on Brew, Cemu requires the "privateapi" version of MoltenVK, which is not available on Brew. To install the required version, follow the instructions below:
 
-Then install the dependencies:
+1. `curl -L -O https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.1/MoltenVK-macos-privateapi.tar`
+1. `tar xf MoltenVK-macos-privateapi.tar`
+1. Create a directory for the MoltenVK dylib if it doesn't already exist:
+   - **On an Apple Silicon Mac:** `sudo mkdir -p /opt/homebrew/lib`
+   - **On an Intel Mac:** `sudo mkdir -p /usr/local/lib/`
+1. Copy the MoltenVK dylib to your system library directory:
+   - **On an Apple Silicon Mac:** `sudo cp MoltenVK/lib/libMoltenVK.dylib /opt/homebrew/lib/`
+   - **On an Intel Mac:** `sudo cp MoltenVK/lib/libMoltenVK.dylib /usr/local/lib/`
 
-`brew install boost molten-vk`
+Alternatively, you can use the non-privateapi version of MoltenVK, but you may encounter some rendering issues due to the lack of logicOp support. If you want to go this route, simply install MoltenVK from Brew with `brew install molten-vk` and skip the steps above.
 
 ### Build Cemu using CMake
 
 1. `git clone --recursive https://github.com/cemu-project/Cemu`
 2. `cd Cemu`
-3. `cmake -S . -B build -DCMAKE_BUILD_TYPE=release -DCMAKE_OSX_ARCHITECTURES=x86_64 -G Ninja`
+3. `cmake -S . -B build -DCMAKE_BUILD_TYPE=release -G Ninja`
 4. `cmake --build build`
 5. You should now have a Cemu executable file in the /bin folder, which you can run using `./bin/Cemu_release`.
 
 #### Troubleshooting steps
-- If step 3 gives you an error about not being able to find ninja, try appending `-DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja` to the command and running it again.
+- If step 3 gives you an error about not being able to find ninja, try appending the following to the command and try again:
+   - **On an Apple Silicon Mac:** `-DCMAKE_MAKE_PROGRAM=/opt/homebrew/bin/ninja`
+   - **On an Intel Mac:** `-DCMAKE_MAKE_PROGRAM=/usr/local/bin/ninja`
 
 ## Android
 Prerequisites:

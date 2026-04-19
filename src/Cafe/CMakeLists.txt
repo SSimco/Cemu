@@ -515,6 +515,8 @@ add_library(CemuCafe
   OS/libs/zlib125
   OS/libs/zlib125/zlib125.cpp
   OS/libs/zlib125/zlib125.h
+  OS/RPL/COSModule.cpp
+  OS/RPL/COSModule.h
   OS/RPL/elf.cpp
   OS/RPL/rpl.cpp
   OS/RPL/rpl_debug_symbols.cpp
@@ -523,6 +525,7 @@ add_library(CemuCafe
   OS/RPL/rpl_structs.h
   OS/RPL/rpl_symbol_storage.cpp
   OS/RPL/rpl_symbol_storage.h
+  TitleList/GameInfo.cpp
   TitleList/GameInfo.h
   TitleList/ParsedMetaXml.h
   TitleList/SaveInfo.cpp
@@ -622,6 +625,8 @@ endif()
 
 set_property(TARGET CemuCafe PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+cemu_use_precompiled_header(CemuCafe)
+
 target_include_directories(CemuCafe PUBLIC "../")
 
 if (glslang_VERSION VERSION_LESS "15.0.0")
@@ -639,6 +644,7 @@ target_link_libraries(CemuCafe PRIVATE
   ZLIB::ZLIB
   CURL::libcurl
   ih264d
+  zstd::zstd
   ${glslang_target}
   PUBLIC
   OpenSSL::SSL

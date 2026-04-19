@@ -8,7 +8,9 @@
 #include "Cafe/OS/libs/swkbd/swkbd.h"
 #include "wxgui/canvas/OpenGLCanvas.h"
 #include "wxgui/canvas/VulkanCanvas.h"
+#if ENABLE_METAL
 #include "wxgui/canvas/MetalCanvas.h"
+#endif
 #include "config/CemuConfig.h"
 #include "wxgui/MainWindow.h"
 #include "wxgui/helpers/wxHelpers.h"
@@ -226,6 +228,6 @@ void PadViewFrame::OnSetWindowTitle(wxCommandEvent& event)
 void PadViewFrame::AsyncSetTitle(std::string_view windowTitle)
 {
 	wxCommandEvent set_title_event(wxEVT_SET_WINDOW_TITLE);
-	set_title_event.SetString(wxHelper::FromUtf8(windowTitle));
+	set_title_event.SetString(wxString::FromUTF8(windowTitle));
 	QueueEvent(set_title_event.Clone());
 }

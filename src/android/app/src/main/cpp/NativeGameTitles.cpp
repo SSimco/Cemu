@@ -5,6 +5,7 @@
 #include "GameTitleLoader.h"
 #include "WuaConverter.h"
 #include "CompressTitleCallbacks.h"
+#include "config/ActiveSettings.h"
 
 namespace NativeGameTitles
 {
