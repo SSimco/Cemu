@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import info.cemu.cemu.settings.account.AccountSettingsScreen
 import info.cemu.cemu.settings.audio.AudioSettingsScreen
 import info.cemu.cemu.settings.customdrivers.CustomDriversScreen
+import info.cemu.cemu.settings.emulatedusbdevices.EmulatedUSBDevicesSettingsScreen
 import info.cemu.cemu.settings.gamespath.GamePathsScreen
 import info.cemu.cemu.settings.general.GeneralSettingsScreen
 import info.cemu.cemu.settings.graphics.GraphicsSettingsScreen
@@ -54,6 +55,9 @@ private object SettingsRoutes {
     object InputSettingsScreenRoute
 
     @Serializable
+    object EmulatedUSBDevicesSettingsScreenRoute
+
+    @Serializable
     data class ControllerInputSettingsScreenRoute(val index: Int)
 
     @Serializable
@@ -80,6 +84,7 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
                 goToAudioSettings = { navController.navigate(SettingsRoutes.AudioSettingsScreenRoute) },
                 goToOverlaySettings = { navController.navigate(SettingsRoutes.OverlaySettingsScreenRoute) },
                 goToAccountSettings = { navController.navigate(SettingsRoutes.AccountSettingsScreenRoute) },
+                goToEmulatedUSBDevicesSettings = { navController.navigate(SettingsRoutes.EmulatedUSBDevicesSettingsScreenRoute) },
             )
         }
         composable<SettingsRoutes.AudioSettingsScreenRoute> {
@@ -102,6 +107,11 @@ fun NavGraphBuilder.settingsNavigation(navController: NavHostController) {
         }
         composable<SettingsRoutes.OverlaySettingsScreenRoute> {
             OverlaySettingsScreen(
+                navigateBack = { navController.popBackStack() },
+            )
+        }
+        composable<SettingsRoutes.EmulatedUSBDevicesSettingsScreenRoute> {
+            EmulatedUSBDevicesSettingsScreen(
                 navigateBack = { navController.popBackStack() },
             )
         }

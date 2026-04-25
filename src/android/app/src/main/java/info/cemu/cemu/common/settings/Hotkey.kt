@@ -10,4 +10,5 @@ data class HotkeyCombo(
 enum class HotkeyAction {
     QUIT,
     TOGGLE_MENU,
+    SHOW_EMULATED_USB_DEVICES_DIALOG,
 }

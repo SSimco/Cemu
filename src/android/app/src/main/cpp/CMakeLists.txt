@@ -7,6 +7,7 @@ add_library(CemuAndroid SHARED
         JNIUtils.cpp
         NativeAccount.cpp
         NativeActiveSettings.cpp
+        NativeEmulatedUSBDevices.cpp
         NativeEmulation.cpp
         NativeGameTitles.cpp
         NativeGraphicPacks.cpp

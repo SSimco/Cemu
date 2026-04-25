@@ -210,6 +210,7 @@ private fun HotkeyBindingDialog(
 private fun hotkeyActionToString(hotkeyAction: HotkeyAction) = when (hotkeyAction) {
     HotkeyAction.QUIT -> tr("Quit")
     HotkeyAction.TOGGLE_MENU -> tr("Toggle menu")
+    HotkeyAction.SHOW_EMULATED_USB_DEVICES_DIALOG -> tr("Show Emulated USB Devices dialog")
 }
 
 @Composable

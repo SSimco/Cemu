@@ -60,6 +60,7 @@ import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.settings.HotkeyAction
 import info.cemu.cemu.common.ui.extensions.showMessage
 import info.cemu.cemu.common.ui.localization.tr
+import info.cemu.cemu.emulation.emulatedusbdevices.EmulatedUSBDevicesDialog
 import info.cemu.cemu.emulation.input.HotkeyManager
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurface
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView
@@ -83,14 +84,17 @@ fun EmulationScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var showQuitConfirmationDialog by remember { mutableStateOf(false) }
+    var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
+    var showEmulatedUSBDevices by remember { mutableStateOf(false) }
+
     val emulationError by viewModel.emulationError.collectAsState()
     val isEmulationInitialized by viewModel.isEmulationInitialized.collectAsState()
     val sideMenuState by viewModel.sideMenuState.collectAsState()
     val gamePadPosition by viewModel.gamePadPosition.collectAsState()
-    var showQuitConfirmationDialog by remember { mutableStateOf(false) }
     val isInputOverlayVisible by viewModel.isInputOverlayVisible.collectAsState()
     val inputOverlaySettings by viewModel.inputOverlaySettings.collectAsState()
-    var inputOverlayInputMode by rememberSaveable { mutableStateOf(DEFAULT) }
+
 
     fun closeDrawer() {
         scope.launch {
@@ -127,6 +131,7 @@ fun EmulationScreen(
             when (action) {
                 HotkeyAction.QUIT -> showQuitConfirmationDialog = true
                 HotkeyAction.TOGGLE_MENU -> toggleMenu()
+                HotkeyAction.SHOW_EMULATED_USB_DEVICES_DIALOG -> showEmulatedUSBDevices = true
             }
         }
     }
@@ -161,6 +166,10 @@ fun EmulationScreen(
                         },
                         onQuit = {
                             showQuitConfirmationDialog = true
+                            closeDrawer()
+                        },
+                        onShowEmulatedUSBDevices = {
+                            showEmulatedUSBDevices = true
                             closeDrawer()
                         },
                     )
@@ -226,6 +235,12 @@ fun EmulationScreen(
         )
     }
 
+    if (showEmulatedUSBDevices) {
+        EmulatedUSBDevicesDialog(
+            onDismiss = { showEmulatedUSBDevices = false },
+        )
+    }
+
     EmulationTextInputDialog()
 }
 
@@ -271,6 +286,7 @@ private fun EditInputsLayout(
 private fun EmulationSideMenuContent(
     sideMenuState: SideMenuState,
     updateState: (SideMenuState) -> Unit,
+    onShowEmulatedUSBDevices: () -> Unit,
     onEditInputOverlay: () -> Unit,
     onResetInputOverlay: () -> Unit,
     onQuit: () -> Unit,
@@ -291,6 +307,11 @@ private fun EmulationSideMenuContent(
         label = tr("Show PAD"),
         checked = sideMenuState.isPadVisible,
         onCheckedChange = { updateState(sideMenuState.copy(isPadVisible = it)) },
+    )
+
+    TextButtonItem(
+        label = tr("Emulated USB Devices"),
+        onClick = onShowEmulatedUSBDevices,
     )
 
     CheckboxItem(

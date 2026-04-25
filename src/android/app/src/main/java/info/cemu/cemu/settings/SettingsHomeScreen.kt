@@ -11,6 +11,7 @@ fun SettingsHomeScreen(
     goToGeneralSettings: () -> Unit,
     goToInputSettings: () -> Unit,
     goToGraphicsSettings: () -> Unit,
+    goToEmulatedUSBDevicesSettings: () -> Unit,
     goToAudioSettings: () -> Unit,
     goToAccountSettings: () -> Unit,
     goToOverlaySettings: () -> Unit,
@@ -39,6 +40,10 @@ fun SettingsHomeScreen(
         Button(
             label = tr("Overlay settings"),
             onClick = dropUnlessResumed(block = goToOverlaySettings)
+        )
+        Button(
+            label = tr("Emulated USB Devices"),
+            onClick = dropUnlessResumed(block = goToEmulatedUSBDevicesSettings)
         )
         Button(
             label = tr("Account settings"),
