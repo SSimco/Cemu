@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -57,6 +56,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.cemu.cemu.R
+import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.settings.HotkeyAction
 import info.cemu.cemu.common.ui.extensions.showMessage
 import info.cemu.cemu.common.ui.localization.tr
@@ -67,7 +67,6 @@ import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.D
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.EDIT_POSITION
 import info.cemu.cemu.emulation.inputoverlay.InputOverlaySurfaceView.InputMode.EDIT_SIZE
 import info.cemu.cemu.nativeinterface.NativeEmulation
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 @Composable
@@ -87,6 +86,7 @@ fun EmulationScreen(
     val emulationError by viewModel.emulationError.collectAsState()
     val isEmulationInitialized by viewModel.isEmulationInitialized.collectAsState()
     val sideMenuState by viewModel.sideMenuState.collectAsState()
+    val gamePadPosition by viewModel.gamePadPosition.collectAsState()
     var showQuitConfirmationDialog by remember { mutableStateOf(false) }
     val isInputOverlayVisible by viewModel.isInputOverlayVisible.collectAsState()
     val inputOverlaySettings by viewModel.inputOverlaySettings.collectAsState()
@@ -168,7 +168,13 @@ fun EmulationScreen(
             }
         },
     ) {
-        EmulationSurfaces(viewModel)
+        EmulationSurfaces(
+            sideMenuState = sideMenuState,
+            gamePadPosition = gamePadPosition,
+            mainHolderCallback = viewModel.mainHolderCallback,
+            padHolderCallback = viewModel.padHolderCallback,
+            onInitializeEmulation = viewModel::initializeEmulation,
+        )
 
         InputOverlaySurface(
             isVisible = isInputOverlayVisible,
@@ -243,20 +249,14 @@ private fun EditInputsLayout(
                 horizontalArrangement = Arrangement.spacedBy(36.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledIconButton(
-                    enabled = inputMode != EDIT_POSITION,
-                    onClick = onMoveClick,
-                ) {
+                FilledIconButton(enabled = inputMode != EDIT_POSITION, onClick = onMoveClick) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_move),
                         contentDescription = tr("Move")
                     )
                 }
 
-                FilledIconButton(
-                    enabled = inputMode != EDIT_SIZE,
-                    onClick = onResizeClick,
-                ) {
+                FilledIconButton(enabled = inputMode != EDIT_SIZE, onClick = onResizeClick) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_resize),
                         contentDescription = tr("Resize"),
@@ -368,11 +368,16 @@ private fun TextButtonItem(
 }
 
 @Composable
-private fun EmulationSurfaces(viewModel: EmulationViewModel) {
-    val sideMenuState by viewModel.sideMenuState.collectAsState()
-    val gamePadPositionState = viewModel.gamePadPosition.collectAsState()
-
-    val gamePadPosition = gamePadPositionState.value ?: return
+private fun EmulationSurfaces(
+    sideMenuState: SideMenuState,
+    gamePadPosition: GamePadPosition?,
+    mainHolderCallback: SurfaceHolder.Callback,
+    padHolderCallback: SurfaceHolder.Callback,
+    onInitializeEmulation: () -> Unit
+) {
+    if (gamePadPosition == null) {
+        return
+    }
 
     val isVertical = gamePadPosition.isVertical()
     val appearsAfterTV = gamePadPosition.appearsAfterTV()
@@ -383,8 +388,8 @@ private fun EmulationSurfaces(viewModel: EmulationViewModel) {
         EmulationSurface(
             modifier = modifier,
             isTV = true,
-            holderCallback = viewModel.mainHolderCallback,
-            afterInit = { viewModel.initializeEmulation() },
+            holderCallback = mainHolderCallback,
+            afterInit = { onInitializeEmulation() },
         )
     }
 
@@ -394,7 +399,7 @@ private fun EmulationSurfaces(viewModel: EmulationViewModel) {
             EmulationSurface(
                 modifier = modifier,
                 isTV = false,
-                holderCallback = viewModel.padHolderCallback,
+                holderCallback = padHolderCallback,
             )
         }
     }
@@ -491,7 +496,25 @@ private fun EmulationLoadingDialog() {
 }
 
 @Composable
-private fun EmulationErrorDialog(errorMessage: String, onQuit: () -> Unit) {
+private fun EmulationErrorDialog(error: NativeError, onQuit: () -> Unit) {
+    val errorMessage = remember(error) {
+        when (error) {
+            is NativeError.SystemInitializationError -> tr("Failed to initialize")
+
+            is NativeError.RendererInitializationError ->
+                tr("Failed creating renderer: {0}", error.message)
+
+            is NativeError.SurfaceCreationError -> tr("Failed creating surface: {0}", error.message)
+
+            NativeError.GameFilesNotFoundError -> tr("Unable to launch game because the base files were not found.")
+            NativeError.NoDiscKeysError -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
+            NativeError.NoTitleTikError -> tr("Could not decrypt title because title.tik is missing.")
+            is NativeError.UnknownTilePrepareError ->
+                tr("Unable to launch game\nPath: {0}", error.launchPath)
+
+            NativeError.LaunchingTitleError -> tr("Failed to launch title")
+        }
+    }
     AlertDialog(
         title = { Text(tr("Error")) },
         text = { Text(errorMessage) },

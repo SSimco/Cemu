@@ -92,7 +92,7 @@ object NativeGameTitles {
     external fun reloadGameTitles()
 
     @JvmStatic
-    external fun getInstalledGamesTitleIds(): List<Long>
+    external fun getInstalledGamesTitleIds(): LongArray
 
     @Keep
     data class Game(
@@ -265,8 +265,25 @@ object NativeGameTitles {
             override fun onError() = callback(CompressResult.ERROR)
         })
 
+    object CompressionStage {
+        const val STARTING = 0
+        const val CANCELLED = 1
+        const val COLLECTING_FILES = 2
+        const val COMPRESSING = 3
+        const val FINALIZING = 4
+    }
+
     @JvmStatic
-    external fun getCurrentProgressForCompression(): Long
+    external fun getCurrentCompressionStage(): Int
+
+    @JvmStatic
+    external fun getCurrentCompressionTotalFileCount(): Int
+
+    @Keep
+    data class CompressionProgress(val current: Long, val total: Long)
+
+    @JvmStatic
+    external fun getCurrentProgressForCompression(): CompressionProgress?
 
     @JvmStatic
     external fun cancelTitleCompression()

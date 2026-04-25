@@ -153,8 +153,9 @@ fun GraphicPacksScreen(
 
         if (graphicPackData != null) {
             graphicPackDataNodeItem(
-                graphicPacksViewModel = graphicPacksViewModel,
-                graphicPackData = graphicPackData
+                graphicPackData = graphicPackData,
+                onSetCurrentGraphicPackActive = graphicPacksViewModel::setCurrentGraphicPackActive,
+                onSetCurrentGraphicPackActivePreset = graphicPacksViewModel::setCurrentGraphicPackActivePreset
             )
         }
 
@@ -306,7 +307,8 @@ private fun LazyListScope.graphicPackDataSearchItems(
 }
 
 private fun LazyListScope.graphicPackDataNodeItem(
-    graphicPacksViewModel: GraphicPacksViewModel,
+    onSetCurrentGraphicPackActive: (Boolean) -> Unit,
+    onSetCurrentGraphicPackActivePreset: (Int, String) -> Unit,
     graphicPackData: GraphicPackData
 ) {
     item {
@@ -318,7 +320,7 @@ private fun LazyListScope.graphicPackDataNodeItem(
             Switch(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 checked = graphicPackData.active,
-                onCheckedChange = graphicPacksViewModel::setCurrentGraphicPackActive,
+                onCheckedChange = onSetCurrentGraphicPackActive,
             )
         }
     }
@@ -335,10 +337,7 @@ private fun LazyListScope.graphicPackDataNodeItem(
             choices = it.choices,
             choice = it.activeChoice,
             onChoiceChanged = { activePreset ->
-                graphicPacksViewModel.setCurrentGraphicPackActivePreset(
-                    it.index,
-                    activePreset
-                )
+                onSetCurrentGraphicPackActivePreset(it.index, activePreset)
             }
         )
     }

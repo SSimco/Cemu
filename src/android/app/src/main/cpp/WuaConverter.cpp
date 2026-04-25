@@ -8,86 +8,245 @@ WuaConverter::WuaConverter(const TitleInfo& titleInfo_base, const TitleInfo& tit
 }
 WuaConverter::~WuaConverter()
 {
-	m_writerContext.cancelled = true;
+	m_cancelled = true;
 	if (m_workerThread.joinable())
 		m_workerThread.join();
 }
 
-void WuaConverter::startConversion(int fd, std::unique_ptr<CompressTitleCallbacks>&& callbacks)
+void WuaConverter::StartConversion(int fd, std::unique_ptr<CompressTitleCallbacks>&& callbacks)
 {
 	m_workerThread = std::thread([callbacks(std::move(callbacks)), fd, this]() {
-	  if (fd == -1)
-	  {
-		  callbacks->OnError();
-		  return;
-	  }
-	  stdx::scope_exit fdCleanup([fd](){ close(fd); });
+		if (fd == -1)
+		{
+			callbacks->OnError();
+			return;
+		}
 
-	  if (m_started)
-		  return;
+		if (m_started)
+			return;
 
-	  m_started = true;
+		m_started = true;
 
-	  std::vector<TitleInfo*> titlesToConvert;
-	  if (m_titleInfo_base.IsValid())
-		  titlesToConvert.emplace_back(&m_titleInfo_base);
-	  if (m_titleInfo_update.IsValid())
-		  titlesToConvert.emplace_back(&m_titleInfo_update);
-	  if (m_titleInfo_aoc.IsValid())
-		  titlesToConvert.emplace_back(&m_titleInfo_aoc);
+		std::vector<TitleInfo*> titlesToConvert;
+		if (m_titleInfo_base.IsValid())
+			titlesToConvert.emplace_back(&m_titleInfo_base);
+		if (m_titleInfo_update.IsValid())
+			titlesToConvert.emplace_back(&m_titleInfo_update);
+		if (m_titleInfo_aoc.IsValid())
+			titlesToConvert.emplace_back(&m_titleInfo_aoc);
 
-	  if (titlesToConvert.empty())
-	  {
-		  callbacks->OnError();
-		  return;
-	  }
+		if (titlesToConvert.empty())
+		{
+			callbacks->OnError();
+			return;
+		}
 
-	  // mount and store
-	  m_writerContext.isValid = true;
-	  m_writerContext.fd = fd;
-	  m_writerContext.zaWriter = std::make_unique<ZArchiveWriter>(&ZArchiveWriterContext::NewOutputFile, &ZArchiveWriterContext::WriteOutputData, &m_writerContext);
-	  if (!m_writerContext.isValid)
-	  {
-		  callbacks->OnError();
-		  return;
-	  }
+		struct ZArchiveWriterContext
+		{
+			static void NewOutputFile(const int32_t partIndex, void* _ctx)
+			{
+			}
 
-	  bool result = m_writerContext.AddTitles(titlesToConvert.data(), titlesToConvert.size());
+			static void WriteOutputData(const void* data, size_t length, void* _ctx)
+			{
+				ZArchiveWriterContext* ctx = (ZArchiveWriterContext*)_ctx;
+				auto written = write(ctx->fd, data, length);
+				int temp = 10;
+			}
 
-	  if (m_writerContext.cancelled)
-		  return;
+			bool RecursivelyCountFiles(const std::string& fscPath)
+			{
+				sint32 fscStatus;
+				std::unique_ptr<FSCVirtualFile> vfDir(fsc_openDirIterator(fscPath.c_str(), &fscStatus));
+				if (!vfDir)
+					return false;
+				if (cancelled)
+					return false;
+				FSCDirEntry dirEntry;
+				while (fsc_nextDir(vfDir.get(), &dirEntry))
+				{
+					if (dirEntry.isFile)
+					{
+						totalInputFileSize += (uint64)dirEntry.fileSize;
+						totalFileCount++;
+					}
+					else if (dirEntry.isDirectory)
+					{
+						if (!RecursivelyCountFiles(fmt::format("{}{}/", fscPath, dirEntry.path)))
+						{
+							return false;
+						}
+					}
+					else
+						cemu_assert_unimplemented();
+				}
+				return true;
+			}
 
-	  if (!result)
-	  {
-		  callbacks->OnError();
-		  return;
-	  }
+			bool RecursivelyAddFiles(std::string archivePath, std::string fscPath)
+			{
+				sint32 fscStatus;
+				std::unique_ptr<FSCVirtualFile> vfDir(fsc_openDirIterator(fscPath.c_str(), &fscStatus));
+				if (!vfDir)
+					return false;
+				if (cancelled)
+					return false;
+				zaWriter->MakeDir(archivePath.c_str(), false);
+				FSCDirEntry dirEntry;
+				while (fsc_nextDir(vfDir.get(), &dirEntry))
+				{
+					if (dirEntry.isFile)
+					{
+						zaWriter->StartNewFile((archivePath + dirEntry.path).c_str());
+						std::unique_ptr<FSCVirtualFile> vFile(fsc_open((fscPath + dirEntry.path).c_str(), FSC_ACCESS_FLAG::OPEN_FILE | FSC_ACCESS_FLAG::READ_PERMISSION, &fscStatus));
+						if (!vFile)
+							return false;
+						transferBuffer.resize(32 * 1024); // 32KB
+						uint32 readBytes;
+						while (true)
+						{
+							readBytes = vFile->fscReadData(transferBuffer.data(), transferBuffer.size());
+							if (readBytes == 0)
+								break;
+							zaWriter->AppendData(transferBuffer.data(), readBytes);
+							if (cancelled)
+								return false;
+							transferredInputBytes += readBytes;
+						}
+						currentFileIndex++;
+					}
+					else if (dirEntry.isDirectory)
+					{
+						if (!RecursivelyAddFiles(fmt::format("{}{}/", archivePath, dirEntry.path), fmt::format("{}{}/", fscPath, dirEntry.path)))
+							return false;
+					}
+					else
+						cemu_assert_unimplemented();
+				}
+				return true;
+			}
 
-	  m_writerContext.zaWriter->Finalize();
+			bool LoadTitleMetaAndCountFiles(TitleInfo* titleInfo)
+			{
+				std::string temporaryMountPath = TitleInfo::GetUniqueTempMountingPath();
+				titleInfo->Mount(temporaryMountPath, "", FSC_PRIORITY_BASE);
+				bool r = RecursivelyCountFiles(temporaryMountPath);
+				titleInfo->Unmount(temporaryMountPath);
+				return r;
+			}
 
-	  // verify the created WUA file
-	  boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_source> stream(fd, boost::iostreams::never_close_handle);
-	  ZArchiveReader* zreader = ZArchiveReader::OpenFromStream(std::make_unique<std::istream>(&stream));
-	  if (!zreader)
-	  {
-		  callbacks->OnError();
-		  return;
-	  }
-	  // todo - do a quick verification here
-	  delete zreader;
+			bool StoreTitle(TitleInfo* titleInfo)
+			{
+				std::string temporaryMountPath = TitleInfo::GetUniqueTempMountingPath();
+				titleInfo->Mount(temporaryMountPath, "", FSC_PRIORITY_BASE);
+				bool r = RecursivelyAddFiles(fmt::format("{:016x}_v{}/", titleInfo->GetAppTitleId(), titleInfo->GetAppTitleVersion()), temporaryMountPath);
+				titleInfo->Unmount(temporaryMountPath);
+				return r;
+			}
 
-	  CafeTitleList::Refresh();
+			bool AddTitles(TitleInfo** titles, size_t count)
+			{
+				currentFileIndex = 0;
+				totalFileCount = 0;
+				// count files
+				stage = Stage::COLLECTING_FILES;
+				for (size_t i = 0; i < count; i++)
+				{
+					if (!LoadTitleMetaAndCountFiles(titles[i]))
+						return false;
+					if (cancelled)
+						return false;
+				}
+				// store files
+				stage = Stage::COMPRESSING;
+				for (size_t i = 0; i < count; i++)
+				{
+					if (!StoreTitle(titles[i]))
+						return false;
+				}
+				return true;
+			}
 
-	  callbacks->OnFinished();
+			~ZArchiveWriterContext()
+			{
+				delete zaWriter;
+			};
+
+			fs::path outputPath;
+			int fd;
+			ZArchiveWriter* zaWriter{};
+			bool isValid{false};
+			std::vector<uint8> transferBuffer;
+			std::atomic_bool& cancelled;
+			// progress
+			std::atomic<Stage>& stage;
+			std::atomic_uint32_t& totalFileCount;
+			std::atomic_uint32_t& currentFileIndex;
+			std::atomic_uint64_t& totalInputFileSize;
+			std::atomic_uint64_t& transferredInputBytes;
+		} writerContext{
+			.cancelled = m_cancelled,
+			.stage = m_stage,
+			.totalFileCount = m_totalFileCount,
+			.currentFileIndex = m_currentFileIndex,
+			.totalInputFileSize = m_totalInputFileSize,
+			.transferredInputBytes = m_transferredInputBytes,
+		};
+
+		// mount and store
+		writerContext.isValid = true;
+		writerContext.fd = fd;
+		writerContext.zaWriter = new ZArchiveWriter(&ZArchiveWriterContext::NewOutputFile, &ZArchiveWriterContext::WriteOutputData, &writerContext);
+		if (!writerContext.isValid)
+		{
+			callbacks->OnError();
+			return;
+		}
+
+		bool result = writerContext.AddTitles(titlesToConvert.data(), titlesToConvert.size());
+
+		if (writerContext.cancelled)
+		{
+			m_stage = Stage::CANCELLED;
+			return;
+		}
+
+		m_stage = Stage::FINALIZING;
+
+		if (!result)
+		{
+			callbacks->OnError();
+			return;
+		}
+
+		writerContext.zaWriter->Finalize();
+
+		off_t newPos = lseek(fd, 0, SEEK_SET);
+		if (newPos == -1)
+		{
+			callbacks->OnError();
+			return;
+		}
+
+		boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_source> streamBuffer(fd, boost::iostreams::never_close_handle);
+
+		// verify the created WUA file
+		ZArchiveReader* zreader = ZArchiveReader::OpenFromStream(std::make_unique<std::istream>(&streamBuffer));
+		if (!zreader)
+		{
+			callbacks->OnError();
+			return;
+		}
+		// todo - do a quick verification here
+		delete zreader;
+
+		CafeTitleList::Refresh();
+
+		callbacks->OnFinished();
 	});
 }
 
-uint64 WuaConverter::getTransferredInputBytes() const
-{
-	return m_writerContext.transferredInputBytes.load(std::memory_order_relaxed);
-}
-
-std::string WuaConverter::getCompressedFileName()
+std::string WuaConverter::GetCompressedFileName()
 {
 	CafeConsoleLanguage languageId = CafeConsoleLanguage::EN; // todo - use user's locale
 	std::string shortName;
@@ -129,80 +288,17 @@ std::string WuaConverter::getCompressedFileName()
 	return defaultFileName;
 }
 
-bool WuaConverter::ZArchiveWriterContext::RecursivelyAddFiles(std::string archivePath, std::string fscPath)
+std::pair<uint64, uint64> WuaConverter::GetTransferredInputBytes() const
 {
-	sint32 fscStatus;
-	std::unique_ptr<FSCVirtualFile> vfDir(fsc_openDirIterator(fscPath.c_str(), &fscStatus));
-	if (!vfDir)
-		return false;
-	if (cancelled)
-		return false;
-	zaWriter->MakeDir(archivePath.c_str(), false);
-	FSCDirEntry dirEntry;
-	while (fsc_nextDir(vfDir.get(), &dirEntry))
-	{
-		if (dirEntry.isFile)
-		{
-			zaWriter->StartNewFile((archivePath + dirEntry.path).c_str());
-			std::unique_ptr<FSCVirtualFile> vFile(fsc_open((fscPath + dirEntry.path).c_str(), FSC_ACCESS_FLAG::OPEN_FILE | FSC_ACCESS_FLAG::READ_PERMISSION, &fscStatus));
-			if (!vFile)
-				return false;
-			transferBuffer.resize(32 * 1024); // 32KB
-			uint32 readBytes;
-			while (true)
-			{
-				readBytes = vFile->fscReadData(transferBuffer.data(), transferBuffer.size());
-				if (readBytes == 0)
-					break;
-				zaWriter->AppendData(transferBuffer.data(), readBytes);
-				if (cancelled)
-					return false;
-				transferredInputBytes += readBytes;
-			}
-		}
-		else if (dirEntry.isDirectory)
-		{
-			if (!RecursivelyAddFiles(fmt::format("{}{}/", archivePath, dirEntry.path), fmt::format("{}{}/", fscPath, dirEntry.path)))
-				return false;
-		}
-		else
-		{
-			cemu_assert_unimplemented();
-		}
-	}
-	return true;
+	return std::make_pair(m_transferredInputBytes.load(), m_totalInputFileSize.load());
 }
 
-void WuaConverter::ZArchiveWriterContext::NewOutputFile(const int32_t partIndex, void* _ctx)
+Stage WuaConverter::GetCurrentStage() const
 {
-	auto ctx = (ZArchiveWriterContext*)_ctx;
-	ctx->sink = std::make_unique<boost::iostreams::file_descriptor_sink>(ctx->fd, boost::iostreams::never_close_handle);
-	ctx->isValid = ctx->sink->is_open();
+	return m_stage;
 }
 
-void WuaConverter::ZArchiveWriterContext::WriteOutputData(const void* data, size_t length, void* _ctx)
+uint32 WuaConverter::GetTotalFileCount() const
 {
-	auto* ctx = (ZArchiveWriterContext*)_ctx;
-	if (ctx->isValid)
-		ctx->sink->write(reinterpret_cast<const char*>(data), length);
-}
-
-bool WuaConverter::ZArchiveWriterContext::StoreTitle(TitleInfo* titleInfo)
-{
-	std::string temporaryMountPath = TitleInfo::GetUniqueTempMountingPath();
-	titleInfo->Mount(temporaryMountPath, "", FSC_PRIORITY_BASE);
-	bool r = RecursivelyAddFiles(fmt::format("{:016x}_v{}/", titleInfo->GetAppTitleId(), titleInfo->GetAppTitleVersion()), temporaryMountPath);
-	titleInfo->Unmount(temporaryMountPath);
-	return r;
-}
-
-bool WuaConverter::ZArchiveWriterContext::AddTitles(TitleInfo** titles, size_t count)
-{
-	// store files
-	for (size_t i = 0; i < count; i++)
-	{
-		if (!StoreTitle(titles[i]))
-			return false;
-	}
-	return true;
+	return m_totalFileCount;
 }

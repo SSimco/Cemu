@@ -189,10 +189,10 @@ Java_info_cemu_cemu_nativeinterface_NativeSettings_removeGamesPath(JNIEnv* env, 
 	std::erase_if(gamePaths, [&](const auto& path) { return path == gamePath; });
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeSettings_getGamesPaths(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	return JNIUtils::CreateJavaStringArrayList(env, GetConfig().game_paths);
+	return JNIUtils::CreateStringObjectArray(env, GetConfig().game_paths);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL

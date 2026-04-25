@@ -20,19 +20,36 @@ sealed class Either<out T, out E> {
     }
 }
 
-inline fun attempt(block: () -> Unit): Either<Unit, String> = try {
-    block()
-    Success(Unit)
+inline fun <T> attempt(block: () -> T): Either<T, String> = try {
+    Success(block())
 } catch (e: Exception) {
     Error(e.message ?: "Unknown error")
 }
 
-suspend inline fun attemptWithContext(
+suspend inline fun <T> attemptWithContext(
     context: CoroutineContext,
-    noinline block: suspend CoroutineScope.() -> Unit
-): Either<Unit, String> = withContext(context) {
-    attempt { block() }
+    noinline block: suspend CoroutineScope.() -> T
+): Either<T, String> = withContext(context) {
+    return@withContext attempt { block() }
 }
 
-inline fun Either<Unit, String>.bind(next: () -> Either<Unit, String>): Either<Unit, String> =
-    fold(onSuccess = { next() }, onError = { Error(it) })
+inline fun <T, E, F> Either<T, E>.mapError(
+    transform: (E) -> F
+): Either<T, F> = fold(
+    onSuccess = { Success(it) },
+    onError = { Error(transform(it)) }
+)
+
+inline fun <T, E, R> Either<T, E>.mapSuccess(
+    transform: (T) -> R
+): Either<R, E> = fold(
+    onSuccess = { Success(transform(it)) },
+    onError = { Error(it) }
+)
+
+inline fun <T, E, R> Either<T, E>.bind(
+    next: (T) -> Either<R, E>
+): Either<R, E> = fold(
+    onSuccess = { next(it) },
+    onError = { Error(it) }
+)

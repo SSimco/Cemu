@@ -10,6 +10,7 @@
 
 namespace NativeInput
 {
+	constexpr jint DISABLED_TYPE = -1;
 
 	class AndroidControllerCallbacks : public ControllerManager::ControllerCallbacks
 	{
@@ -117,6 +118,28 @@ namespace NativeInput
 
 		return {nullptr, nullptr};
 	}
+
+	std::shared_ptr<ControllerBase> GetControllerForEmulatedController(uint32 index, std::string_view uuid, std::string_view name)
+	{
+		auto emulatedController = InputManager::instance().get_controller(index);
+
+		if (!emulatedController)
+		{
+			return nullptr;
+		}
+
+		const auto& controllers = emulatedController->get_controllers();
+		auto controllerIt = std::find_if(controllers.begin(), controllers.end(), [&](const ControllerPtr& c) { return c->api() == InputAPI::Android && c->uuid() == uuid; });
+
+		if (controllerIt != controllers.end())
+		{
+			return *controllerIt;
+		}
+
+		std::shared_ptr<ControllerBase> controller = ControllerFactory::CreateController(InputAPI::Android, uuid, name);
+		emulatedController->add_controller(controller);
+		return controller;
+	}
 } // namespace NativeInput
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
@@ -204,7 +227,8 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerType([[maybe_unused
 	auto emulatedController = EmulatedControllerManager::GetController(index).GetControllerPtr();
 	if (emulatedController)
 		return emulatedController->type();
-	throw std::runtime_error(fmt::format("can't get type for emulated controller {}", index));
+
+	return NativeInput::DISABLED_TYPE;
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
@@ -343,32 +367,10 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_setDeviceCallbacks(JNIEnv* env, 
 	DeviceController::set_callbacks(callbacks == nullptr ? nullptr : std::make_shared<NativeInput::DeviceControllerCallbacks>(env, callbacks));
 }
 
-std::shared_ptr<ControllerBase> GetControllerForEmulatedController(uint32 index, std::string_view uuid, std::string_view name)
-{
-	auto emulatedController = InputManager::instance().get_controller(index);
-
-	if (!emulatedController)
-	{
-		return nullptr;
-	}
-
-	const auto& controllers = emulatedController->get_controllers();
-	auto controllerIt = std::find_if(controllers.begin(), controllers.end(), [&](const ControllerPtr& c) { return c->api() == InputAPI::Android && c->uuid() == uuid; });
-
-	if (controllerIt != controllers.end())
-	{
-		return *controllerIt;
-	}
-
-	std::shared_ptr<ControllerBase> controller = ControllerFactory::CreateController(InputAPI::Android, uuid, name);
-	emulatedController->add_controller(controller);
-	return controller;
-}
-
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jint index, jstring descriptor, jstring name)
 {
-	auto controller = GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
+	auto controller = NativeInput::GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
 
 	if (controller == nullptr)
 	{
@@ -398,7 +400,7 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_getControllerSettings(JNIEnv* en
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_setControllerSettings(JNIEnv* env, [[maybe_unused]] jclass clazz, jint index, jstring descriptor, jstring name, jobject controllerSettings)
 {
-	auto controller = GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
+	auto controller = NativeInput::GetControllerForEmulatedController(index, JNIUtils::FromJString(env, descriptor), JNIUtils::FromJString(env, name));
 
 	if (controller == nullptr)
 	{
@@ -435,45 +437,20 @@ Java_info_cemu_cemu_nativeinterface_NativeInput_setControllerSettings(JNIEnv* en
 extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeInput_getMotionEnabledControllerDescriptors(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
+	using namespace std::views;
 	auto& inputManager = InputManager::instance();
 
-	std::unordered_set<std::string> controllersSet;
+	auto controllers = iota(size_t{0}, InputManager::kMaxController) |
+					   transform([&](size_t i) { return inputManager.get_controller(i); }) |
+					   filter([](const auto& e) { return e != nullptr; }) |
+					   transform([](const auto& e) { return e->get_controllers(); }) |
+					   join |
+					   filter([](const auto& c) { return c->api() == InputAPI::Android && c->use_motion(); }) |
+					   transform([](const auto& c) { return c->uuid(); });
 
-	for (size_t i = 0; i < InputManager::kMaxController; ++i)
-	{
-		auto emulatedController = inputManager.get_controller(i);
-
-		if (!emulatedController)
-		{
-			continue;
-		}
-
-		auto controllers = emulatedController->get_controllers();
-
-		for (const auto& controller : controllers)
-		{
-			if (controller->api() == InputAPI::Android && controller->use_motion())
-			{
-				controllersSet.insert(controller->uuid());
-			}
-		}
-	}
-
-	jclass stringClass = env->FindClass("java/lang/String");
-	jobjectArray controllersIdsJava = env->NewObjectArray(static_cast<jsize>(controllersSet.size()), stringClass, nullptr);
-
-	jsize index = 0;
-	for (const auto& uuid : controllersSet)
-	{
-		env->SetObjectArrayElement(
-			controllersIdsJava,
-			index,
-			JNIUtils::ToJString(env, uuid));
-
-		++index;
-	}
-
-	return controllersIdsJava;
+	return JNIUtils::CreateStringObjectArray(
+		env,
+		controllers);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL

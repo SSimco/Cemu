@@ -204,7 +204,7 @@ private fun <T> SelectDialog(
 }
 
 @Composable
-fun Choice(label: String, selected: Boolean, isEnabled: Boolean, onClick: () -> Unit) {
+private fun Choice(label: String, selected: Boolean, isEnabled: Boolean, onClick: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier

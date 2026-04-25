@@ -18,9 +18,7 @@ fun InputSettingsScreen(
     goToHotkeySettings: () -> Unit,
 ) {
     val controllers = remember {
-        (0..<NativeInput.MAX_CONTROLLERS).map { controllerIndex ->
-            controllerIndex to getControllerType(controllerIndex)
-        }
+        (0..<NativeInput.MAX_CONTROLLERS).map { it to NativeInput.getControllerType(it) }
     }
     ScreenContent(
         appBarText = tr("Input settings"),
@@ -50,7 +48,3 @@ fun InputSettingsScreen(
         }
     }
 }
-
-fun getControllerType(index: Int): Int =
-    if (NativeInput.isControllerDisabled(index)) NativeInput.EmulatedControllerType.DISABLED
-    else NativeInput.getControllerType(index)

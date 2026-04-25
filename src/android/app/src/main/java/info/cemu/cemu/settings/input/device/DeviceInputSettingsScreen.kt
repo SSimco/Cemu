@@ -41,8 +41,7 @@ fun DeviceInputSettingsScreen(navigateBack: () -> Unit) {
     val vibrator = remember { context.getDeviceVibrator() }
     var deviceControllerIndex by remember { mutableIntStateOf(NativeInput.getDeviceControllerIndex()) }
     val deviceControllerType = remember(deviceControllerIndex) {
-        if (NativeInput.isControllerDisabled(deviceControllerIndex)) NativeInput.EmulatedControllerType.DISABLED
-        else NativeInput.getControllerType(deviceControllerIndex)
+        NativeInput.getControllerType(deviceControllerIndex)
     }
 
     ScreenContent(

@@ -5,7 +5,7 @@ import java.util.Objects
 
 object NativeGraphicPacks {
     @JvmStatic
-    external fun getGraphicPackBasicInfos(): List<GraphicPackBasicInfo>
+    external fun getGraphicPackBasicInfos(): Array<GraphicPackBasicInfo>
 
     @JvmStatic
     external fun refreshGraphicPacks()
@@ -20,21 +20,43 @@ object NativeGraphicPacks {
     external fun setGraphicPackActivePreset(id: Long, category: String?, preset: String?)
 
     @JvmStatic
-    external fun getGraphicPackPresets(id: Long): ArrayList<GraphicPackPreset>
+    external fun getGraphicPackPresets(id: Long): Array<GraphicPackPreset>
 
     @Keep
     data class GraphicPackBasicInfo(
         val id: Long,
         val virtualPath: String,
         val enabled: Boolean,
-        val titleIds: ArrayList<Long>
-    )
+        val titleIds: LongArray
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as GraphicPackBasicInfo
+
+            if (id != other.id) return false
+            if (enabled != other.enabled) return false
+            if (virtualPath != other.virtualPath) return false
+            if (!titleIds.contentEquals(other.titleIds)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = id.hashCode()
+            result = 31 * result + enabled.hashCode()
+            result = 31 * result + virtualPath.hashCode()
+            result = 31 * result + titleIds.contentHashCode()
+            return result
+        }
+    }
 
     @Keep
     class GraphicPackPreset(
         private val graphicPackId: Long,
         val category: String?,
-        val presets: ArrayList<String>,
+        val presets: Array<String>,
         private var _activePreset: String
     ) {
         override fun hashCode(): Int {
@@ -69,13 +91,13 @@ object NativeGraphicPacks {
         private var active: Boolean,
         val name: String,
         val description: String,
-        private var _presets: ArrayList<GraphicPackPreset>
+        private var _presets: Array<GraphicPackPreset>
     ) {
         fun isActive(): Boolean {
             return active
         }
 
-        val presets: List<GraphicPackPreset>
+        val presets: Array<GraphicPackPreset>
             get() = _presets
 
         fun reloadPresets() {

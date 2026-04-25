@@ -13,14 +13,14 @@ import info.cemu.cemu.common.either.Error
 import info.cemu.cemu.common.either.Success
 import info.cemu.cemu.common.either.attemptWithContext
 import info.cemu.cemu.common.either.bind
+import info.cemu.cemu.common.either.mapError
 import info.cemu.cemu.common.settings.AppSettings
 import info.cemu.cemu.common.settings.AppSettingsStore
-import info.cemu.cemu.common.settings.GamePadPosition
 import info.cemu.cemu.common.settings.InputOverlayRect
 import info.cemu.cemu.common.settings.InputOverlaySettings
 import info.cemu.cemu.common.settings.OverlayInputConfig
-import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeEmulation
+import info.cemu.cemu.nativeinterface.NativeEmulation.PrepareTitleResult
 import info.cemu.cemu.nativeinterface.NativeException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 data class SideMenuState(
     val isMotionEnabled: Boolean = false,
@@ -57,12 +56,24 @@ class ConditionFlags(
     }
 }
 
+sealed interface NativeError {
+    data class SurfaceCreationError(val message: String) : NativeError
+    data class RendererInitializationError(val message: String) : NativeError
+
+    object GameFilesNotFoundError : NativeError
+    object NoDiscKeysError : NativeError
+    object NoTitleTikError : NativeError
+    data class UnknownTilePrepareError(val launchPath: String) : NativeError
+    data class SystemInitializationError(val message: String) : NativeError
+
+    object LaunchingTitleError : NativeError
+}
 
 class EmulationViewModel(
     private val launchPath: String,
     private val dataStore: DataStore<AppSettings> = AppSettingsStore.dataStore
 ) : ViewModel() {
-    private val _emulationError = MutableStateFlow<String?>(null)
+    private val _emulationError = MutableStateFlow<NativeError?>(null)
     val emulationError = _emulationError.asStateFlow()
 
     private val _sideMenuState = MutableStateFlow(SideMenuState())
@@ -159,7 +170,7 @@ class EmulationViewModel(
 
                 destroyedSurfaces.set(isMainCanvas, false)
             } catch (exception: NativeException) {
-                _emulationError.value = tr("Failed creating surface: {0}", exception.message!!)
+                _emulationError.value = NativeError.SurfaceCreationError(exception.message!!)
             }
         }
 
@@ -182,53 +193,33 @@ class EmulationViewModel(
     val mainHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(true)
     val padHolderCallback: SurfaceHolder.Callback = CanvasSurfaceHolderCallback(false)
 
-    private suspend fun initializeSystems(): Either<Unit, String> {
-        return attemptWithContext(Dispatchers.IO) {
-            NativeEmulation.initializeSystems()
-        }
-    }
+    private suspend fun initializeSystems() = attemptWithContext(Dispatchers.IO) {
+        NativeEmulation.initializeSystems()
+    }.mapError { NativeError.SystemInitializationError(it) }
 
-    private suspend fun initializeRenderer(): Either<Unit, String> {
-        return withContext(Dispatchers.IO) {
-            try {
-                NativeEmulation.initializeRenderer()
+    private suspend fun initializeRenderer() = attemptWithContext(Dispatchers.IO) {
+        NativeEmulation.initializeRenderer()
+        NativeEmulation.initializeSurface(isMainCanvas = true)
+    }.mapError { NativeError.RendererInitializationError(it) }
 
-                NativeEmulation.initializeSurface(isMainCanvas = true)
+    private suspend fun prepareTitle(): Either<Unit, NativeError> =
+        attemptWithContext(Dispatchers.IO) { NativeEmulation.prepareTitle(launchPath) }
+            .fold(
+                onSuccess = { result ->
+                    when (result) {
+                        PrepareTitleResult.SUCCESSFUL -> Success(Unit)
+                        PrepareTitleResult.ERROR_GAME_BASE_FILES_NOT_FOUND -> Error(NativeError.GameFilesNotFoundError)
+                        PrepareTitleResult.ERROR_NO_DISC_KEY -> Error(NativeError.NoDiscKeysError)
+                        PrepareTitleResult.ERROR_NO_TITLE_TIK -> Error(NativeError.NoTitleTikError)
+                        else -> Error(NativeError.UnknownTilePrepareError(launchPath))
+                    }
+                },
+                onError = { Error(NativeError.UnknownTilePrepareError(launchPath)) }
+            )
 
-                return@withContext Success(Unit)
-
-            } catch (exception: NativeException) {
-                val errorMessage = tr("Failed creating renderer: {0}", exception.message!!)
-                return@withContext Error(errorMessage)
-            }
-        }
-    }
-
-    private suspend fun prepareTitle(): Either<Unit, String> {
-        return withContext(Dispatchers.IO) {
-            val result = NativeEmulation.prepareTitle(launchPath)
-
-            if (result == NativeEmulation.PrepareTitleResult.SUCCESSFUL) {
-                return@withContext Success(Unit)
-            }
-
-            val errorMessage = when (result) {
-                NativeEmulation.PrepareTitleResult.ERROR_GAME_BASE_FILES_NOT_FOUND -> tr("Unable to launch game because the base files were not found.")
-                NativeEmulation.PrepareTitleResult.ERROR_NO_DISC_KEY -> tr("Could not decrypt title. Make sure that keys.txt contains the correct disc key for this title.")
-                NativeEmulation.PrepareTitleResult.ERROR_NO_TITLE_TIK -> tr("Could not decrypt title because title.tik is missing.")
-                else -> tr("Unable to launch game\nPath: {0}", launchPath)
-            }
-
-            return@withContext Error(errorMessage)
-        }
-    }
-
-
-    private suspend fun launchTitle(): Either<Unit, String> {
-        return attemptWithContext(Dispatchers.IO) {
-            NativeEmulation.launchTitle()
-        }
-    }
+    private suspend fun launchTitle() =
+        attemptWithContext(Dispatchers.IO) { NativeEmulation.launchTitle() }
+            .mapError { NativeError.LaunchingTitleError }
 
     private val _isEmulationInitialized = MutableStateFlow(false)
     val isEmulationInitialized = _isEmulationInitialized.asStateFlow()

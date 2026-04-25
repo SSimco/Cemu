@@ -20,12 +20,27 @@ enum class CompressResult {
     ERROR,
 }
 
-class CompressTitleUseCase(private val scope: CoroutineScope) {
-    private val _inProgress = MutableStateFlow(false)
-    val inProgress = _inProgress.asStateFlow()
+enum class CompressionStage {
+    STARTING,
+    COLLECTING_FILES,
+    COMPRESSING,
+    FINALIZING,
+}
 
-    private val _progress = MutableStateFlow<Long?>(null)
+data class CompressionProgress(
+    val current: Long,
+    val total: Long
+)
+
+class CompressTitleUseCase(private val scope: CoroutineScope) {
+    private val _stage = MutableStateFlow<CompressionStage?>(null)
+    val stage = _stage.asStateFlow()
+
+    private val _progress = MutableStateFlow(CompressionProgress(0, 0))
     val progress = _progress.asStateFlow()
+
+    private val _totalFileCount = MutableStateFlow(0)
+    val totalFileCount = _totalFileCount.asStateFlow()
 
     private var compressJob: Job? = null
     private var progressJob: Job? = null
@@ -33,10 +48,7 @@ class CompressTitleUseCase(private val scope: CoroutineScope) {
 
     fun cancel() {
         scope.launch(Dispatchers.IO) {
-            progressJob?.cancelAndJoin()
             NativeGameTitles.cancelTitleCompression()
-            _inProgress.value = false
-            _progress.value = null
         }
     }
 
@@ -45,7 +57,7 @@ class CompressTitleUseCase(private val scope: CoroutineScope) {
         uri: Uri,
         callback: (CompressResult) -> Unit
     ) {
-        if (_inProgress.value) return
+        if (_stage.value != null) return
 
         val fd = context.contentResolver.openFileDescriptor(uri, "rw")
 
@@ -54,39 +66,61 @@ class CompressTitleUseCase(private val scope: CoroutineScope) {
             return
         }
 
-        val oldProgressJob = progressJob
         compressJob = scope.launch {
-            oldProgressJob?.cancelAndJoin()
-            _inProgress.value = true
+            _stage.value = CompressionStage.STARTING
+
+            progressJob?.cancelAndJoin()
 
             try {
                 progressJob = launch {
                     while (isActive) {
                         delay(500)
-                        _progress.value = NativeGameTitles.getCurrentProgressForCompression()
+                        val currentProgress = NativeGameTitles.getCurrentProgressForCompression()
+
+                        if (currentProgress == null) {
+                            _stage.value = null
+                            return@launch
+                        }
+
+                        val (current, total) = currentProgress
+                        _progress.value = CompressionProgress(current, total)
+
+                        _totalFileCount.value =
+                            NativeGameTitles.getCurrentCompressionTotalFileCount()
+
+                        val currentStage = NativeGameTitles.getCurrentCompressionStage()
+
+                        if (currentStage == NativeGameTitles.CompressionStage.CANCELLED) {
+                            _stage.value = null
+                            return@launch
+                        }
+
+                        _stage.value = when (NativeGameTitles.getCurrentCompressionStage()) {
+                            NativeGameTitles.CompressionStage.STARTING -> CompressionStage.STARTING
+                            NativeGameTitles.CompressionStage.COLLECTING_FILES -> CompressionStage.COLLECTING_FILES
+                            NativeGameTitles.CompressionStage.COMPRESSING -> CompressionStage.COMPRESSING
+                            NativeGameTitles.CompressionStage.FINALIZING -> CompressionStage.FINALIZING
+                            else -> CompressionStage.STARTING
+                        }
                     }
                 }
 
                 NativeGameTitles.compressQueuedTitle(
                     fd = fd.detachFd(),
                     callback = { result ->
+                        progressJob?.cancel()
+
                         when (result) {
                             NativeCompressResult.FINISHED -> callback(CompressResult.FINISHED)
                             NativeCompressResult.ERROR -> callback(CompressResult.ERROR)
                         }
 
-                        progressJob?.cancel()
-                        _inProgress.value = false
-                        _progress.value = null
+                        _stage.value = null
                     }
                 )
             } catch (_: Exception) {
-                progressJob?.cancel()
-
-                _inProgress.value = false
-                _progress.value = null
-
                 callback(CompressResult.ERROR)
+                _stage.value = null
             }
         }
     }

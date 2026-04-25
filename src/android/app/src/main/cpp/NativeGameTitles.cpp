@@ -39,7 +39,7 @@ namespace NativeGameTitles
 		g_currentGameProfile.Load(titleId);
 	}
 
-	std::unique_ptr<WuaConverter> s_wuaConverter;
+	std::unique_ptr<WuaConverter> g_wuaConverter;
 } // namespace NativeGameTitles
 
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
@@ -188,10 +188,10 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_reloadGameTitles([[maybe_un
 	NativeGameTitles::s_gameTitleLoader.ReloadGameTitles();
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+extern "C" [[maybe_unused]] JNIEXPORT jlongArray JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getInstalledGamesTitleIds(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	return JNIUtils::CreateJavaLongArrayList(env, CafeTitleList::GetAllTitleIds());
+	return JNIUtils::CreateLongArray(env, CafeTitleList::GetAllTitleIds());
 }
 
 class SaveListCallback
@@ -544,7 +544,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_queueTitleToCompress(JNIEnv
 			break;
 	}
 
-	NativeGameTitles::s_wuaConverter = std::make_unique<WuaConverter>(titleInfo_base, titleInfo_update, titleInfo_aoc);
+	NativeGameTitles::g_wuaConverter = std::make_unique<WuaConverter>(titleInfo_base, titleInfo_update, titleInfo_aoc);
 
 	jobject compressTitleInfo = JNIUtils::NewObject(
 		env,
@@ -559,31 +559,62 @@ Java_info_cemu_cemu_nativeinterface_NativeGameTitles_queueTitleToCompress(JNIEnv
 extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCompressedFileNameForQueuedTitle(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	if (NativeGameTitles::s_wuaConverter == nullptr)
+	if (NativeGameTitles::g_wuaConverter == nullptr)
 		return nullptr;
-	return JNIUtils::ToJString(env, NativeGameTitles::s_wuaConverter->getCompressedFileName());
+	return JNIUtils::ToJString(env, NativeGameTitles::g_wuaConverter->GetCompressedFileName());
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_compressQueuedTitle([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jint fd, jobject compressTitleCallbacks)
 {
-	if (NativeGameTitles::s_wuaConverter == nullptr)
+	if (NativeGameTitles::g_wuaConverter == nullptr)
 		return;
-	NativeGameTitles::s_wuaConverter->startConversion(fd, std::make_unique<CompressTitleCallbacks>(compressTitleCallbacks));
+
+	NativeGameTitles::g_wuaConverter->StartConversion(fd, std::make_unique<CompressTitleCallbacks>(compressTitleCallbacks));
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
-Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCurrentProgressForCompression([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCurrentProgressForCompression(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	if (NativeGameTitles::s_wuaConverter == nullptr)
+	if (NativeGameTitles::g_wuaConverter == nullptr)
+		return nullptr;
+
+	auto [current, total] = NativeGameTitles::g_wuaConverter->GetTransferredInputBytes();
+
+	static auto [progressClass, ctrMID] = [env] {
+		jclass progressClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGameTitles$CompressionProgress");
+		auto temp = env->NewGlobalRef(progressClass);
+		env->DeleteLocalRef(progressClass);
+		progressClass = static_cast<jclass>(temp);
+		jmethodID ctrMID = env->GetMethodID(progressClass, "<init>", "(JJ)V");
+		return std::make_pair(progressClass, ctrMID);
+	}();
+
+	return env->NewObject(progressClass, ctrMID, static_cast<jlong>(current), static_cast<jlong>(total));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCurrentCompressionStage([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	if (NativeGameTitles::g_wuaConverter == nullptr)
+		return static_cast<jint>(Stage::CANCELLED);
+
+	return static_cast<jint>(NativeGameTitles::g_wuaConverter->GetCurrentStage());
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_info_cemu_cemu_nativeinterface_NativeGameTitles_getCurrentCompressionTotalFileCount([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
+{
+	if (NativeGameTitles::g_wuaConverter == nullptr)
 		return 0L;
-	return NativeGameTitles::s_wuaConverter->getTransferredInputBytes();
+
+	return static_cast<jint>(NativeGameTitles::g_wuaConverter->GetTotalFileCount());
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGameTitles_cancelTitleCompression([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	if (NativeGameTitles::s_wuaConverter == nullptr)
+	if (NativeGameTitles::g_wuaConverter == nullptr)
 		return;
-	NativeGameTitles::s_wuaConverter.reset();
+	NativeGameTitles::g_wuaConverter.reset();
 }

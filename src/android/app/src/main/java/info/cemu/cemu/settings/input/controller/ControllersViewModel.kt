@@ -28,11 +28,13 @@ data class InputController(
     val hasRumble: Boolean,
 )
 
+data class ActiveController(
+    val controller: InputController,
+    val settings: NativeInput.ControllerSettings
+)
+
 class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
-    private var _controllerType = MutableStateFlow(
-        if (NativeInput.isControllerDisabled(controllerIndex)) NativeInput.EmulatedControllerType.DISABLED
-        else NativeInput.getControllerType(controllerIndex)
-    )
+    private var _controllerType = MutableStateFlow(NativeInput.getControllerType(controllerIndex))
     val controllerType = _controllerType.asStateFlow()
 
     private val _controls = MutableStateFlow<Map<Int, String>>(emptyMap())
@@ -135,11 +137,6 @@ class ControllersViewModel(val controllerIndex: Int) : ViewModel() {
 
         return isWPAD || controllersCount.wpadCount < NativeInput.MAX_WPAD_CONTROLLERS
     }
-
-    data class ActiveController(
-        val controller: InputController,
-        val settings: NativeInput.ControllerSettings
-    )
 
     private val _activeController = MutableStateFlow<ActiveController?>(null)
     val activeController = _activeController.asStateFlow()

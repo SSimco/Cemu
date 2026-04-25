@@ -76,22 +76,22 @@ import info.cemu.cemu.settings.input.controller.emulatedcontroller.WiimoteContro
 fun ControllerInputSettingsScreen(
     navigateBack: () -> Unit,
     controllerIndex: Int,
-    controllersViewModel: ControllersViewModel = viewModel(
+    viewModel: ControllersViewModel = viewModel(
         factory = ControllersViewModel.Factory, extras = MutableCreationExtras().apply {
             set(ControllersViewModel.CONTROLLER_INDEX_KEY, controllerIndex)
         }),
 ) {
     DisposableEffect(Unit) {
         onDispose {
-            controllersViewModel.save()
+            viewModel.save()
         }
     }
 
-    val controllers by controllersViewModel.controllers.collectAsState()
-    val buttonToBind by controllersViewModel.buttonToBind.collectAsState()
-
-    val controllerType by controllersViewModel.controllerType.collectAsState()
-    val controls by controllersViewModel.controls.collectAsState()
+    val controllers by viewModel.controllers.collectAsState()
+    val buttonToBind by viewModel.buttonToBind.collectAsState()
+    val controllerType by viewModel.controllerType.collectAsState()
+    val controls by viewModel.controls.collectAsState()
+    val activeController by viewModel.activeController.collectAsState()
 
     var showMapAllInputsDialog by rememberSaveable { mutableStateOf(false) }
     var showControllerSettingsDialog by rememberSaveable { mutableStateOf(false) }
@@ -100,15 +100,15 @@ fun ControllerInputSettingsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     fun onInputClick(buttonName: String, buttonId: Int) {
-        controllersViewModel.setButtonToBind(ButtonInfo(buttonName, buttonId))
+        viewModel.setButtonToBind(ButtonInfo(buttonName, buttonId))
     }
 
     fun onInputLongClick(buttonId: Int) {
-        controllersViewModel.clearButtonMapping(buttonId)
+        viewModel.clearButtonMapping(buttonId)
     }
 
     fun refreshControllers(onControllersAvailable: () -> Unit) {
-        if (controllersViewModel.refreshAvailableControllers()) {
+        if (viewModel.refreshAvailableControllers()) {
             onControllersAvailable()
         } else {
             snackbarHostState.showMessage(coroutineScope, tr("No controllers available"))
@@ -121,7 +121,7 @@ fun ControllerInputSettingsScreen(
         navigateBack = navigateBack,
     ) {
         SingleSelection(
-            isChoiceEnabled = controllersViewModel::isControllerTypeAllowed,
+            isChoiceEnabled = viewModel::isControllerTypeAllowed,
             label = tr("Emulated controller"),
             initialChoice = { controllerType },
             choices = listOf(
@@ -132,7 +132,7 @@ fun ControllerInputSettingsScreen(
                 EmulatedControllerType.WIIMOTE
             ),
             choiceToString = { controllerTypeToString(it) },
-            onChoiceChanged = controllersViewModel::setControllerType
+            onChoiceChanged = viewModel::setControllerType
         )
 
         if (controllerType == EmulatedControllerType.DISABLED) {
@@ -188,20 +188,20 @@ fun ControllerInputSettingsScreen(
         InputBindingPopup(
             buttonName = it.name,
             mapKeyEvent = { event ->
-                controllersViewModel.mapKeyEvent(event, it.id)
-                controllersViewModel.clearButtonToBind()
+                viewModel.mapKeyEvent(event, it.id)
+                viewModel.clearButtonToBind()
             },
             mapMotionEvent = { event ->
-                if (controllersViewModel.tryMapMotionEvent(event, it.id)) {
-                    controllersViewModel.clearButtonToBind()
+                if (viewModel.tryMapMotionEvent(event, it.id)) {
+                    viewModel.clearButtonToBind()
                 }
             },
             onClear = {
-                controllersViewModel.clearButtonMapping(it.id)
-                controllersViewModel.clearButtonToBind()
+                viewModel.clearButtonMapping(it.id)
+                viewModel.clearButtonToBind()
             },
             onDismiss = {
-                controllersViewModel.clearButtonToBind()
+                viewModel.clearButtonToBind()
             },
         )
     }
@@ -210,31 +210,35 @@ fun ControllerInputSettingsScreen(
         ControllerSelectDialog(
             controllers = controllers,
             onDismissRequest = { showMapAllInputsDialog = false },
-            onSelect = { controllersViewModel.mapAllInputs(it.id) },
+            onSelect = { viewModel.mapAllInputs(it.id) },
         )
     }
 
     if (showControllerSettingsDialog) {
         ControllerSettingsDialog(
-            viewModel = controllersViewModel,
             controllers = controllers,
-            onDismissRequest = { showControllerSettingsDialog = false },
-        )
+            controllerType = controllerType,
+            activeController = activeController,
+            onSetActiveController = viewModel::setActiveController,
+            onSetControllerSettings = viewModel::setControllerSettings,
+            onDismissRequest = { showControllerSettingsDialog = false })
     }
 }
 
 @Composable
 private fun ControllerSettingsDialog(
     onDismissRequest: () -> Unit,
-    viewModel: ControllersViewModel,
+    controllerType: Int,
+    activeController: ActiveController?,
+    onSetActiveController: (InputController) -> Unit,
+    onSetControllerSettings: (InputController, NativeInput.ControllerSettings) -> Unit,
     controllers: List<InputController>,
 ) {
-    val activeController by viewModel.activeController.collectAsState()
-    val controllerType by viewModel.controllerType.collectAsState()
+
 
     fun updateSettings(settings: NativeInput.ControllerSettings) {
         val (controller, _) = activeController ?: return
-        viewModel.setControllerSettings(controller, settings)
+        onSetControllerSettings(controller, settings)
     }
 
     Dialog(
@@ -270,7 +274,7 @@ private fun ControllerSettingsDialog(
                     choice = activeController?.controller,
                     choices = controllers,
                     choiceToString = { it?.name ?: "" },
-                    onChoiceChanged = { viewModel.setActiveController(it!!) },
+                    onChoiceChanged = { onSetActiveController(it!!) },
                 )
 
                 val (controller, settings) = activeController ?: return@Column

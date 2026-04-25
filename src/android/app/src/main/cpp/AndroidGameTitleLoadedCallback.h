@@ -3,7 +3,7 @@
 #include "GameTitleLoader.h"
 #include "JNIUtils.h"
 #include <android/bitmap.h>
-// TODO: Refactor this:
+
 class AndroidGameTitleLoadedCallback : public GameTitleLoadedCallback
 {
 	jmethodID m_onGameTitleLoadedMID;

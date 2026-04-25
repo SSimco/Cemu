@@ -65,6 +65,8 @@ import info.cemu.cemu.common.ui.localization.regionToString
 import info.cemu.cemu.common.ui.localization.tr
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.titlemanager.usecases.CompressResult
+import info.cemu.cemu.titlemanager.usecases.CompressionProgress
+import info.cemu.cemu.titlemanager.usecases.CompressionStage
 import info.cemu.cemu.titlemanager.usecases.DeleteResult
 import info.cemu.cemu.titlemanager.usecases.InstallResult
 import kotlinx.coroutines.launch
@@ -84,9 +86,11 @@ fun TitleManagerScreen(
     val queuedTitleToCompress by titleListViewModel.queuedTitleToCompress.collectAsState()
     val showTitleInstallProgress by titleListViewModel.titleInstallInProgress.collectAsState()
     val titleInstallProgress by titleListViewModel.titleInstallProgress.collectAsState()
-    val compressTitleInProgress by titleListViewModel.compressInProgress.collectAsState()
-    val currentCompressProgress by titleListViewModel.compressProgress.collectAsState()
+    val compressStage by titleListViewModel.compressStage.collectAsState()
+    val compressProgress by titleListViewModel.compressProgress.collectAsState()
+    val compressTotalFileCount by titleListViewModel.compressionTotalFileCount.collectAsState()
     val titleToBeDeleted by titleListViewModel.titleToBeDeleted.collectAsState()
+    val filter by titleListViewModel.filter.collectAsState()
 
     fun showNotificationMessage(text: String) {
         coroutineScope.launch {
@@ -132,10 +136,11 @@ fun TitleManagerScreen(
                 uri = uri,
                 onResult = { result ->
                     {
-                        when (result) {
-                            CompressResult.FINISHED -> showNotificationMessage(tr("Finished converting"))
-                            CompressResult.ERROR -> showNotificationMessage(tr("Error while converting"))
-                        }
+                        val x = 20
+                    }
+                    when (result) {
+                        CompressResult.FINISHED -> showNotificationMessage(tr("Finished converting"))
+                        CompressResult.ERROR -> showNotificationMessage(tr("Error while converting"))
                     }
                 }
             )
@@ -189,11 +194,16 @@ fun TitleManagerScreen(
             )
         }
     }
-    if (showFilterSheet)
+    if (showFilterSheet) {
         TitleFilterBottomSheet(
+            filter = filter,
+            onFilterQueryChanged = titleListViewModel::setFilterQuery,
+            onToggleType = titleListViewModel::toggleType,
+            onToggleFormat = titleListViewModel::toggleFormat,
+            onTogglePath = titleListViewModel::togglePath,
             onDismissRequest = { showFilterSheet = false },
-            titleListViewModel = titleListViewModel
         )
+    }
 
     queuedTitleToInstallError?.let { titleToInstallError ->
         TitleInstallConfirmDialog(
@@ -223,9 +233,12 @@ fun TitleManagerScreen(
         )
     }
 
-    if (compressTitleInProgress)
+    val stage = compressStage
+    if (stage != null)
         TitleCompressProgressDialog(
-            bytesWritten = currentCompressProgress,
+            stage = stage,
+            progress = compressProgress,
+            totalFileCount = compressTotalFileCount,
             onCancel = titleListViewModel::cancelCompression,
         )
 
@@ -235,7 +248,12 @@ fun TitleManagerScreen(
 }
 
 @Composable
-private fun TitleCompressProgressDialog(bytesWritten: Long?, onCancel: () -> Unit) {
+private fun TitleCompressProgressDialog(
+    stage: CompressionStage,
+    progress: CompressionProgress,
+    totalFileCount: Int,
+    onCancel: () -> Unit,
+) {
     var showCancelConfirmDialog by rememberSaveable { mutableStateOf(false) }
 
     AlertDialog(
@@ -245,9 +263,28 @@ private fun TitleCompressProgressDialog(bytesWritten: Long?, onCancel: () -> Uni
                 modifier = Modifier.padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                LinearProgressIndicator()
-                if (bytesWritten != null)
-                    Text(tr("Current progress: {0}", bytesWritten.formatBytes()))
+                if (stage == CompressionStage.COMPRESSING) {
+                    LinearProgressIndicator(progress = {
+                        val (current, total) = progress
+                        current.toFloat() / total
+                    })
+                } else {
+                    LinearProgressIndicator()
+                }
+
+                Text(
+                    when (stage) {
+                        CompressionStage.STARTING -> tr("Starting...")
+                        CompressionStage.COLLECTING_FILES -> tr("Collecting list of files...") + " ($totalFileCount)"
+                        CompressionStage.COMPRESSING -> {
+                            val (current, total) = progress
+
+                            tr("Converting files...") + " (${current.formatBytes()}/${total.formatBytes()})"
+                        }
+
+                        CompressionStage.FINALIZING -> tr("Finalizing...")
+                    }
+                )
             }
         },
         onDismissRequest = {},
@@ -266,7 +303,10 @@ private fun TitleCompressProgressDialog(bytesWritten: Long?, onCancel: () -> Uni
             text = { Text(tr("Do you really want to cancel compressing the title?")) },
             onDismissRequest = { showCancelConfirmDialog = false },
             confirmButton = {
-                TextButton(onClick = onCancel) {
+                TextButton(onClick = {
+                    onCancel()
+                    showCancelConfirmDialog = false
+                }) {
                     Text(tr("Yes"))
                 }
             },
@@ -374,9 +414,7 @@ private fun TitleInstallProgressDialog(
         onDismissRequest = {},
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = { showCancelConfirmDialog = true }) {
-                Text(tr("Cancel"))
-            }
+            TextButton(onClick = { showCancelConfirmDialog = true }) { Text(tr("Cancel")) }
         }
     )
 
@@ -387,15 +425,9 @@ private fun TitleInstallProgressDialog(
                 Text(tr("Do you really want to cancel the installation process?\n\nCanceling the process will delete the applied files."))
             },
             onDismissRequest = { showCancelConfirmDialog = false },
-            confirmButton = {
-                TextButton(onClick = onCancel) {
-                    Text(tr("Yes"))
-                }
-            },
+            confirmButton = { TextButton(onClick = onCancel) { Text(tr("Yes")) } },
             dismissButton = {
-                TextButton(onClick = { showCancelConfirmDialog = false }) {
-                    Text(tr("No"))
-                }
+                TextButton(onClick = { showCancelConfirmDialog = false }) { Text(tr("No")) }
             }
         )
 }
@@ -452,11 +484,13 @@ Do you still want to continue with the installation? It will replace the current
 
 @Composable
 private fun TitleFilterBottomSheet(
+    filter: TitleListFilter,
+    onFilterQueryChanged: (String) -> Unit,
+    onToggleType: (EntryType) -> Unit,
+    onToggleFormat: (EntryFormat) -> Unit,
+    onTogglePath: (EntryPath) -> Unit,
     onDismissRequest: () -> Unit,
-    titleListViewModel: TitleListViewModel,
 ) {
-    val filter by titleListViewModel.filter.collectAsState()
-
     ModalBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         onDismissRequest = onDismissRequest,
@@ -468,26 +502,26 @@ private fun TitleFilterBottomSheet(
                     .fillMaxWidth(),
                 singleLine = true,
                 value = filter.query,
-                onValueChange = titleListViewModel::setFilterQuery,
+                onValueChange = onFilterQueryChanged,
                 label = { Text(tr("Search titles")) }
             )
             FilterRow(
                 filterRowLabel = tr("Types"),
                 filterValues = EntryType.entries.map { (it to (it in filter.types)) },
                 valueToLabel = { entryTypeToString(it) },
-                onToggle = titleListViewModel::toggleType,
+                onToggle = onToggleType,
             )
             FilterRow(
                 filterRowLabel = tr("Formats"),
                 filterValues = EntryFormat.entries.map { (it to (it in filter.formats)) },
                 valueToLabel = { formatToString(it) },
-                onToggle = titleListViewModel::toggleFormat,
+                onToggle = onToggleFormat,
             )
             FilterRow(
                 filterRowLabel = tr("Locations"),
                 filterValues = EntryPath.entries.map { (it to (it in filter.paths)) },
                 valueToLabel = { pathToString(it) },
-                onToggle = titleListViewModel::togglePath,
+                onToggle = onTogglePath,
             )
         }
     }

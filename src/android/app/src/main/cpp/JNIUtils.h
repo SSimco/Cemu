@@ -31,10 +31,6 @@ namespace JNIUtils
 		return ToJString(env, boost::nowide::narrow(str));
 	}
 
-	jobject CreateJavaStringArrayList(JNIEnv* env, const std::vector<std::string>& stringList);
-
-	jobject CreateJavaStringArrayList(JNIEnv* env, const std::vector<std::wstring>& stringList);
-
 	inline void HandleNativeException(JNIEnv* env, std::invocable auto fn)
 	{
 		try
@@ -97,9 +93,109 @@ namespace JNIUtils
 
 	Scopedjobject GetEnumValue(JNIEnv* env, const std::string& enumClassName, const std::string& enumName);
 
-	jobject CreateArrayList(JNIEnv* env, const std::vector<jobject>& objects);
+	template<std::ranges::sized_range Range>
+	jlongArray CreateLongArray(JNIEnv* env, Range&& range)
+		requires std::convertible_to<std::ranges::range_value_t<Range>, jlong>
+	{
+		auto size = std::ranges::size(range);
+		jlongArray array = env->NewLongArray(static_cast<jsize>(size));
 
-	jobject CreateJavaLongArrayList(JNIEnv* env, const std::vector<uint64_t>& values);
+		std::vector<jlong> buffer;
+		buffer.reserve(size);
+
+		for (auto v : range)
+		{
+			buffer.push_back(static_cast<jlong>(v));
+		}
+
+		env->SetLongArrayRegion(array, 0, static_cast<jsize>(size), buffer.data());
+
+		return array;
+	}
+
+	template<std::ranges::input_range Range>
+		requires(!std::ranges::sized_range<Range>)
+	jlongArray CreateLongArray(JNIEnv* env, Range&& range)
+	{
+		std::vector<std::ranges::range_value_t<Range>> vector;
+
+		for (auto&& e : range)
+		{
+			vector.push_back(static_cast<decltype(e)&&>(e));
+		}
+
+		return CreateLongArray(env, vector);
+	}
+
+	template<typename F, typename Elem, typename Result>
+	concept JNITransform = requires(F f, Elem e) {{ f(e) } -> std::convertible_to<Result>; };
+
+	template<std::ranges::sized_range Range, typename Transform>
+		requires JNITransform<Transform, std::ranges::range_value_t<Range>, jobject>
+	jobjectArray CreateObjectArray(JNIEnv* env, jclass elementClass, Range&& range, Transform&& transform)
+	{
+		auto size = std::ranges::size(range);
+
+		jobjectArray array = env->NewObjectArray(
+			static_cast<jsize>(size),
+			elementClass,
+			nullptr);
+
+		jsize index = 0;
+		for (auto&& item : range)
+		{
+			jobject obj = transform(item);
+			env->SetObjectArrayElement(array, index++, obj);
+			env->DeleteLocalRef(obj);
+		}
+
+		return array;
+	}
+
+	template<std::ranges::input_range Range, typename Transform>
+		requires(!std::ranges::sized_range<Range> && JNITransform<Transform, std::ranges::range_value_t<Range>, jobject>)
+	jobjectArray CreateObjectArray(JNIEnv* env, jclass elementClass, Range&& range, Transform&& transform)
+	{
+		std::vector<std::ranges::range_value_t<Range>> vector;
+
+		for (auto&& e : range)
+		{
+			vector.push_back(static_cast<decltype(e)&&>(e));
+		}
+
+		return CreateObjectArray(env, elementClass, vector, std::forward<Transform>(transform));
+	}
+
+	template<std::ranges::sized_range Range>
+	jobjectArray CreateStringObjectArray(JNIEnv* env, Range&& range)
+		requires std::same_as<std::ranges::range_value_t<Range>, std::string>
+	{
+		jclass elementClass = env->FindClass("java/lang/String");
+
+		jobjectArray array = CreateObjectArray(
+			env,
+			elementClass,
+			range,
+			[env](const std::string& str) -> jstring { return env->NewStringUTF(str.c_str()); });
+
+		env->DeleteLocalRef(elementClass);
+
+		return array;
+	}
+
+	template<std::ranges::input_range Range>
+		requires(!std::ranges::sized_range<Range> && std::same_as<std::ranges::range_value_t<Range>, std::string>)
+	jobjectArray CreateStringObjectArray(JNIEnv* env, Range&& range)
+	{
+		std::vector<std::ranges::range_value_t<Range>> vector;
+
+		for (auto&& e : range)
+		{
+			vector.push_back(static_cast<decltype(e)&&>(e));
+		}
+
+		return CreateStringObjectArray(env, vector);
+	}
 
 	template<typename... TArgs>
 	jobject NewObject(JNIEnv* env, const char* className, const std::string& ctrSig = "()V", TArgs&&... args)

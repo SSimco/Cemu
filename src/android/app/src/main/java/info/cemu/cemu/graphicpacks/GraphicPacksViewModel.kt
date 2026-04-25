@@ -33,7 +33,7 @@ data class Preset(
                     index = index,
                     category = preset.category,
                     activeChoice = preset.activePreset,
-                    choices = preset.presets,
+                    choices = preset.presets.toList(),
                 )
             }
         }
@@ -115,7 +115,7 @@ class GraphicPacksViewModel(
 
         nativeGraphicPack.reloadPresets()
 
-        if (oldPresets == nativeGraphicPack.presets) {
+        if (oldPresets.contentEquals(nativeGraphicPack.presets)) {
             return
         }
 

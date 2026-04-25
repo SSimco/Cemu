@@ -237,8 +237,9 @@ class TitleListViewModel : ViewModel() {
         _queuedTitleToCompress.value = null
     }
 
-    val compressInProgress = compressUseCase.inProgress
+    val compressStage = compressUseCase.stage
     val compressProgress = compressUseCase.progress
+    val compressionTotalFileCount = compressUseCase.totalFileCount
 
 
     fun compressQueuedTitle(

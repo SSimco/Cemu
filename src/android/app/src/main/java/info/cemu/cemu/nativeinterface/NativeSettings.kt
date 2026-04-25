@@ -11,7 +11,7 @@ object NativeSettings {
     external fun removeGamesPath(uri: String?)
 
     @JvmStatic
-    external fun getGamesPaths(): ArrayList<String>
+    external fun getGamesPaths(): Array<String>
 
     @JvmStatic
     external fun getAsyncShaderCompile(): Boolean

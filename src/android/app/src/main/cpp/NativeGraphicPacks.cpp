@@ -5,9 +5,9 @@
 
 namespace NativeGraphicPacks
 {
-	std::unordered_map<sint64, GraphicPackPtr> s_graphicPacks;
+	std::unordered_map<sint64, GraphicPackPtr> g_graphicPacks;
 
-	void SaveGraphicPackStateToConfig(GraphicPackPtr graphicPack)
+	void SaveGraphicPackStateToConfig(const GraphicPackPtr& graphicPack)
 	{
 		auto& data = GetConfig();
 		auto filename = _utf8ToPath(graphicPack->GetNormalizedPathString());
@@ -30,47 +30,56 @@ namespace NativeGraphicPacks
 		}
 	}
 
-	jobject GetGraphicPresets(JNIEnv* env, GraphicPackPtr graphicPack, sint64 id)
+	jobjectArray GetGraphicPresets(JNIEnv* env, const GraphicPackPtr& graphicPack, sint64 id)
 	{
+		using namespace std::ranges::views;
 		auto graphicPackPresetClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPackPreset");
-		auto graphicPackPresetCtorId = env->GetMethodID(graphicPackPresetClass, "<init>", "(JLjava/lang/String;Ljava/util/ArrayList;Ljava/lang/String;)V");
+		auto graphicPackPresetCtorId = env->GetMethodID(graphicPackPresetClass, "<init>", "(JLjava/lang/String;[Ljava/lang/String;Ljava/lang/String;)V");
 
 		std::vector<std::string> order;
-		auto presets = graphicPack->GetCategorizedPresets(order);
+		using CategorizedPresets = std::unordered_map<std::string, std::vector<GraphicPack2::PresetPtr>>;
+		CategorizedPresets presets = graphicPack->GetCategorizedPresets(order);
 
-		std::vector<jobject> presetsJobjects;
-		for (const auto& category : order)
+		struct PresetData
 		{
-			const auto& entry = presets[category];
-			// test if any preset is visible and update its status
-			if (std::none_of(entry.cbegin(), entry.cend(), [graphicPack](const auto& p) { return p->visible; }))
-			{
-				continue;
-			}
+			const std::string& category;
+			const std::vector<GraphicPack2::PresetPtr>& presets;
+		};
 
-			jstring categoryJStr = category.empty() ? nullptr : JNIUtils::ToJString(env, category);
-			std::vector<std::string> presetSelections;
-			std::optional<std::string> activePreset;
-			for (auto& pentry : entry)
-			{
-				if (!pentry->visible)
-					continue;
+		auto presetsData = order |
+						   transform([&](const auto& category) { return PresetData{category, presets.at(category)}; }) |
+						   filter([](const PresetData& presetData) {
+							   return std::ranges::any_of(presetData.presets, [](const auto& p) { return p->visible; });
+						   });
 
-				presetSelections.push_back(pentry->name);
+		return JNIUtils::CreateObjectArray(
+			env,
+			graphicPackPresetClass,
+			presetsData,
+			[&](const auto& presetData) -> jobject {
+				jstring categoryJStr = presetData.category.empty() ? nullptr : JNIUtils::ToJString(env, presetData.category);
+				std::vector<std::string> presetSelections;
+				std::optional<std::string> activePreset;
+				for (auto& pentry : presetData.presets)
+				{
+					if (!pentry->visible)
+						continue;
 
-				if (pentry->active)
-					activePreset = pentry->name;
-			}
+					presetSelections.push_back(pentry->name);
 
-			jstring activePresetJstr = nullptr;
-			if (activePreset.has_value())
-				activePresetJstr = JNIUtils::ToJString(env, activePreset.value());
-			else if (!presetSelections.empty())
-				activePresetJstr = JNIUtils::ToJString(env, presetSelections.front());
-			auto presetJObject = env->NewObject(graphicPackPresetClass, graphicPackPresetCtorId, id, categoryJStr, JNIUtils::CreateJavaStringArrayList(env, presetSelections), activePresetJstr);
-			presetsJobjects.push_back(presetJObject);
-		}
-		return JNIUtils::CreateArrayList(env, presetsJobjects);
+					if (pentry->active)
+						activePreset = pentry->name;
+				}
+
+				jstring activePresetJstr = nullptr;
+
+				if (activePreset.has_value())
+					activePresetJstr = JNIUtils::ToJString(env, activePreset.value());
+				else if (!presetSelections.empty())
+					activePresetJstr = JNIUtils::ToJString(env, presetSelections.front());
+
+				return env->NewObject(graphicPackPresetClass, graphicPackPresetCtorId, id, categoryJStr, JNIUtils::CreateStringObjectArray(env, presetSelections), activePresetJstr);
+			});
 	}
 } // namespace NativeGraphicPacks
 
@@ -84,42 +93,40 @@ Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_refreshGraphicPacks([[may
 
 	GraphicPack2::ClearGraphicPacks();
 	GraphicPack2::LoadAll();
-	NativeGraphicPacks::s_graphicPacks.clear();
+	NativeGraphicPacks::g_graphicPacks.clear();
 
 	auto graphicPacks = GraphicPack2::GetGraphicPacks();
 
 	for (auto&& graphicPack : graphicPacks)
 	{
-		NativeGraphicPacks::s_graphicPacks[reinterpret_cast<sint64>(graphicPack.get())] = graphicPack;
+		NativeGraphicPacks::g_graphicPacks[reinterpret_cast<sint64>(graphicPack.get())] = graphicPack;
 	}
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_getGraphicPackBasicInfos(JNIEnv* env, [[maybe_unused]] jclass clazz)
 {
-	auto graphicPackInfoClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPackBasicInfo");
-	auto graphicPackInfoCtorId = env->GetMethodID(graphicPackInfoClass, "<init>", "(JLjava/lang/String;ZLjava/util/ArrayList;)V");
+	jclass graphicPackInfoClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPackBasicInfo");
+	jmethodID graphicPackInfoCtorId = env->GetMethodID(graphicPackInfoClass, "<init>", "(JLjava/lang/String;Z[J)V");
 
-	std::vector<jobject> graphicPackInfoJObjects;
-	graphicPackInfoJObjects.reserve(NativeGraphicPacks::s_graphicPacks.size());
-
-	for (auto&& graphicPack : NativeGraphicPacks::s_graphicPacks)
-	{
-		jstring virtualPath = JNIUtils::ToJString(env, graphicPack.second->GetVirtualPath());
-		jlong id = graphicPack.first;
-		jobject titleIds = JNIUtils::CreateJavaLongArrayList(env, graphicPack.second->GetTitleIds());
-		jobject jGraphicPack = env->NewObject(graphicPackInfoClass, graphicPackInfoCtorId, id, virtualPath, graphicPack.second->IsEnabled(), titleIds);
-		graphicPackInfoJObjects.push_back(jGraphicPack);
-	}
-	return JNIUtils::CreateArrayList(env, graphicPackInfoJObjects);
+	return JNIUtils::CreateObjectArray(
+		env,
+		graphicPackInfoClass,
+		NativeGraphicPacks::g_graphicPacks,
+		[&](const auto& graphicPack) {
+			jstring virtualPath = JNIUtils::ToJString(env, graphicPack.second->GetVirtualPath());
+			jlong id = graphicPack.first;
+			jlongArray titleIds = JNIUtils::CreateLongArray(env, graphicPack.second->GetTitleIds());
+			return env->NewObject(graphicPackInfoClass, graphicPackInfoCtorId, id, virtualPath, graphicPack.second->IsEnabled(), titleIds);
+		});
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_getGraphicPack(JNIEnv* env, [[maybe_unused]] jclass clazz, jlong id)
 {
-	auto graphicPackClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPack");
-	auto graphicPackCtorId = env->GetMethodID(graphicPackClass, "<init>", "(JZLjava/lang/String;Ljava/lang/String;Ljava/util/ArrayList;)V");
-	auto graphicPack = NativeGraphicPacks::s_graphicPacks.at(id);
+	jclass graphicPackClass = env->FindClass("info/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPack");
+	jmethodID graphicPackCtorId = env->GetMethodID(graphicPackClass, "<init>", "(JZLjava/lang/String;Ljava/lang/String;[Linfo/cemu/cemu/nativeinterface/NativeGraphicPacks$GraphicPackPreset;)V");
+	const auto& graphicPack = NativeGraphicPacks::g_graphicPacks.at(id);
 
 	jstring graphicPackName = JNIUtils::ToJString(env, graphicPack->GetName());
 	jstring graphicPackDescription = JNIUtils::ToJString(env, graphicPack->GetDescription());
@@ -136,7 +143,7 @@ Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_getGraphicPack(JNIEnv* en
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_setGraphicPackActive([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong id, jboolean active)
 {
-	auto graphicPack = NativeGraphicPacks::s_graphicPacks.at(id);
+	const auto& graphicPack = NativeGraphicPacks::g_graphicPacks.at(id);
 	graphicPack->SetEnabled(active);
 	NativeGraphicPacks::SaveGraphicPackStateToConfig(graphicPack);
 }
@@ -145,13 +152,13 @@ extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_setGraphicPackActivePreset([[maybe_unused]] JNIEnv* env, [[maybe_unused]] jclass clazz, jlong id, jstring category, jstring preset)
 {
 	std::string presetCategory = category == nullptr ? "" : JNIUtils::FromJString(env, category);
-	auto graphicPack = NativeGraphicPacks::s_graphicPacks.at(id);
+	const auto& graphicPack = NativeGraphicPacks::g_graphicPacks.at(id);
 	graphicPack->SetActivePreset(presetCategory, JNIUtils::FromJString(env, preset));
 	NativeGraphicPacks::SaveGraphicPackStateToConfig(graphicPack);
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeGraphicPacks_getGraphicPackPresets(JNIEnv* env, [[maybe_unused]] jclass clazz, jlong id)
 {
-	return NativeGraphicPacks::GetGraphicPresets(env, NativeGraphicPacks::s_graphicPacks.at(id), id);
+	return NativeGraphicPacks::GetGraphicPresets(env, NativeGraphicPacks::g_graphicPacks.at(id), id);
 }

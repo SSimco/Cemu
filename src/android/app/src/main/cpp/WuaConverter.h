@@ -10,34 +10,26 @@
 #include <zarchive/zarchivewriter.h>
 #include <zarchive/zarchivereader.h>
 
+enum class Stage
+{
+	STARTING,
+	CANCELLED,
+	COLLECTING_FILES,
+	COMPRESSING,
+	FINALIZING,
+};
+
 class WuaConverter
 {
 	TitleInfo m_titleInfo_base;
 	TitleInfo m_titleInfo_update;
 	TitleInfo m_titleInfo_aoc;
-
-	struct ZArchiveWriterContext
-	{
-		static void NewOutputFile(sint32 partIndex, void* _ctx);
-
-		static void WriteOutputData(const void* data, size_t length, void* _ctx);
-
-		bool RecursivelyAddFiles(std::string archivePath, std::string fscPath);
-
-		bool StoreTitle(TitleInfo* titleInfo);
-
-		bool AddTitles(TitleInfo** titles, size_t count);
-
-		int fd;
-		bool isValid{false};
-		std::unique_ptr<boost::iostreams::file_descriptor_sink> sink{};
-		std::unique_ptr<ZArchiveWriter> zaWriter{};
-		std::vector<uint8> transferBuffer;
-		std::atomic_bool cancelled{false};
-		// progress
-		std::atomic_uint64_t transferredInputBytes{};
-	} m_writerContext;
-
+	std::atomic_uint64_t m_transferredInputBytes{0};
+	std::atomic_uint64_t m_totalInputFileSize{0};
+	std::atomic_uint32_t m_currentFileIndex{0};
+	std::atomic_uint32_t m_totalFileCount{0};
+	std::atomic_bool m_cancelled{false};
+	std::atomic<Stage> m_stage{Stage::STARTING};
 	std::thread m_workerThread;
 	bool m_started{false};
 
@@ -49,9 +41,11 @@ class WuaConverter
 
 	~WuaConverter();
 
-	std::string getCompressedFileName();
+	std::string GetCompressedFileName();
 
-	uint64 getTransferredInputBytes() const;
+	std::pair<uint64, uint64> GetTransferredInputBytes() const;
+	uint32 GetTotalFileCount() const;
+	Stage GetCurrentStage() const;
 
-	void startConversion(int fd, std::unique_ptr<CompressTitleCallbacks>&& callbacks);
+	void StartConversion(int fd, std::unique_ptr<CompressTitleCallbacks>&& callbacks);
 };
