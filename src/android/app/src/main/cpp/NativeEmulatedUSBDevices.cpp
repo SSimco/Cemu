@@ -103,6 +103,35 @@ namespace NativeEmulatedUSBDevices
 
 		return true;
 	}
+
+	fs::path PrepareUniqueUserFilePath(std::string_view relativeDir, std::string_view fileName)
+	{
+		fs::path baseDir = ActiveSettings::GetUserDataPath(relativeDir);
+		fs::path filePath = baseDir / fileName;
+
+		std::error_code ec;
+		fs::create_directories(filePath.parent_path(), ec);
+
+		if (!fs::exists(filePath, ec))
+		{
+			return filePath;
+		}
+
+		std::string stem = filePath.stem().string();
+		std::string ext = filePath.extension().string();
+
+		int counter = 1;
+		while (true)
+		{
+			fs::path newPath = baseDir / fmt::format("{} ({}){}", stem, counter, ext);
+			if (!fs::exists(newPath, ec))
+			{
+				return newPath;
+			}
+
+			counter++;
+		}
+	}
 } // namespace NativeEmulatedUSBDevices
 
 extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
@@ -206,9 +235,7 @@ extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulatedUSBDevices_createSkylanderFigure(JNIEnv* env, [[maybe_unused]] jclass clazz, jint id, jint variant)
 {
 	std::string skylanderFileName = nsyshid::g_skyportal.FindSkylander(id, variant) + ".sky";
-	fs::path skylanderFilePath = ActiveSettings::GetUserDataPath(NativeEmulatedUSBDevices::SKYLANDERS_FIGURES_PATH) / skylanderFileName;
-	std::error_code ec;
-	fs::create_directories(skylanderFilePath.parent_path(), ec);
+	fs::path skylanderFilePath = NativeEmulatedUSBDevices::PrepareUniqueUserFilePath(NativeEmulatedUSBDevices::SKYLANDERS_FIGURES_PATH, skylanderFileName);
 	return nsyshid::g_skyportal.CreateSkylander(skylanderFilePath, id, variant);
 }
 
@@ -216,11 +243,8 @@ extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulatedUSBDevices_createInfinityFigure(JNIEnv* env, [[maybe_unused]] jclass clazz, jlong number)
 {
 	auto [figureSeries, figureName] = nsyshid::g_infinitybase.FindFigure(number);
-
 	std::string infinityFileName = figureName + ".bin";
-	fs::path infinityFilePath = ActiveSettings::GetUserDataPath(NativeEmulatedUSBDevices::INFINITY_FIGURES_PATH) / infinityFileName;
-	std::error_code ec;
-	fs::create_directories(infinityFilePath.parent_path(), ec);
+	fs::path infinityFilePath = NativeEmulatedUSBDevices::PrepareUniqueUserFilePath(NativeEmulatedUSBDevices::INFINITY_FIGURES_PATH, infinityFileName);
 	return nsyshid::g_infinitybase.CreateFigure(infinityFilePath, number, figureSeries);
 }
 
@@ -228,11 +252,8 @@ extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_info_cemu_cemu_nativeinterface_NativeEmulatedUSBDevices_createDimensionsFigure(JNIEnv* env, [[maybe_unused]] jclass clazz, jlong number)
 {
 	std::string figureName = nsyshid::g_dimensionstoypad.FindFigure(number);
-
 	std::string dimensionsFileName = figureName + ".bin";
-	fs::path dimensionsFilePath = ActiveSettings::GetUserDataPath(NativeEmulatedUSBDevices::DIMENSIONS_FIGURES_PATH) / dimensionsFileName;
-	std::error_code ec;
-	fs::create_directories(dimensionsFilePath.parent_path(), ec);
+	fs::path dimensionsFilePath = NativeEmulatedUSBDevices::PrepareUniqueUserFilePath(NativeEmulatedUSBDevices::DIMENSIONS_FIGURES_PATH, dimensionsFileName);
 	return nsyshid::g_dimensionstoypad.CreateFigure(dimensionsFilePath, number);
 }
 
