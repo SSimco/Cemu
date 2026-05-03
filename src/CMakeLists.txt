@@ -207,8 +207,11 @@ target_link_libraries(CemuBin PRIVATE
 	CemuGui
 	CemuInput
 	CemuUtil
-	SDL2::SDL2
 )
+
+if(ENABLE_SDL)
+	target_link_libraries(CemuBin PRIVATE SDL2::SDL2)
+endif()
 
 if(UNIX AND NOT APPLE)
 	# due to nasm output some linkers will make stack executable

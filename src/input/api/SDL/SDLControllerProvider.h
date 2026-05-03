@@ -1,11 +1,8 @@
 #pragma once
+
 #include <SDL2/SDL_joystick.h>
 #include "input/motion/MotionHandler.h"
 #include "input/api/ControllerProvider.h"
-
-#ifndef HAS_SDL
-#define HAS_SDL 1
-#endif
 
 static bool operator==(const SDL_JoystickGUID& g1, const SDL_JoystickGUID& g2)
 {

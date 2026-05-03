@@ -30,8 +30,10 @@
 #pragma comment(lib,"Dbghelp.lib")
 #endif
 
+#ifdef HAS_SDL
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
+#endif
 
 #if BOOST_OS_LINUX
 #define _putenv(__s) putenv((char*)(__s))

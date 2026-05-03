@@ -1,5 +1,8 @@
 #include "Cemu/Logging/CemuLogging.h"
+
+#ifdef HAS_SDL
 #include <SDL2/SDL.h>
+#endif
 
 class ScreenSaver
 {
@@ -10,6 +13,8 @@ public:
 #if BOOST_OS_MACOS
 	  return;
 #endif
+
+#ifdef HAS_SDL
     // Initialize video subsystem if necessary
     if (SDL_WasInit(SDL_INIT_VIDEO) == 0)
     {
@@ -36,5 +41,6 @@ public:
         cemuLog_log(LogType::Force, "Could not verify if screen saver was re-enabled (`SDL_IsScreenSaverEnabled()` returned SDL_FALSE)");
       }
     }
-  };
+#endif
+  }
 };
